@@ -1,0 +1,59 @@
+variables:
+  DOCKER_TLS_CERTDIR: ""
+
+stages:
+  - test
+  - lint
+  - build
+
+# Login for git
+before_script:
+  - echo -e "machine git.coinninja.net\nlogin gitlab-ci-token\npassword ${CI_JOB_TOKEN}" > $HOME/.netrc
+
+test:
+  stage: test
+  script:
+    - go test ./...
+
+golangci-lint:
+  stage: lint
+  image: registry.coinninja.net/engineering/go-ci:latest
+  script:
+    - golangci-lint run
+
+build:branch:
+  stage: build
+  script:
+    - gomobile bind -target ios -o lib/cnlib-$CI_COMMIT_REF_SLUG.framework .
+    - zip -r /tmp/cnlib-ios-$CI_COMMIT_REF_SLUG.zip lib/cnlib-$CI_COMMIT_REF_SLUG.framework
+    - gomobile bind -target android -o lib/cnlib-$CI_COMMIT_REF_SLUG.aar .
+    - zip -r /tmp/cnlib-android-$CI_COMMIT_REF_SLUG.zip lib/cnlib-$CI_COMMIT_REF_SLUG-sources.jar lib/cnlib-$CI_COMMIT_REF_SLUG.aar
+  artifacts:
+    paths:
+      - /tmp/cnlib-ios-$CI_COMMIT_REF_SLUG.zip
+      - /tmp/cnlib-android-$CI_COMMIT_REF_SLUG.zip
+    expire_in: 2 week
+  only:
+    - branches@engineering/cnlib
+  except:
+    - master
+    - develop
+    - tags
+
+build:latest:
+  stage: build
+  script:
+    - gomobile bind -target ios -o lib/cnlib-$CI_COMMIT_REF_SLUG.framework .
+    - gomobile bind -target android -o lib/cnlib-$CI_COMMIT_REF_SLUG.aar .
+  only:
+    - develop@engineering/cnlib
+
+build:tagged:
+  stage: build
+  script:
+    - gomobile bind -target ios -o lib/cnlib-$CI_COMMIT_REF_SLUG.framework .
+    - gomobile bind -target android -o lib/cnlib-$CI_COMMIT_REF_SLUG.aar .
+  only:
+    - tags@engineering/cnlib
+  except:
+    - branches

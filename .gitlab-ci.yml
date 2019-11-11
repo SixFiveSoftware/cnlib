@@ -6,10 +6,6 @@ stages:
   - lint
   - build
 
-# Login for git
-before_script:
-  - echo -e "machine git.coinninja.net\nlogin gitlab-ci-token\npassword ${CI_JOB_TOKEN}" > $HOME/.netrc
-
 test:
   stage: test
   script:
@@ -21,17 +17,25 @@ golangci-lint:
   script:
     - golangci-lint run
 
+.build: &build
+  allow_failure: false
+  before_script:
+    - echo -e "machine git.coinninja.net\nlogin gitlab-ci-token\npassword ${CI_JOB_TOKEN}" > $HOME/.netrc
+  script:
+    - gomobile bind -target ios -v -o lib/cnlib-$LIBRARY_TAG.framework .
+    - zip -r lib/cnlib-ios-$LIBRARY_TAG.zip lib/cnlib-$LIBRARY_TAG.framework
+    - gomobile bind -target android -v -o lib/cnlib-$LIBRARY_TAG.aar .
+    - zip -r lib/cnlib-android-$LIBRARY_TAG.zip lib/cnlib-$LIBRARY_TAG-sources.jar lib/cnlib-$LIBRARY_TAG.aar
+
 build:branch:
   stage: build
-  script:
-    - gomobile bind -target ios -o lib/cnlib-$CI_COMMIT_REF_SLUG.framework .
-    - zip -r /tmp/cnlib-ios-$CI_COMMIT_REF_SLUG.zip lib/cnlib-$CI_COMMIT_REF_SLUG.framework
-    - gomobile bind -target android -o lib/cnlib-$CI_COMMIT_REF_SLUG.aar .
-    - zip -r /tmp/cnlib-android-$CI_COMMIT_REF_SLUG.zip lib/cnlib-$CI_COMMIT_REF_SLUG-sources.jar lib/cnlib-$CI_COMMIT_REF_SLUG.aar
+  <<: *build
+  variables:
+    LIBRARY_TAG: $CI_COMMIT_REF_SLUG
   artifacts:
     paths:
-      - /tmp/cnlib-ios-$CI_COMMIT_REF_SLUG.zip
-      - /tmp/cnlib-android-$CI_COMMIT_REF_SLUG.zip
+      - lib/cnlib-ios-$CI_COMMIT_REF_SLUG.zip
+      - lib/cnlib-android-$CI_COMMIT_REF_SLUG.zip
     expire_in: 2 week
   only:
     - branches@engineering/cnlib
@@ -42,17 +46,27 @@ build:branch:
 
 build:latest:
   stage: build
-  script:
-    - gomobile bind -target ios -o lib/cnlib-$CI_COMMIT_REF_SLUG.framework .
-    - gomobile bind -target android -o lib/cnlib-$CI_COMMIT_REF_SLUG.aar .
+  <<: *build
+  variables:
+    LIBRARY_TAG: latest
+  artifacts:
+    paths:
+      - lib/cnlib-ios-latest.zip
+      - lib/cnlib-android-latest.zip
+    expire_in: 30 yrs
   only:
     - develop@engineering/cnlib
 
 build:tagged:
   stage: build
-  script:
-    - gomobile bind -target ios -o lib/cnlib-$CI_COMMIT_REF_SLUG.framework .
-    - gomobile bind -target android -o lib/cnlib-$CI_COMMIT_REF_SLUG.aar .
+  <<: *build
+  variables:
+    LIBRARY_TAG: $CI_COMMIT_TAG
+  artifacts:
+    paths:
+      - lib/cnlib-ios-$CI_COMMIT_TAG.zip
+      - lib/cnlib-android-$CI_COMMIT_TAG.zip
+    expire_in: 30 yrs
   only:
     - tags@engineering/cnlib
   except:

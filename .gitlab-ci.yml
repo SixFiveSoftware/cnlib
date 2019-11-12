@@ -6,6 +6,10 @@ stages:
   - lint
   - build
 
+# Login for git
+before_script:
+  - echo -e "machine git.coinninja.net\nlogin gitlab-ci-token\npassword ${CI_JOB_TOKEN}" > $HOME/.netrc
+
 test:
   stage: test
   script:
@@ -19,8 +23,6 @@ golangci-lint:
 
 .build: &build
   allow_failure: false
-  before_script:
-    - echo -e "machine git.coinninja.net\nlogin gitlab-ci-token\npassword ${CI_JOB_TOKEN}" > $HOME/.netrc
   script:
     - gomobile bind -target ios -v -prefix cnb -o lib/Golib.framework .
     - zip -r lib/cnlib-ios-$LIBRARY_TAG.zip lib/Golib.framework

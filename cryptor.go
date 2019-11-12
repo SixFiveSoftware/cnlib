@@ -19,7 +19,7 @@ func Encrypt(data []byte, publicKeyBytes []byte, privateKeyBytes []byte) ([]byte
 
 	// Get or generate private key
 	var privateKey *btcec.PrivateKey
-	if privateKeyBytes == nil || len(privateKeyBytes) == 0 {
+	if len(privateKeyBytes) == 0 {
 		privateKey, _ = btcec.NewPrivateKey(btcec.S256())
 	} else {
 		privateKey, _ = btcec.PrivKeyFromBytes(btcec.S256(), privateKeyBytes)

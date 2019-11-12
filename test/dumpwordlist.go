@@ -7,5 +7,5 @@ import (
 )
 
 func main() {
-	fmt.Printf("%+v\n", golib.GetWordList())
+	fmt.Printf("%+v\n", cnlib.GetWordListString())
 }

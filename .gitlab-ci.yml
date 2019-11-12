@@ -22,8 +22,8 @@ golangci-lint:
   before_script:
     - echo -e "machine git.coinninja.net\nlogin gitlab-ci-token\npassword ${CI_JOB_TOKEN}" > $HOME/.netrc
   script:
-    - gomobile bind -target ios -v -o lib/cnlib-$LIBRARY_TAG.framework .
-    - zip -r lib/cnlib-ios-$LIBRARY_TAG.zip lib/cnlib-$LIBRARY_TAG.framework
+    - gomobile bind -target ios -v -prefix cnb -o lib/Golib.framework .
+    - zip -r lib/cnlib-ios-$LIBRARY_TAG.zip lib/Golib.framework
     - gomobile bind -target android -v -o lib/cnlib-$LIBRARY_TAG.aar .
     - zip -r lib/cnlib-android-$LIBRARY_TAG.zip lib/cnlib-$LIBRARY_TAG-sources.jar lib/cnlib-$LIBRARY_TAG.aar
 

@@ -12,7 +12,7 @@ import (
 
 // HDWallet represents the user's current wallet.
 type HDWallet struct {
-	Basecoin         Basecoin
+	Basecoin         *Basecoin
 	WalletWords      string // space-separated string of user's recovery words
 	masterPrivateKey *bip32.Key
 }
@@ -34,7 +34,7 @@ func NewHDWalletFromWords(wordString string, basecoin *Basecoin) *HDWallet {
 	if err != nil {
 		return nil
 	}
-	wallet := HDWallet{Basecoin: *basecoin, WalletWords: wordString, masterPrivateKey: masterKey}
+	wallet := HDWallet{Basecoin: basecoin, WalletWords: wordString, masterPrivateKey: masterKey}
 	return &wallet
 }
 

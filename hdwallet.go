@@ -3,6 +3,8 @@ package cnlib
 import (
 	"strings"
 
+	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcutil"
 	"github.com/tyler-smith/go-bip32"
 	"github.com/tyler-smith/go-bip39"
 	"github.com/tyler-smith/go-bip39/wordlists"
@@ -50,7 +52,34 @@ func (wallet *HDWallet) SigningPublicKey() []byte {
 	return wallet.signingMasterKey().PublicKey().Key
 }
 
+// ReceiveAddressAtIndex returns a receive address at given path based on wallet's Basecoin.
+func (wallet *HDWallet) ReceiveAddressAtIndex(index int) string {
+	path := DerivationPath{wallet.Basecoin.Purpose, wallet.Basecoin.Coin, wallet.Basecoin.Account, 0, index}
+	indexKey := privateKey(wallet.masterPrivateKey, path)
+	pubkey := indexKey.PublicKey().Key
+	keyHash := btcutil.Hash160(pubkey)
+	defaultNet := &chaincfg.MainNetParams
+	if wallet.Basecoin.Purpose == 84 {
+		addrHash, _ := btcutil.NewAddressWitnessPubKeyHash(keyHash, defaultNet)
+		return addrHash.EncodeAddress()
+	}
+	return ""
+}
+
 /// Unexported functions
+
+func hardened(i int) uint32 {
+	return uint32(0x80000000) + uint32(i)
+}
+
+func privateKey(masterKey *bip32.Key, derivationPath DerivationPath) *bip32.Key {
+	purposeKey, _ := masterKey.NewChildKey(hardened(derivationPath.Purpose))
+	coinKey, _ := purposeKey.NewChildKey(hardened(derivationPath.Coin))
+	accountKey, _ := coinKey.NewChildKey(hardened(derivationPath.Account))
+	changeKey, _ := accountKey.NewChildKey(uint32(derivationPath.Change))
+	indexKey, _ := changeKey.NewChildKey(uint32(derivationPath.Index))
+	return indexKey
+}
 
 func masterPrivateKey(wordString string) (*bip32.Key, error) {
 	seed := bip39.NewSeed(wordString, "")

@@ -5,7 +5,8 @@ import (
 
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
-	"github.com/tyler-smith/go-bip32"
+	"github.com/btcsuite/btcutil/hdkeychain"
+
 	"github.com/tyler-smith/go-bip39"
 	"github.com/tyler-smith/go-bip39/wordlists"
 )
@@ -16,7 +17,7 @@ import (
 type HDWallet struct {
 	Basecoin         *Basecoin
 	WalletWords      string // space-separated string of user's recovery words
-	masterPrivateKey *bip32.Key
+	masterPrivateKey *hdkeychain.ExtendedKey
 }
 
 // GetFullBIP39WordListString returns all 2,048 BIP39 mnemonic words as a space-separated string.
@@ -44,20 +45,24 @@ func NewHDWalletFromWords(wordString string, basecoin *Basecoin) *HDWallet {
 
 // SigningKey returns the private key at the m/42 path.
 func (wallet *HDWallet) SigningKey() []byte {
-	return wallet.signingMasterKey().Key
+	ec, _ := wallet.signingMasterKey().ECPrivKey()
+	return ec.Serialize()
 }
 
 // SigningPublicKey returns the public key at the m/42 path.
 func (wallet *HDWallet) SigningPublicKey() []byte {
-	return wallet.signingMasterKey().PublicKey().Key
+	ec, _ := wallet.signingMasterKey().ECPubKey()
+	return ec.SerializeCompressed()
 }
 
 // ReceiveAddressAtIndex returns a receive address at given path based on wallet's Basecoin.
 func (wallet *HDWallet) ReceiveAddressAtIndex(index int) string {
 	path := DerivationPath{wallet.Basecoin.Purpose, wallet.Basecoin.Coin, wallet.Basecoin.Account, 0, index}
 	indexKey := privateKey(wallet.masterPrivateKey, path)
-	pubkey := indexKey.PublicKey().Key
-	keyHash := btcutil.Hash160(pubkey)
+	ecPriv, _ := indexKey.ECPrivKey()
+	ecPub := ecPriv.PubKey()
+	pubkeyBytes := ecPub.SerializeCompressed()
+	keyHash := btcutil.Hash160(pubkeyBytes)
 	defaultNet := &chaincfg.MainNetParams
 	if wallet.Basecoin.Purpose == 84 {
 		addrHash, _ := btcutil.NewAddressWitnessPubKeyHash(keyHash, defaultNet)
@@ -69,33 +74,34 @@ func (wallet *HDWallet) ReceiveAddressAtIndex(index int) string {
 /// Unexported functions
 
 func hardened(i int) uint32 {
-	return uint32(0x80000000) + uint32(i)
+	return hdkeychain.HardenedKeyStart + uint32(i)
 }
 
-func privateKey(masterKey *bip32.Key, derivationPath DerivationPath) *bip32.Key {
-	purposeKey, _ := masterKey.NewChildKey(hardened(derivationPath.Purpose))
-	coinKey, _ := purposeKey.NewChildKey(hardened(derivationPath.Coin))
-	accountKey, _ := coinKey.NewChildKey(hardened(derivationPath.Account))
-	changeKey, _ := accountKey.NewChildKey(uint32(derivationPath.Change))
-	indexKey, _ := changeKey.NewChildKey(uint32(derivationPath.Index))
+func privateKey(masterKey *hdkeychain.ExtendedKey, derivationPath DerivationPath) *hdkeychain.ExtendedKey {
+	purposeKey, _ := masterKey.Child(hardened(derivationPath.Purpose))
+	coinKey, _ := purposeKey.Child(hardened(derivationPath.Coin))
+	accountKey, _ := coinKey.Child(hardened(derivationPath.Account))
+	changeKey, _ := accountKey.Child(uint32(derivationPath.Change))
+	indexKey, _ := changeKey.Child(uint32(derivationPath.Index))
 	return indexKey
 }
 
-func masterPrivateKey(wordString string) (*bip32.Key, error) {
+func masterPrivateKey(wordString string) (*hdkeychain.ExtendedKey, error) {
 	seed := bip39.NewSeed(wordString, "")
-	masterKey, err := bip32.NewMasterKey(seed)
+	defaultNet := chaincfg.MainNetParams
+	masterKey, err := hdkeychain.NewMaster(seed, &defaultNet)
 	if err != nil {
 		return nil, err
 	}
 	return masterKey, nil
 }
 
-func (wallet *HDWallet) signingMasterKey() *bip32.Key {
+func (wallet *HDWallet) signingMasterKey() *hdkeychain.ExtendedKey {
 	masterKey := wallet.masterPrivateKey
 	if masterKey == nil {
 		return nil
 	}
-	childKey, childErr := masterKey.NewChildKey(42)
+	childKey, childErr := masterKey.Child(42)
 	if childErr != nil {
 		return nil
 	}

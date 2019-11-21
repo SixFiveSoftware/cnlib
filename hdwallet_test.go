@@ -5,12 +5,10 @@ import (
 	"encoding/hex"
 	"strings"
 	"testing"
-
-	"git.coinninja.net/engineering/cnlib"
 )
 
 func TestGetFullBIP39WordListString(t *testing.T) {
-	wl := cnlib.GetFullBIP39WordListString()
+	wl := GetFullBIP39WordListString()
 	words := strings.Split(wl, " ")
 
 	if len(words) != 2048 {
@@ -42,7 +40,7 @@ func TestNewWordListFromEntropy(t *testing.T) {
 		t.Errorf("Expected %v bytes, got %v", size, n1)
 	}
 
-	wordString1 := cnlib.NewWordListFromEntropy(bs1)
+	wordString1 := NewWordListFromEntropy(bs1)
 	words1 := strings.Split(wordString1, " ")
 
 	if len(words1) != expectedWordLen {
@@ -61,7 +59,7 @@ func TestNewWordListFromEntropy(t *testing.T) {
 		t.Errorf("Expected %v bytes, got %v", size, n2)
 	}
 
-	wordString2 := cnlib.NewWordListFromEntropy(bs2)
+	wordString2 := NewWordListFromEntropy(bs2)
 	words2 := strings.Split(wordString2, " ")
 
 	if len(words2) != expectedWordLen {
@@ -75,8 +73,8 @@ func TestNewWordListFromEntropy(t *testing.T) {
 
 func TestNewHDWalletFromWords(t *testing.T) {
 	w := "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
-	bc := cnlib.NewBaseCoin(84, 0, 0)
-	wallet := cnlib.NewHDWalletFromWords(w, bc)
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
 
 	if wallet.WalletWords != w {
 		t.Errorf("Expected wallet words to equal provided words: %v,\n...but got: %v", w, wallet.WalletWords)
@@ -97,8 +95,8 @@ func TestNewHDWalletFromWords(t *testing.T) {
 
 func TestSigningKey(t *testing.T) {
 	w := "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
-	bc := cnlib.NewBaseCoin(84, 0, 0)
-	wallet := cnlib.NewHDWalletFromWords(w, bc)
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
 
 	sk := wallet.SigningKey()
 
@@ -112,8 +110,8 @@ func TestSigningKey(t *testing.T) {
 
 func TestSigningPublicKey(t *testing.T) {
 	w := "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
-	bc := cnlib.NewBaseCoin(84, 0, 0)
-	wallet := cnlib.NewHDWalletFromWords(w, bc)
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
 
 	pk := wallet.SigningPublicKey()
 
@@ -129,8 +127,8 @@ func TestReceiveAddressAtIndex_ForSegwitAddress(t *testing.T) {
 	expectedAddress := "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu"
 
 	w := "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
-	bc := cnlib.NewBaseCoin(84, 0, 0)
-	wallet := cnlib.NewHDWalletFromWords(w, bc)
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
 
 	ra := wallet.ReceiveAddressAtIndex(0)
 

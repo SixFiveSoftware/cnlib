@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcutil"
 	"github.com/btcsuite/btcutil/hdkeychain"
 
 	"github.com/tyler-smith/go-bip39"
@@ -55,30 +54,14 @@ func (wallet *HDWallet) SigningPublicKey() []byte {
 	return ec.SerializeCompressed()
 }
 
-// ReceiveAddressAtIndex returns a receive address at given path based on wallet's Basecoin.
-func (wallet *HDWallet) ReceiveAddressAtIndex(index int) string {
-	path := DerivationPath{wallet.Basecoin.Purpose, wallet.Basecoin.Coin, wallet.Basecoin.Account, 0, index}
-	indexKey := privateKey(wallet.masterPrivateKey, path)
-	ecPriv, _ := indexKey.ECPrivKey()
-	ecPub := ecPriv.PubKey()
-	pubkeyBytes := ecPub.SerializeCompressed()
-	keyHash := btcutil.Hash160(pubkeyBytes)
-	defaultNet := &chaincfg.MainNetParams
-	if wallet.Basecoin.Purpose == 84 {
-		addrHash, _ := btcutil.NewAddressWitnessPubKeyHash(keyHash, defaultNet)
-		return addrHash.EncodeAddress()
-	}
-	return ""
-}
-
 /// Unexported functions
 
 func hardened(i int) uint32 {
 	return hdkeychain.HardenedKeyStart + uint32(i)
 }
 
-func privateKey(masterKey *hdkeychain.ExtendedKey, derivationPath DerivationPath) *hdkeychain.ExtendedKey {
-	purposeKey, _ := masterKey.Child(hardened(derivationPath.Purpose))
+func (wallet *HDWallet) privateKey(derivationPath DerivationPath) *hdkeychain.ExtendedKey {
+	purposeKey, _ := wallet.masterPrivateKey.Child(hardened(derivationPath.Purpose))
 	coinKey, _ := purposeKey.Child(hardened(derivationPath.Coin))
 	accountKey, _ := coinKey.Child(hardened(derivationPath.Account))
 	changeKey, _ := accountKey.Child(uint32(derivationPath.Change))

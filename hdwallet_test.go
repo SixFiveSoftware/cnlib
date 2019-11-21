@@ -122,17 +122,3 @@ func TestSigningPublicKey(t *testing.T) {
 		t.Errorf("Expected private key hex to be %v, got %v", expected, pkString)
 	}
 }
-
-func TestReceiveAddressAtIndex_ForSegwitAddress(t *testing.T) {
-	expectedAddress := "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu"
-
-	w := "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
-	bc := NewBaseCoin(84, 0, 0)
-	wallet := NewHDWalletFromWords(w, bc)
-
-	ra := wallet.ReceiveAddressAtIndex(0)
-
-	if ra != expectedAddress {
-		t.Errorf("Expected segwit address %v, got %v.", expectedAddress, ra)
-	}
-}

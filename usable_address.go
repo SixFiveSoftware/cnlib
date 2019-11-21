@@ -3,6 +3,7 @@ package cnlib
 import (
 	"encoding/hex"
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcutil"
 )
 
@@ -48,8 +49,23 @@ func (ua *UsableAddress) generateAddress() string {
 
 	if purpose == 84 {
 		return ua.buildSegwitAddress(ua.DerivationPath)
+	} else if purpose == 49 {
+		return ua.buildBIP49Address(ua.DerivationPath)
 	}
 	return ""
+}
+
+func (ua *UsableAddress) buildBIP49Address(path *DerivationPath) string {
+	indexKey := ua.Wallet.privateKey(*path)
+	ecPriv, _ := indexKey.ECPrivKey()
+	ecPub := ecPriv.PubKey()
+	pubkeyBytes := ecPub.SerializeCompressed()
+	keyHash := btcutil.Hash160(pubkeyBytes)
+
+	scriptSig, _ := txscript.NewScriptBuilder().AddOp(txscript.OP_0).AddData(keyHash).Script()
+	addrHash, _ := btcutil.NewAddressScriptHash(scriptSig, &chaincfg.MainNetParams)
+
+	return addrHash.EncodeAddress()
 }
 
 func (ua *UsableAddress) buildSegwitAddress(path *DerivationPath) string {

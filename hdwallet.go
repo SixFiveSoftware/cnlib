@@ -45,13 +45,15 @@ func NewHDWalletFromWords(wordString string, basecoin *Basecoin) *HDWallet {
 
 // SigningKey returns the private key at the m/42 path.
 func (wallet *HDWallet) SigningKey() []byte {
-	ec, _ := wallet.signingMasterKey().ECPrivKey()
+	kf := keyFactory{Wallet: wallet}
+	ec, _ := kf.signingMasterKey().ECPrivKey()
 	return ec.Serialize()
 }
 
 // SigningPublicKey returns the public key at the m/42 path.
 func (wallet *HDWallet) SigningPublicKey() []byte {
-	ec, _ := wallet.signingMasterKey().ECPubKey()
+	kf := keyFactory{Wallet: wallet}
+	ec, _ := kf.signingMasterKey().ECPubKey()
 	return ec.SerializeCompressed()
 }
 
@@ -92,15 +94,6 @@ func hardened(i int) uint32 {
 	return hdkeychain.HardenedKeyStart + uint32(i)
 }
 
-func (wallet *HDWallet) privateKey(derivationPath DerivationPath) *hdkeychain.ExtendedKey {
-	purposeKey, _ := wallet.masterPrivateKey.Child(hardened(derivationPath.Purpose))
-	coinKey, _ := purposeKey.Child(hardened(derivationPath.Coin))
-	accountKey, _ := coinKey.Child(hardened(derivationPath.Account))
-	changeKey, _ := accountKey.Child(uint32(derivationPath.Change))
-	indexKey, _ := changeKey.Child(uint32(derivationPath.Index))
-	return indexKey
-}
-
 func masterPrivateKey(wordString string) (*hdkeychain.ExtendedKey, error) {
 	seed := bip39.NewSeed(wordString, "")
 	defaultNet := chaincfg.MainNetParams
@@ -109,16 +102,4 @@ func masterPrivateKey(wordString string) (*hdkeychain.ExtendedKey, error) {
 		return nil, err
 	}
 	return masterKey, nil
-}
-
-func (wallet *HDWallet) signingMasterKey() *hdkeychain.ExtendedKey {
-	masterKey := wallet.masterPrivateKey
-	if masterKey == nil {
-		return nil
-	}
-	childKey, childErr := masterKey.Child(42)
-	if childErr != nil {
-		return nil
-	}
-	return childKey
 }

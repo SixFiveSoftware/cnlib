@@ -35,8 +35,9 @@ func (ua *UsableAddress) MetaAddress() *MetaAddress {
 		return nil
 	}
 
-	path := *ua.DerivationPath
-	indexKey := ua.Wallet.privateKey(path)
+	path := ua.DerivationPath
+	kf := keyFactory{Wallet: ua.Wallet}
+	indexKey := kf.indexPrivateKey(path)
 	ecPriv, _ := indexKey.ECPrivKey()
 	ecPub := ecPriv.PubKey()
 	pubkeyBytes := ecPub.SerializeUncompressed()
@@ -63,7 +64,8 @@ func (ua *UsableAddress) generateAddress() (string, error) {
 }
 
 func (ua *UsableAddress) buildBIP49Address(path *DerivationPath) string {
-	indexKey := ua.Wallet.privateKey(*path)
+	kf := keyFactory{Wallet: ua.Wallet}
+	indexKey := kf.indexPrivateKey(path)
 	ecPriv, _ := indexKey.ECPrivKey()
 	ecPub := ecPriv.PubKey()
 	pubkeyBytes := ecPub.SerializeCompressed()
@@ -76,7 +78,8 @@ func (ua *UsableAddress) buildBIP49Address(path *DerivationPath) string {
 }
 
 func (ua *UsableAddress) buildSegwitAddress(path *DerivationPath) string {
-	indexKey := ua.Wallet.privateKey(*path)
+	kf := keyFactory{Wallet: ua.Wallet}
+	indexKey := kf.indexPrivateKey(path)
 	ecPriv, _ := indexKey.ECPrivKey()
 	ecPub := ecPriv.PubKey()
 	pubkeyBytes := ecPub.SerializeCompressed()

@@ -93,6 +93,20 @@ func (wallet *HDWallet) CheckForAddress(a string, upTo int) (*MetaAddress, error
 	return nil, errors.New("address not found")
 }
 
+// SignData signs a given message and returns the signature in bytes.
+func (wallet *HDWallet) SignData(message []byte) []byte {
+	kf := keyFactory{Wallet: wallet}
+	signature := kf.signData(message)
+	return signature
+}
+
+// SignatureSigningData signs a given message and returns the signature in hex-encoded string format.
+func (wallet *HDWallet) SignatureSigningData(message []byte) string {
+	kf := keyFactory{Wallet: wallet}
+	str := kf.signatureSigningData(message)
+	return str
+}
+
 /// Unexported functions
 
 func (wallet *HDWallet) metaAddress(change int, index int) *MetaAddress {

@@ -1,6 +1,8 @@
 package cnlib
 
 import (
+	"encoding/hex"
+
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil/hdkeychain"
@@ -41,8 +43,7 @@ func (kf keyFactory) signingMasterKey() *hdkeychain.ExtendedKey {
 	return childKey
 }
 
-// SignData signs a given message and returns the signature in bytes.
-func (kf keyFactory) SignData(message []byte) []byte {
+func (kf keyFactory) signData(message []byte) []byte {
 	messageHash := chainhash.DoubleHashB(message)
 	key, keyErr := kf.signingMasterKey().ECPrivKey()
 	if keyErr != nil {
@@ -62,4 +63,12 @@ func (kf keyFactory) SignData(message []byte) []byte {
 	}
 
 	return signature.Serialize()
+}
+
+func (kf keyFactory) signatureSigningData(message []byte) string {
+	sign := kf.signData(message)
+	if len(sign) == 0 {
+		return ""
+	}
+	return hex.EncodeToString(sign)
 }

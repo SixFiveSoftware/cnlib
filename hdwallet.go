@@ -1,6 +1,7 @@
 package cnlib
 
 import (
+	"encoding/hex"
 	"strings"
 
 	"github.com/btcsuite/btcd/chaincfg"
@@ -54,7 +55,38 @@ func (wallet *HDWallet) SigningPublicKey() []byte {
 	return ec.SerializeCompressed()
 }
 
+// CoinNinjaVerificationKeyHexString returns the hex-encoded string of the signing pubkey byte slice.
+func (wallet *HDWallet) CoinNinjaVerificationKeyHexString() string {
+	return hex.EncodeToString(wallet.SigningPublicKey())
+}
+
+// ReceiveAddressForIndex returns a receive MetaAddress derived from the current wallet, Basecoin, and index.
+func (wallet *HDWallet) ReceiveAddressForIndex(index int) *MetaAddress {
+	return wallet.metaAddress(0, index)
+}
+
+// ChangeAddressForIndex returns a change MetaAddress derived from the current wallet, Basecoin, and index.
+func (wallet *HDWallet) ChangeAddressForIndex(index int) *MetaAddress {
+	return wallet.metaAddress(1, index)
+}
+
+// UpdateCoin updates the pointer stored to a new instance of Basecoin. Fetched MetaAddresses will reflect updated coin.
+func (wallet *HDWallet) UpdateCoin(c *Basecoin) {
+	wallet.Basecoin = c
+}
+
 /// Unexported functions
+
+func (wallet *HDWallet) metaAddress(change int, index int) *MetaAddress {
+	if index < 0 {
+		return nil
+	}
+	c := wallet.Basecoin
+	path := NewDerivationPath(c.Purpose, c.Coin, c.Account, change, index)
+	ua := NewUsableAddress(wallet, path)
+	ma := ua.MetaAddress()
+	return ma
+}
 
 func hardened(i int) uint32 {
 	return hdkeychain.HardenedKeyStart + uint32(i)

@@ -2,10 +2,13 @@ package cnlib
 
 import "testing"
 
+const (
+	words = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+)
+
 func TestMetaAddress_Receive_Segwit_Address(t *testing.T) {
 	path := NewDerivationPath(84, 0, 0, 0, 0)
 	coin := NewBaseCoin(84, 0, 0)
-	words := "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 	wallet := NewHDWalletFromWords(words, coin)
 	usableAddress := NewUsableAddress(wallet, path)
 	meta := usableAddress.MetaAddress()
@@ -28,7 +31,6 @@ func TestMetaAddress_Receive_Segwit_Address(t *testing.T) {
 func TestMetaAddress_Change_Segwit_Address(t *testing.T) {
 	path := NewDerivationPath(84, 0, 0, 1, 0)
 	coin := NewBaseCoin(84, 0, 0)
-	words := "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 	wallet := NewHDWalletFromWords(words, coin)
 	usableAddress := NewUsableAddress(wallet, path)
 	meta := usableAddress.MetaAddress()
@@ -51,7 +53,6 @@ func TestMetaAddress_Change_Segwit_Address(t *testing.T) {
 func TestMetaAddress_Receive_LegacySegwit_Address(t *testing.T) {
 	path := NewDerivationPath(49, 0, 0, 0, 0)
 	coin := NewBaseCoin(49, 0, 0)
-	words := "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 	wallet := NewHDWalletFromWords(words, coin)
 	usableAddress := NewUsableAddress(wallet, path)
 	meta := usableAddress.MetaAddress()
@@ -74,7 +75,6 @@ func TestMetaAddress_Receive_LegacySegwit_Address(t *testing.T) {
 func TestMetaAddress_Change_LegacySegwit_Address(t *testing.T) {
 	path := NewDerivationPath(49, 0, 0, 1, 0)
 	coin := NewBaseCoin(49, 0, 0)
-	words := "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 	wallet := NewHDWalletFromWords(words, coin)
 	usableAddress := NewUsableAddress(wallet, path)
 	meta := usableAddress.MetaAddress()

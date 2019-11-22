@@ -7,6 +7,10 @@ import (
 	"testing"
 )
 
+const (
+	w = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+)
+
 func TestGetFullBIP39WordListString(t *testing.T) {
 	wl := GetFullBIP39WordListString()
 	words := strings.Split(wl, " ")
@@ -72,7 +76,6 @@ func TestNewWordListFromEntropy(t *testing.T) {
 }
 
 func TestNewHDWalletFromWords(t *testing.T) {
-	w := "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 	bc := NewBaseCoin(84, 0, 0)
 	wallet := NewHDWalletFromWords(w, bc)
 
@@ -94,7 +97,6 @@ func TestNewHDWalletFromWords(t *testing.T) {
 }
 
 func TestSigningKey(t *testing.T) {
-	w := "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 	bc := NewBaseCoin(84, 0, 0)
 	wallet := NewHDWalletFromWords(w, bc)
 
@@ -109,7 +111,6 @@ func TestSigningKey(t *testing.T) {
 }
 
 func TestSigningPublicKey(t *testing.T) {
-	w := "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 	bc := NewBaseCoin(84, 0, 0)
 	wallet := NewHDWalletFromWords(w, bc)
 
@@ -120,5 +121,109 @@ func TestSigningPublicKey(t *testing.T) {
 
 	if pkString != expected {
 		t.Errorf("Expected private key hex to be %v, got %v", expected, pkString)
+	}
+}
+
+func TestCoinNinjaVerificationKeyHexString(t *testing.T) {
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+
+	pkString := wallet.CoinNinjaVerificationKeyHexString()
+	expected := "024458596b5c97e716e82015a72c37b5d3fe0c5dc70a4b83d72e7d2eb65920633e"
+
+	if pkString != expected {
+		t.Errorf("Expected private key hex to be %v, got %v", expected, pkString)
+	}
+}
+
+func TestReceiveAddressForIndex_ValidIndex(t *testing.T) {
+	i := 0
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+
+	ma := wallet.ReceiveAddressForIndex(i)
+	expectedAddress := "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu"
+	expectedPath := NewDerivationPath(84, 0, 0, 0, i)
+	expectedKey := "0430d54fd0dd420a6e5f8d3624f5f3482cae350f79d5f0753bf5beef9c2d91af3c04717159ce0828a7f686c2c7510b7aa7d4c685ebc2051642ccbebc7099e2f679"
+
+	if ma.Address != expectedAddress {
+		t.Errorf("Expected address %v, got %v", expectedAddress, ma.Address)
+	}
+
+	// dereference both to compare values, not pointers
+	if *ma.DerivationPath != *expectedPath {
+		t.Errorf("Expected path %v, got %v", expectedPath, ma.DerivationPath)
+	}
+
+	if ma.UncompressedPublicKey != expectedKey {
+		t.Errorf("Expected key %v, got %v", expectedKey, ma.UncompressedPublicKey)
+	}
+}
+
+func TestReceiveAddressForIndex_InvalidIndex(t *testing.T) {
+	i := -1
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+
+	ma := wallet.ReceiveAddressForIndex(i)
+
+	if ma != nil {
+		t.Errorf("Expected MetaAddress to be nil.")
+	}
+}
+
+func TestChangeAddressForIndex_ValidIndex(t *testing.T) {
+	i := 0
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+
+	ma := wallet.ChangeAddressForIndex(i)
+	expectedAddress := "bc1q8c6fshw2dlwun7ekn9qwf37cu2rn755upcp6el"
+	expectedPath := NewDerivationPath(84, 0, 0, 1, i)
+	expectedKey := ""
+
+	if ma.Address != expectedAddress {
+		t.Errorf("Expected address %v, got %v", expectedAddress, ma.Address)
+	}
+
+	// dereference both to compare values, not pointers
+	if *ma.DerivationPath != *expectedPath {
+		t.Errorf("Expected path %v, got %v", expectedPath, ma.DerivationPath)
+	}
+
+	if ma.UncompressedPublicKey != expectedKey {
+		t.Errorf("Expected key %v, got %v", expectedKey, ma.UncompressedPublicKey)
+	}
+}
+
+func TestChangeAddressForIndex_InvalidIndex(t *testing.T) {
+	i := -1
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+
+	ma := wallet.ChangeAddressForIndex(i)
+
+	if ma != nil {
+		t.Errorf("Expected MetaAddress to be nil.")
+	}
+}
+
+func TestUpdateCoin(t *testing.T) {
+	bc := NewBaseCoin(49, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	newCoin := NewBaseCoin(84, 0, 0)
+	expAddr1 := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
+	expAddr2 := "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu"
+
+	ma1 := wallet.ReceiveAddressForIndex(0)
+	if ma1.Address != expAddr1 {
+		t.Errorf("Expected address %v, got %v", expAddr1, ma1.Address)
+	}
+
+	wallet.UpdateCoin(newCoin)
+
+	ma2 := wallet.ReceiveAddressForIndex(0)
+	if ma2.Address != expAddr2 {
+		t.Errorf("Expected address %v, got %v", expAddr2, ma2.Address)
 	}
 }

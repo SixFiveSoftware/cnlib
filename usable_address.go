@@ -2,6 +2,8 @@ package cnlib
 
 import (
 	"encoding/hex"
+	"errors"
+
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcutil"
@@ -27,7 +29,12 @@ func NewUsableAddress(wallet *HDWallet, derivationPath *DerivationPath) *UsableA
 
 // MetaAddress returns a meta address with a given path based on wallet's Basecoin, and uncompressed pubkey if a receive address.
 func (ua *UsableAddress) MetaAddress() *MetaAddress {
-	addr := ua.generateAddress()
+	addr, addrErr := ua.generateAddress()
+
+	if addrErr != nil {
+		return nil
+	}
+
 	path := *ua.DerivationPath
 	indexKey := ua.Wallet.privateKey(path)
 	ecPriv, _ := indexKey.ECPrivKey()
@@ -44,15 +51,15 @@ func (ua *UsableAddress) MetaAddress() *MetaAddress {
 
 /// Unexposed methods
 
-func (ua *UsableAddress) generateAddress() string {
+func (ua *UsableAddress) generateAddress() (string, error) {
 	purpose := ua.DerivationPath.Purpose
 
 	if purpose == 84 {
-		return ua.buildSegwitAddress(ua.DerivationPath)
+		return ua.buildSegwitAddress(ua.DerivationPath), nil
 	} else if purpose == 49 {
-		return ua.buildBIP49Address(ua.DerivationPath)
+		return ua.buildBIP49Address(ua.DerivationPath), nil
 	}
-	return ""
+	return "", errors.New("Unrecognized Address Purpose")
 }
 
 func (ua *UsableAddress) buildBIP49Address(path *DerivationPath) string {

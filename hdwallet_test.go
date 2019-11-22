@@ -227,3 +227,33 @@ func TestUpdateCoin(t *testing.T) {
 		t.Errorf("Expected address %v, got %v", expAddr2, ma2.Address)
 	}
 }
+
+func TestCheckForAddress_AddressExistsInRange(t *testing.T) {
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	expectedAddrAt10 := "bc1qd30z5a5e50jtgx28rvt64483tq65r9pkj623wh"
+
+	ma, err := wallet.CheckForAddress(expectedAddrAt10, 20)
+
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if ma.Address != expectedAddrAt10 {
+		t.Errorf("Expected to find %v, got %v", expectedAddrAt10, ma.Address)
+	}
+}
+
+func TestCheckForAddress_AddressDoesNotExist(t *testing.T) {
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	expectedAddrAt30 := "bc1qvy9t2k673tsp6wdwpym3m29sz829nuac9jccc9"
+
+	ma, err := wallet.CheckForAddress(expectedAddrAt30, 20)
+
+	if err == nil {
+		t.Errorf("Expected error, got nil")
+	}
+	if ma != nil {
+		t.Errorf("Expected MetaAddress to be nil, got %v", ma.Address)
+	}
+}

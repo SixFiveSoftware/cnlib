@@ -16,3 +16,9 @@ func NewMetaAddress(address string, path *DerivationPath, uncompressedPublicKey 
 	ma := MetaAddress{Address: address, DerivationPath: path, UncompressedPublicKey: uncompressedPublicKey}
 	return &ma
 }
+
+// IsReceiveAddress computes if the address is a receive address, vs change address.
+func (ma *MetaAddress) IsReceiveAddress() bool {
+	change := ma.DerivationPath.Change
+	return change == 0
+}

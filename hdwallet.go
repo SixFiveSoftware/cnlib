@@ -2,6 +2,7 @@ package cnlib
 
 import (
 	"encoding/hex"
+	"errors"
 	"strings"
 
 	"github.com/btcsuite/btcd/chaincfg"
@@ -75,6 +76,21 @@ func (wallet *HDWallet) ChangeAddressForIndex(index int) *MetaAddress {
 // UpdateCoin updates the pointer stored to a new instance of Basecoin. Fetched MetaAddresses will reflect updated coin.
 func (wallet *HDWallet) UpdateCoin(c *Basecoin) {
 	wallet.Basecoin = c
+}
+
+// CheckForAddress scans the wallet for a given address up to a given index on both receive/change chains.
+func (wallet *HDWallet) CheckForAddress(a string, upTo int) (*MetaAddress, error) {
+	for i := 0; i < upTo; i++ {
+		rma := wallet.ReceiveAddressForIndex(i)
+		cma := wallet.ChangeAddressForIndex(i)
+		if rma.Address == a {
+			return rma, nil
+		}
+		if cma.Address == a {
+			return cma, nil
+		}
+	}
+	return nil, errors.New("address not found")
 }
 
 /// Unexported functions

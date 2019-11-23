@@ -14,7 +14,7 @@ func Encrypt(data []byte, publicKeyBytes []byte, privateKeyBytes []byte) ([]byte
 	// Get or generate public key
 	publicKey, err := btcec.ParsePubKey(publicKeyBytes, btcec.S256())
 	if err != nil {
-		return nil, errors.New("invalid pulic key")
+		return nil, errors.New("invalid public key")
 	}
 
 	// Get or generate private key
@@ -24,9 +24,6 @@ func Encrypt(data []byte, publicKeyBytes []byte, privateKeyBytes []byte) ([]byte
 	} else {
 		privateKey, _ = btcec.PrivKeyFromBytes(btcec.S256(), privateKeyBytes)
 	}
-	if err != nil {
-		return nil, errors.New("invalid private key")
-	}
 
 	return cryptor.Encrypt(data, privateKey, publicKey)
 
@@ -35,11 +32,7 @@ func Encrypt(data []byte, publicKeyBytes []byte, privateKeyBytes []byte) ([]byte
 // Decrypt will dencrypt a memo using a private key (bytes)
 func Decrypt(data []byte, privateKeyBytes []byte) ([]byte, error) {
 
-	privateKey, err := btcec.PrivKeyFromBytes(btcec.S256(), privateKeyBytes)
-	if err != nil {
-		return nil, errors.New("invalid private key")
-	}
-
+	privateKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), privateKeyBytes)
 	return cryptor.Decrypt(data, privateKey)
 
 }

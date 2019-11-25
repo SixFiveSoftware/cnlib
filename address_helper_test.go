@@ -87,3 +87,23 @@ func TestSegwitAddress_InvalidAddresses_ReturnFalse(t *testing.T) {
 		}
 	}
 }
+
+func TestSegwitAddressHRP(t *testing.T) {
+	bcAddr := "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu"
+	rtAddr := "bcrt1q6rz28mcfaxtmd6v789l9rrlrusdprr9pz3cppk"
+	legacyAddr := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
+	helper := addressHelperTestHelpers()
+
+	bcHrp, bcErr := helper.HRPFromAddress(bcAddr)
+	if bcErr != nil || bcHrp != "bc" {
+		t.Errorf("Expected hrp of bc, got %v. Error: %v", bcHrp, bcErr)
+	}
+	rtHrp, rtErr := helper.HRPFromAddress(rtAddr)
+	if rtErr != nil || rtHrp != "bcrt" {
+		t.Errorf("Expected hrp of bcrt, got %v. Error: %v", rtHrp, rtErr)
+	}
+	laHrp, laErr := helper.HRPFromAddress(legacyAddr)
+	if laErr == nil || laHrp != "" {
+		t.Errorf("Expected error, got %v. Error: %v", laHrp, laErr)
+	}
+}

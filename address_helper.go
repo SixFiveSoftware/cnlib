@@ -1,6 +1,8 @@
 package cnlib
 
 import (
+	"errors"
+
 	"github.com/btcsuite/btcutil"
 	"github.com/btcsuite/btcutil/base58"
 )
@@ -53,4 +55,25 @@ func (ah *AddressHelper) AddressIsValidSegwitAddress(addr string) bool {
 	_, okWsh := address.(*btcutil.AddressWitnessScriptHash)
 
 	return okWpkh || okWsh
+}
+
+// HRPFromAddress decodes the given address, and if a SegWit address, returns the HRP.
+func (ah *AddressHelper) HRPFromAddress(addr string) (string, error) {
+	address, addrErr := btcutil.DecodeAddress(addr, ah.Basecoin.defaultNetParams())
+
+	if addrErr != nil {
+		return "", errors.New("failed to decode address")
+	}
+
+	wpkhAddr, okWpkh := address.(*btcutil.AddressWitnessPubKeyHash)
+	if okWpkh {
+		return wpkhAddr.Hrp(), nil
+	}
+
+	wshAddr, okWsh := address.(*btcutil.AddressWitnessScriptHash)
+	if okWsh {
+		return wshAddr.Hrp(), nil
+	}
+
+	return "", errors.New("invalid segwit address")
 }

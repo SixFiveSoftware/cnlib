@@ -50,6 +50,52 @@ func TestMetaAddress_Change_Segwit_Address(t *testing.T) {
 	}
 }
 
+func TestMetaAddress_RegTestAddresses(t *testing.T) {
+	bc := NewBaseCoin(84, 1, 0)
+
+	rpath0 := NewDerivationPath(84, 1, 0, 0, 0)
+	rpath1 := NewDerivationPath(84, 1, 0, 0, 1)
+	rpath2 := NewDerivationPath(84, 1, 0, 0, 2)
+	cpath0 := NewDerivationPath(84, 1, 0, 1, 0)
+	cpath1 := NewDerivationPath(84, 1, 0, 1, 1)
+	cpath2 := NewDerivationPath(84, 1, 0, 1, 2)
+
+	rexp0 := "bcrt1q6rz28mcfaxtmd6v789l9rrlrusdprr9pz3cppk"
+	rexp1 := "bcrt1qd7spv5q28348xl4myc8zmh983w5jx32cs707jh"
+	rexp2 := "bcrt1qxdyjf6h5d6qxap4n2dap97q4j5ps6ua8jkxz0z"
+	cexp0 := "bcrt1q9u62588spffmq4dzjxsr5l297znf3z6jkgnhsw"
+	cexp1 := "bcrt1qkwgskuzmmwwvqajnyr7yp9hgvh5y45kg984qvy"
+	cexp2 := "bcrt1q2vma00td2g9llw8hwa8ny3r774rtt7ae3q2e44"
+
+	wallet := NewHDWalletFromWords(w, bc)
+
+	rua0 := NewUsableAddress(wallet, rpath0).MetaAddress().Address
+	rua1 := NewUsableAddress(wallet, rpath1).MetaAddress().Address
+	rua2 := NewUsableAddress(wallet, rpath2).MetaAddress().Address
+	cua0 := NewUsableAddress(wallet, cpath0).MetaAddress().Address
+	cua1 := NewUsableAddress(wallet, cpath1).MetaAddress().Address
+	cua2 := NewUsableAddress(wallet, cpath2).MetaAddress().Address
+
+	if rua0 != rexp0 {
+		t.Errorf("Expected address %v, got %v", rexp0, rua0)
+	}
+	if rua1 != rexp1 {
+		t.Errorf("Expected address %v, got %v", rexp1, rua1)
+	}
+	if rua2 != rexp2 {
+		t.Errorf("Expected address %v, got %v", rexp2, rua2)
+	}
+	if cua0 != cexp0 {
+		t.Errorf("Expected address %v, got %v", cexp0, cua0)
+	}
+	if cua1 != cexp1 {
+		t.Errorf("Expected address %v, got %v", cexp1, cua1)
+	}
+	if cua2 != cexp2 {
+		t.Errorf("Expected address %v, got %v", cexp2, cua2)
+	}
+}
+
 func TestMetaAddress_Receive_LegacySegwit_Address(t *testing.T) {
 	path := NewDerivationPath(49, 0, 0, 0, 0)
 	coin := NewBaseCoin(49, 0, 0)

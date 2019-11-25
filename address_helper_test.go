@@ -2,6 +2,12 @@ package cnlib
 
 import "testing"
 
+func addressHelperTestHelpers() *AddressHelper {
+	bc := NewBaseCoin(84, 0, 0)
+	ah := NewAddressHelper(bc)
+	return ah
+}
+
 func TestBase58CheckEncoding_ValidAddress_ReturnsTrue(t *testing.T) {
 	addresses := []string{
 		"12vRFewBpbdiS5HXDDLEfVFtJnpA2x8NV8",
@@ -11,7 +17,7 @@ func TestBase58CheckEncoding_ValidAddress_ReturnsTrue(t *testing.T) {
 	}
 
 	for _, addr := range addresses {
-		valid := AddressIsBase58CheckEncoded(addr)
+		valid := addressHelperTestHelpers().AddressIsBase58CheckEncoded(addr)
 		if !valid {
 			t.Errorf("Expected %v to be base58Check encoded", addr)
 		}
@@ -45,7 +51,7 @@ func TestBase58CheckEncoding_InvalidAddresses_ReturnFalse(t *testing.T) {
 	}
 
 	for _, addr := range addresses {
-		valid := AddressIsBase58CheckEncoded(addr)
+		valid := addressHelperTestHelpers().AddressIsBase58CheckEncoded(addr)
 		if valid {
 			t.Errorf("Expected %v to not be base58Check encoded", addr)
 		}
@@ -61,7 +67,7 @@ func TestSegwitAddress_ValidAddresses_ReturnTrue(t *testing.T) {
 	}
 
 	for _, addr := range addresses {
-		valid := AddressIsValidSegwitAddress(addr)
+		valid := addressHelperTestHelpers().AddressIsValidSegwitAddress(addr)
 		if !valid {
 			t.Errorf("Expected %v to be valid segwit address.", addr)
 		}
@@ -75,7 +81,7 @@ func TestSegwitAddress_InvalidAddresses_ReturnFalse(t *testing.T) {
 	}
 
 	for _, addr := range addresses {
-		valid := AddressIsValidSegwitAddress(addr)
+		valid := addressHelperTestHelpers().AddressIsValidSegwitAddress(addr)
 		if valid {
 			t.Errorf("Expected %v to be invalid segwit address.", addr)
 		}

@@ -1,7 +1,6 @@
 package cnlib
 
 import (
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
 	"github.com/btcsuite/btcutil/base58"
 )
@@ -15,9 +14,19 @@ const (
 )
 
 const checksumSize = 4
+// AddressHelper is a struct with helper functions to provide info about addresses.
+type AddressHelper struct {
+	Basecoin *Basecoin
+}
+
+// NewAddressHelper returns a ref to a new AddressHelper object, given a *Basecoin.
+func NewAddressHelper(basecoin *Basecoin) *AddressHelper {
+	ah := AddressHelper{Basecoin: basecoin}
+	return &ah
+}
 
 // AddressIsBase58CheckEncoded decodes the address, returns true if address is base58check encoded.
-func AddressIsBase58CheckEncoded(addr string) bool {
+func (*AddressHelper) AddressIsBase58CheckEncoded(addr string) bool {
 	result, version, err := base58.CheckDecode(addr)
 
 	if err != nil {
@@ -32,8 +41,9 @@ func AddressIsBase58CheckEncoded(addr string) bool {
 }
 
 // AddressIsValidSegwitAddress decodes the address, returns true if is a witness type.
-func AddressIsValidSegwitAddress(addr string) bool {
-	address, addrErr := btcutil.DecodeAddress(addr, &chaincfg.MainNetParams)
+func (ah *AddressHelper) AddressIsValidSegwitAddress(addr string) bool {
+
+	address, addrErr := btcutil.DecodeAddress(addr, ah.Basecoin.defaultNetParams())
 
 	if addrErr != nil {
 		return false

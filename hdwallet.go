@@ -5,7 +5,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil/hdkeychain"
 
 	"github.com/tyler-smith/go-bip39"
@@ -34,7 +34,7 @@ func NewWordListFromEntropy(entropy []byte) string {
 
 // NewHDWalletFromWords returns a pointer to an HDWallet, containing the Basecoin, words, and unexported master private key.
 func NewHDWalletFromWords(wordString string, basecoin *Basecoin) *HDWallet {
-	masterKey, err := masterPrivateKey(wordString)
+	masterKey, err := masterPrivateKey(wordString, basecoin)
 	if err != nil {
 		return nil
 	}
@@ -153,10 +153,10 @@ func hardened(i int) uint32 {
 	return hdkeychain.HardenedKeyStart + uint32(i)
 }
 
-func masterPrivateKey(wordString string) (*hdkeychain.ExtendedKey, error) {
+func masterPrivateKey(wordString string, basecoin *Basecoin) (*hdkeychain.ExtendedKey, error) {
 	seed := bip39.NewSeed(wordString, "")
-	defaultNet := chaincfg.MainNetParams
-	masterKey, err := hdkeychain.NewMaster(seed, &defaultNet)
+	defaultNet := basecoin.defaultNetParams()
+	masterKey, err := hdkeychain.NewMaster(seed, defaultNet)
 	if err != nil {
 		return nil, err
 	}

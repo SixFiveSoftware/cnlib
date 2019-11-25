@@ -84,6 +84,6 @@ func (ua *UsableAddress) buildSegwitAddress(path *DerivationPath) string {
 	ecPub := ecPriv.PubKey()
 	pubkeyBytes := ecPub.SerializeCompressed()
 	keyHash := btcutil.Hash160(pubkeyBytes)
-	addrHash, _ := btcutil.NewAddressWitnessPubKeyHash(keyHash, &chaincfg.MainNetParams)
+	addrHash, _ := btcutil.NewAddressWitnessPubKeyHash(keyHash, ua.Wallet.Basecoin.defaultNetParams())
 	return addrHash.EncodeAddress()
 }

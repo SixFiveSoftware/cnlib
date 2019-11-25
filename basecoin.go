@@ -1,5 +1,7 @@
 package cnlib
 
+import "github.com/btcsuite/btcd/chaincfg"
+
 /// Type Declaration
 
 // Basecoin is used to provide information about the current user's wallet.
@@ -48,4 +50,18 @@ func (bc *Basecoin) GetBech32HRP() string {
 		return "bc"
 	}
 	return "bcrt"
+}
+
+func (bc *Basecoin) isTestNet() bool {
+	if bc.Coin == 0 {
+		return false
+	}
+	return true
+}
+
+func (bc *Basecoin) defaultNetParams() *chaincfg.Params {
+	if bc.isTestNet() {
+		return &chaincfg.RegressionNetParams
+	}
+	return &chaincfg.MainNetParams
 }

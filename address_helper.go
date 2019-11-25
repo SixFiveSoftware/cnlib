@@ -1,6 +1,8 @@
 package cnlib
 
 import (
+	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcutil"
 	"github.com/btcsuite/btcutil/base58"
 )
 
@@ -14,7 +16,7 @@ const (
 
 const checksumSize = 4
 
-// AddressIsBase58CheckEncoded decodes the address to determine if address is valid.
+// AddressIsBase58CheckEncoded decodes the address, returns true if address is base58check encoded.
 func AddressIsBase58CheckEncoded(addr string) bool {
 	result, version, err := base58.CheckDecode(addr)
 
@@ -27,4 +29,18 @@ func AddressIsBase58CheckEncoded(addr string) bool {
 	}
 
 	return false
+}
+
+// AddressIsValidSegwitAddress decodes the address, returns true if is a witness type.
+func AddressIsValidSegwitAddress(addr string) bool {
+	address, addrErr := btcutil.DecodeAddress(addr, &chaincfg.MainNetParams)
+
+	if addrErr != nil {
+		return false
+	}
+
+	_, okWpkh := address.(*btcutil.AddressWitnessPubKeyHash)
+	_, okWsh := address.(*btcutil.AddressWitnessScriptHash)
+
+	return okWpkh || okWsh
 }

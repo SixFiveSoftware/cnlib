@@ -51,3 +51,33 @@ func TestBase58CheckEncoding_InvalidAddresses_ReturnFalse(t *testing.T) {
 		}
 	}
 }
+
+func TestSegwitAddress_ValidAddresses_ReturnTrue(t *testing.T) {
+	addresses := []string{
+		"bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu",                     // demo wallet first receive address
+		"bc1q8c6fshw2dlwun7ekn9qwf37cu2rn755upcp6el",                     // demo wallet first change address
+		"bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4",                     // p2wpkh sipa demo
+		"bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3", // p2wsh sipa demo
+	}
+
+	for _, addr := range addresses {
+		valid := AddressIsValidSegwitAddress(addr)
+		if !valid {
+			t.Errorf("Expected %v to be valid segwit address.", addr)
+		}
+	}
+}
+
+func TestSegwitAddress_InvalidAddresses_ReturnFalse(t *testing.T) {
+	addresses := []string{
+		"BC1QW508D6QEJXTDG4Y5R3ZARVAYR0C5XW7KV8F3T4", // p2wsh sipa demo invalid p2wpkh, YR transposed
+		"3Cd4xEu2VvM352BVgd9cb1Ct5vxz318tVT",
+	}
+
+	for _, addr := range addresses {
+		valid := AddressIsValidSegwitAddress(addr)
+		if valid {
+			t.Errorf("Expected %v to be invalid segwit address.", addr)
+		}
+	}
+}

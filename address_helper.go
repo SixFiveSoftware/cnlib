@@ -8,14 +8,27 @@ import (
 )
 
 const (
-	p2pk   = 0
-	p2pkh  = 1
-	p2sh   = 2
-	p2wpkh = 3
-	p2wsh  = 4
+	checksumSize      = 4
+	p2wpkhProgramSize = 20
+	p2wshProgramSize  = 32
 )
 
-const checksumSize = 4
+const (
+	bip49purpose = 49
+	bip84purpose = 84
+)
+
+// constants for size in bytes of pieces of a transaction
+const (
+	p2pkhOutputSize       = 34
+	p2shOutputSize        = 32
+	p2wpkhOutputSize      = 31
+	p2DefaultOutputSize   = 32
+	p2shSegwitInputSize   = 91
+	p2wpkhSegwitInputSize = 68
+	baseSize              = 11
+)
+
 // AddressHelper is a struct with helper functions to provide info about addresses.
 type AddressHelper struct {
 	Basecoin *Basecoin
@@ -76,4 +89,68 @@ func (ah *AddressHelper) HRPFromAddress(addr string) (string, error) {
 	}
 
 	return "", errors.New("invalid segwit address")
+}
+
+/// Unexposed methods
+
+func (ah *AddressHelper) bytesPerInput() uint {
+	if ah.Basecoin.Purpose == bip84purpose {
+		return p2wpkhSegwitInputSize
+	}
+	return p2shSegwitInputSize
+}
+
+func (ah *AddressHelper) bytesPerChangeOuptut() uint {
+	if ah.Basecoin.Purpose == bip84purpose {
+		return p2wpkhOutputSize
+	}
+	return p2shOutputSize
+}
+
+// totalBytes computes number of bytes a tx will be, given number of inputs, destination address, and if includes change or not.
+func (ah *AddressHelper) totalBytes(numInputs uint16, address string, includeChange bool) (uint, error) {
+	total := uint(baseSize)
+
+	total = total + (ah.bytesPerInput() * uint(numInputs))
+
+	if includeChange {
+		total = total + ah.bytesPerChangeOuptut()
+	}
+
+	outBytes, err := ah.bytesPerOutputAddress(address)
+	if err != nil {
+		return 0, err
+	}
+	total += outBytes
+
+	return total, nil
+}
+
+func (ah *AddressHelper) bytesPerOutputAddress(addr string) (uint, error) {
+	dec, decErr := btcutil.DecodeAddress(addr, ah.Basecoin.defaultNetParams())
+	if decErr != nil {
+		return 0, decErr
+	}
+
+	if _, ok := dec.(*btcutil.AddressPubKey); ok {
+		return p2DefaultOutputSize, nil
+	}
+
+	if _, ok := dec.(*btcutil.AddressPubKeyHash); ok {
+		return p2pkhOutputSize, nil
+	}
+
+	if _, ok := dec.(*btcutil.AddressScriptHash); ok {
+		return p2shOutputSize, nil
+	}
+
+	if _, ok := dec.(*btcutil.AddressWitnessPubKeyHash); ok {
+		return p2wpkhOutputSize, nil
+	}
+
+	if _, ok := dec.(*btcutil.AddressWitnessScriptHash); ok {
+		return p2wpkhOutputSize, nil
+	}
+
+	return 0, errors.New("address not supported")
 }

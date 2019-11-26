@@ -107,3 +107,80 @@ func TestSegwitAddressHRP(t *testing.T) {
 		t.Errorf("Expected error, got %v. Error: %v", laHrp, laErr)
 	}
 }
+
+func TestBytesPerInputBIP84Input(t *testing.T) {
+	bpi := addressHelperTestHelpers().bytesPerInput()
+	if bpi != p2wpkhSegwitInputSize {
+		t.Errorf("Expected %v bytes, got %v", p2wpkhSegwitInputSize, bpi)
+	}
+}
+
+func TestBytesPerInputBIP49Input(t *testing.T) {
+	bc := NewBaseCoin(49, 0, 0)
+	ah := NewAddressHelper(bc)
+	bpi := ah.bytesPerInput()
+
+	if bpi != p2shSegwitInputSize {
+		t.Errorf("Expected %v bytes, got %v", p2shSegwitInputSize, bpi)
+	}
+}
+
+func TestBytesPerChangeOuptutBIP84(t *testing.T) {
+	bpco := addressHelperTestHelpers().bytesPerChangeOuptut()
+	if bpco != p2wpkhOutputSize {
+		t.Errorf("Expected %v bytes, got %v", p2wpkhOutputSize, bpco)
+	}
+}
+
+func TestBytesPerChangeOuptutBIP49(t *testing.T) {
+	bc := NewBaseCoin(49, 0, 0)
+	ah := NewAddressHelper(bc)
+	bpco := ah.bytesPerChangeOuptut()
+
+	if bpco != p2shOutputSize {
+		t.Errorf("Expected %v bytes, got %v", p2shOutputSize, bpco)
+	}
+}
+
+func TestTotalBytes_SingleBIP49Input_TwoBIP49Outputs(t *testing.T) {
+	address := "35dKN7xvHH3xnBWUrWzJtkjfrAFXk6hyH8"
+	bc := NewBaseCoin(49, 0, 0)
+	expectedBytes := uint(166)
+	ah := NewAddressHelper(bc)
+
+	bytes, err := ah.totalBytes(1, address, true)
+	if err != nil {
+		t.Errorf("Expcted byte count, got error: %v", err)
+	}
+	if bytes != expectedBytes {
+		t.Errorf("Expected %v bytes, got %v", expectedBytes, bytes)
+	}
+}
+
+func TestTotalBytes_SingleBIP84Input_TwoBIP84Outputs(t *testing.T) {
+	address := "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4"
+	expectedBytes := uint(141)
+
+	bytes, err := addressHelperTestHelpers().totalBytes(1, address, true)
+	if err != nil {
+		t.Errorf("Expcted byte count, got error: %v", err)
+	}
+	if bytes != expectedBytes {
+		t.Errorf("Expected %v bytes, got %v", expectedBytes, bytes)
+	}
+}
+
+func TestTotalBytes_SingleBIP49Input_LegacyOutput_BIP49Change(t *testing.T) {
+	address := "1LqBGSKuX5yYUonjxT5qGfpUsXKYYWeabA"
+	bc := NewBaseCoin(49, 0, 0)
+	expectedBytes := uint(168)
+	ah := NewAddressHelper(bc)
+
+	bytes, err := ah.totalBytes(1, address, true)
+	if err != nil {
+		t.Errorf("Expcted byte count, got error: %v", err)
+	}
+	if bytes != expectedBytes {
+		t.Errorf("Expected %v bytes, got %v", expectedBytes, bytes)
+	}
+}

@@ -193,6 +193,21 @@ func (td *TransactionData) UTXOAtIndex(index int) (*UTXO, error) {
 	return td.availableUtxos[index], nil
 }
 
+// AddUTXO Adds a utxo to the private array.
+func (t *TransactionDataStandard) AddUTXO(utxo *UTXO) {
+	t.TransactionData.AddUTXO(utxo)
+}
+
+// AddUTXO Adds a utxo to the private array.
+func (t *TransactionDataFlatFee) AddUTXO(utxo *UTXO) {
+	t.TransactionData.AddUTXO(utxo)
+}
+
+// AddUTXO Adds a utxo to the private array.
+func (t *TransactionDataSendMax) AddUTXO(utxo *UTXO) {
+	t.TransactionData.AddUTXO(utxo)
+}
+
 // Generate is called after all available utxo's have been added, to configure the transaction data. Builds a standard transaction with a fee rate.
 func (t *TransactionDataStandard) Generate() (bool, error) {
 	ah := NewAddressHelper(t.TransactionData.basecoin)
@@ -258,13 +273,60 @@ func (t *TransactionDataStandard) Generate() (bool, error) {
 }
 
 // Generate is called after all available utxo's have been added, to configure the transaction data. Builds a standard transaction with a flat fee.
-func (t *TransactionDataFlatFee) Generate() {
+func (t *TransactionDataFlatFee) Generate() (bool, error) {
+	totalFromUTXOs := 0
+	tempUTXOs := make([]*UTXO, 0)
 
+	for i := 0; i < len(t.TransactionData.availableUtxos); i++ {
+		utxo := t.TransactionData.availableUtxos[i]
+		tempUTXOs = append(tempUTXOs, utxo)
+		totalFromUTXOs += utxo.Amount
+
+		possibleChange := totalFromUTXOs - t.TransactionData.Amount - t.TransactionData.FeeAmount
+		tempChangeAmount := Max(0, possibleChange)
+		t.TransactionData.ChangeAmount = tempChangeAmount
+
+		if totalFromUTXOs >= t.TransactionData.Amount && tempChangeAmount > 0 {
+			if tempChangeAmount < dustThreshold {
+				t.TransactionData.ChangeAmount = 0
+			}
+		}
+	}
+
+	if totalFromUTXOs < (t.TransactionData.FeeAmount + t.TransactionData.Amount) {
+		return false, errors.New("insufficient funds")
+	}
+
+	t.TransactionData.requiredUtxos = tempUTXOs
+
+	return true, nil
 }
 
 // Generate is called after all available utxo's have been added, to configure the transaction data. Builds a transaction sending max with a fee rate.
-func (t *TransactionDataSendMax) Generate() {
+func (t *TransactionDataSendMax) Generate() (bool, error) {
+	ah := NewAddressHelper(t.TransactionData.basecoin)
 
+	tempUTXOs := t.TransactionData.availableUtxos
+	totalFromUTXOs := 0
+	for _, utxo := range t.TransactionData.availableUtxos {
+		totalFromUTXOs += utxo.Amount
+	}
+
+	totalBytes, tbErr := ah.totalBytes(tempUTXOs, t.TransactionData.PaymentAddress, false)
+	if tbErr != nil {
+		return false, tbErr
+	}
+
+	feeAmount := t.TransactionData.feeRate * totalBytes
+	amountForValidation := totalFromUTXOs - feeAmount
+	if amountForValidation < 0 {
+		return false, errors.New("insufficient funds")
+	}
+	t.TransactionData.Amount = amountForValidation
+	t.TransactionData.FeeAmount = feeAmount
+	t.TransactionData.requiredUtxos = tempUTXOs
+
+	return true, nil
 }
 
 /// Unexported Functions
@@ -274,5 +336,5 @@ func (td *TransactionData) shouldAddChangeToTransaction() bool {
 }
 
 func (td *TransactionData) utxoCount() int {
-	return len(td.availableUtxos)
+	return len(td.requiredUtxos)
 }

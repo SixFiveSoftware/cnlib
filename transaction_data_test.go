@@ -32,7 +32,7 @@ func TestNewTransactionDataStandard_SingleOutput_SingleInput_SatisfiesAmount(t *
 	data := NewTransactionDataStandard(
 		address, addressHelper().Basecoin, paymentAmount, feeRate, changePath, 500000, MustBeRBF,
 	)
-	data.TransactionData.AddUTXO(utxo)
+	data.AddUTXO(utxo)
 	success, err := data.Generate()
 
 	// then
@@ -92,7 +92,7 @@ func TestTransactionDataStandard_SingleOutput_DoubleInput_WithChange(t *testing.
 	// when
 	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, AllowedToBeRBF)
 	for _, utxo := range utxos {
-		data.TransactionData.AddUTXO(utxo)
+		data.AddUTXO(utxo)
 	}
 	success, dataErr := data.Generate()
 
@@ -151,7 +151,7 @@ func TestNewTransactionDataStandard_SingleInput_SingleOutput_NoChange(t *testing
 	// when
 	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, AllowedToBeRBF)
 	for _, utxo := range utxos {
-		data.TransactionData.AddUTXO(utxo)
+		data.AddUTXO(utxo)
 	}
 	success, dataErr := data.Generate()
 
@@ -212,7 +212,7 @@ func TestNewTransactionStandard_SingleOutput_DoubleInput_NoChange(t *testing.T) 
 	// when
 	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, AllowedToBeRBF)
 	for _, utxo := range utxos {
-		data.TransactionData.AddUTXO(utxo)
+		data.AddUTXO(utxo)
 	}
 	success, err := data.Generate()
 
@@ -260,7 +260,7 @@ func TestNewTransactionStandard_SingleOutput_DoubleInput_InsufficientFunds(t *te
 	// when
 	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, AllowedToBeRBF)
 	for _, utxo := range utxos {
-		data.TransactionData.AddUTXO(utxo)
+		data.AddUTXO(utxo)
 	}
 	success, _ := data.Generate()
 
@@ -296,7 +296,7 @@ func TestNewTransactionDataStandard_SingleBIP84Output_SingleBIP49Input(t *testin
 	// when
 	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, AllowedToBeRBF)
 	for _, utxo := range utxos {
-		data.TransactionData.AddUTXO(utxo)
+		data.AddUTXO(utxo)
 	}
 	success, err := data.Generate()
 
@@ -357,7 +357,7 @@ func TestNewTransactionDataStandard_CostOfChangeIsBeneficial(t *testing.T) {
 	// when
 	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, AllowedToBeRBF)
 	for _, utxo := range utxos {
-		data.TransactionData.AddUTXO(utxo)
+		data.AddUTXO(utxo)
 	}
 	success1, err1 := data.Generate()
 
@@ -393,7 +393,7 @@ func TestNewTransactionDataStandard_CostOfChangeIsBeneficial(t *testing.T) {
 	expectedChange := 3440
 	goodData := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, AllowedToBeRBF)
 	for _, utxo := range utxos {
-		goodData.TransactionData.AddUTXO(utxo)
+		goodData.AddUTXO(utxo)
 	}
 	success2, err2 := goodData.Generate()
 
@@ -421,5 +421,261 @@ func TestNewTransactionDataStandard_CostOfChangeIsBeneficial(t *testing.T) {
 	}
 	if goodData.TransactionData.RBFOption != expectedRBFOption {
 		t.Errorf("Expected RBFOption to be %v, got %v", expectedRBFOption, goodData.TransactionData.RBFOption)
+	}
+}
+
+func TestNewTransactionDataFlatFee_WithChange(t *testing.T) {
+	// given
+	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
+	ah := addressHelper()
+	path1 := NewDerivationPath(49, 0, 0, 1, 3)
+	path2 := NewDerivationPath(49, 0, 0, 0, 2)
+	path3 := NewDerivationPath(49, 0, 0, 0, 8)
+	utxo1 := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 2221, path1, true)
+	utxo2 := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 15935, path2, true)
+	utxo3 := NewUTXO("3013fcd9ea8fd65a69709f07fed2c1fd765d57664486debcb72ef47f2ea415f6", 0, 15526, path3, true)
+	utxos := []*UTXO{utxo1, utxo2, utxo3}
+	changePath := NewDerivationPath(49, 0, 0, 1, 5)
+	paymentAmount := 20000
+	flatFeeAmount := 10000
+	expectedChange := 3682
+
+	// when
+	data := NewTransactionDataFlatFee(address, ah.Basecoin, paymentAmount, flatFeeAmount, changePath, 500000)
+	for _, utxo := range utxos {
+		data.AddUTXO(utxo)
+	}
+	success, err := data.Generate()
+
+	// then
+	if !success {
+		t.Errorf("Expected to generate a flat fee tx data, got error: %v", err)
+	}
+	if data.TransactionData.PaymentAddress != address {
+		t.Errorf("Expected payment address %v, got %v", address, data.TransactionData.PaymentAddress)
+	}
+	if data.TransactionData.Amount != paymentAmount {
+		t.Errorf("Expected amount %v, got %v", paymentAmount, data.TransactionData.Amount)
+	}
+	if data.TransactionData.FeeAmount != flatFeeAmount {
+		t.Errorf("Expected flat fee amount %v, got %v", flatFeeAmount, data.TransactionData.FeeAmount)
+	}
+	if data.TransactionData.ChangeAmount != expectedChange {
+		t.Errorf("Expected change amount %v, got %v", expectedChange, data.TransactionData.ChangeAmount)
+	}
+	if !data.TransactionData.shouldAddChangeToTransaction() {
+		t.Errorf("Expected to add change, but didn't.")
+	}
+}
+
+func TestNewTransactionDataFlatFee_DustyTransaction_NoChange(t *testing.T) {
+	// given
+	ah := addressHelper()
+	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
+	path1 := NewDerivationPath(49, 0, 0, 1, 3)
+	path2 := NewDerivationPath(49, 0, 0, 0, 2)
+	utxo1 := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 20000, path1, true)
+	utxo2 := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 10100, path2, true)
+	utxos := []*UTXO{utxo1, utxo2}
+	changePath := NewDerivationPath(49, 0, 0, 1, 5)
+	paymentAmount := 20000
+	expectedFeeAmount := 10000
+	expectedChange := 0
+
+	// when
+	data := NewTransactionDataFlatFee(address, ah.Basecoin, paymentAmount, expectedFeeAmount, changePath, 500000)
+	for _, utxo := range utxos {
+		data.AddUTXO(utxo)
+	}
+	success, err := data.Generate()
+
+	// then
+	if !success {
+		t.Errorf("Expected to generate a flat fee tx data, got error: %v", err)
+	}
+	if data.TransactionData.PaymentAddress != address {
+		t.Errorf("Expected payment address %v, got %v", address, data.TransactionData.PaymentAddress)
+	}
+	if data.TransactionData.Amount != paymentAmount {
+		t.Errorf("Expected amount %v, got %v", paymentAmount, data.TransactionData.Amount)
+	}
+	if data.TransactionData.FeeAmount != expectedFeeAmount {
+		t.Errorf("Expected flat fee amount %v, got %v", expectedFeeAmount, data.TransactionData.FeeAmount)
+	}
+	if data.TransactionData.utxoCount() != len(utxos) {
+		t.Errorf("Expected %v utxos, got %v", len(utxos), data.TransactionData.utxoCount())
+	}
+	if data.TransactionData.ChangeAmount != expectedChange {
+		t.Errorf("Expected change amount %v, got %v", expectedChange, data.TransactionData.ChangeAmount)
+	}
+	if data.TransactionData.shouldAddChangeToTransaction() {
+		t.Errorf("Expected to not add change, but did.")
+	}
+}
+
+func TestNewTransactionDataSendMax_UsesAllUTXOs_AmountIsTotalMinusFee(t *testing.T) {
+	// given
+	ah := addressHelper()
+	feeRate := 5
+	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
+	path1 := NewDerivationPath(49, 0, 0, 1, 3)
+	path2 := NewDerivationPath(49, 0, 0, 0, 2)
+	utxo1 := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 20000, path1, true)
+	utxo2 := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 10000, path2, true)
+	utxos := []*UTXO{utxo1, utxo2}
+	inputAmount := utxo1.Amount + utxo2.Amount
+	totalBytes, tbErr := ah.totalBytes(utxos, address, false)
+	if tbErr != nil {
+		t.Errorf("Expected total bytes, got error: %v", tbErr)
+	}
+	expectedFeeAmount := feeRate * totalBytes // 1,125
+	expectedAmount := inputAmount - expectedFeeAmount
+
+	// when
+	data := NewTransactionDataSendingMax(address, ah.Basecoin, feeRate, 500000)
+	for _, utxo := range utxos {
+		data.AddUTXO(utxo)
+	}
+	success, err := data.Generate()
+
+	// then
+	if !success {
+		t.Errorf("Expected to generate a flat fee tx data, got error: %v", err)
+	}
+	if data.TransactionData.PaymentAddress != address {
+		t.Errorf("Expected payment address %v, got %v", address, data.TransactionData.PaymentAddress)
+	}
+	if data.TransactionData.Amount != expectedAmount {
+		t.Errorf("Expected amount %v, got %v", expectedAmount, data.TransactionData.Amount)
+	}
+	if data.TransactionData.FeeAmount != expectedFeeAmount {
+		t.Errorf("Expected flat fee amount %v, got %v", expectedFeeAmount, data.TransactionData.FeeAmount)
+	}
+	if data.TransactionData.ChangeAmount != 0 {
+		t.Errorf("Expected change amount %v, got %v", 0, data.TransactionData.ChangeAmount)
+	}
+	if data.TransactionData.shouldAddChangeToTransaction() {
+		t.Errorf("Expected to not add change, but did.")
+	}
+}
+
+func TestNewTransactionDataSendMax_JustEnoughFunds(t *testing.T) {
+	// given
+	ah := addressHelper()
+	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
+	feeRate := 5
+	path1 := NewDerivationPath(49, 0, 0, 1, 3)
+	utxo := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 670, path1, true)
+	utxos := []*UTXO{utxo}
+	inputAmount := utxo.Amount
+	totalBytes, tbErr := ah.totalBytes(utxos, address, false)
+	if tbErr != nil {
+		t.Errorf("Expected to get total bytes, got error: %v", tbErr)
+	}
+	expectedFeeAmount := feeRate * totalBytes         // 670
+	expectedAmount := inputAmount - expectedFeeAmount // 0
+
+	// when
+	data := NewTransactionDataSendingMax(address, ah.Basecoin, feeRate, 500000)
+	for _, u := range utxos {
+		data.AddUTXO(u)
+	}
+	success, err := data.Generate()
+
+	// then
+	if !success {
+		t.Errorf("Expected to generate a flat fee tx data, got error: %v", err)
+	}
+	if data.TransactionData.PaymentAddress != address {
+		t.Errorf("Expected payment address %v, got %v", address, data.TransactionData.PaymentAddress)
+	}
+	if data.TransactionData.Amount != expectedAmount {
+		t.Errorf("Expected amount %v, got %v", expectedAmount, data.TransactionData.Amount)
+	}
+	if data.TransactionData.Amount != 0 {
+		t.Errorf("Expected amount %v, got %v", 0, data.TransactionData.Amount)
+	}
+	if data.TransactionData.FeeAmount != expectedFeeAmount {
+		t.Errorf("Expected flat fee amount %v, got %v", expectedFeeAmount, data.TransactionData.FeeAmount)
+	}
+	if data.TransactionData.FeeAmount != 670 {
+		t.Errorf("Expected flat fee amount %v, got %v", 670, data.TransactionData.FeeAmount)
+	}
+	if data.TransactionData.ChangeAmount != 0 {
+		t.Errorf("Expected change amount %v, got %v", 0, data.TransactionData.ChangeAmount)
+	}
+	if data.TransactionData.shouldAddChangeToTransaction() {
+		t.Errorf("Expected to not add change, but did.")
+	}
+}
+
+func TestNewTransactionDataSendMax_InsufficientFunds(t *testing.T) {
+	// given
+	ah := addressHelper()
+	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
+	feeRate := 5
+	path1 := NewDerivationPath(39, 0, 0, 1, 3)
+	utxo := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 100, path1, true)
+	utxos := []*UTXO{utxo}
+
+	// when
+	data := NewTransactionDataSendingMax(address, ah.Basecoin, feeRate, 500000)
+	for _, u := range utxos {
+		data.AddUTXO(u)
+	}
+	success, _ := data.Generate()
+
+	// then
+	if success {
+		t.Errorf("Expected to fail with insufficient funds.")
+	}
+}
+
+func TestNewTransactionDataSendMax_ToNativeSegwit(t *testing.T) {
+	// given
+	ah := addressHelper()
+	address := "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4"
+	feeRate := 5
+	path1 := NewDerivationPath(49, 0, 0, 1, 3)
+	path2 := NewDerivationPath(49, 0, 0, 0, 2)
+	utxo1 := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 20000, path1, true)
+	utxo2 := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 10000, path2, true)
+	utxos := []*UTXO{utxo1, utxo2}
+	inputAmount := utxo1.Amount + utxo2.Amount
+	totalBytes, tbErr := ah.totalBytes(utxos, address, false) // 224
+	if tbErr != nil {
+		t.Errorf("Expected to get total bytes, got error: %v", tbErr)
+	}
+	expectedFeeAmount := feeRate * totalBytes // 1,120
+	expectedAmount := inputAmount - expectedFeeAmount
+
+	// when
+	data := NewTransactionDataSendingMax(address, ah.Basecoin, feeRate, 500000)
+	for _, utxo := range utxos {
+		data.AddUTXO(utxo)
+	}
+	success, err := data.Generate()
+
+	// then
+	if !success {
+		t.Errorf("Expected to generate a flat fee tx data, got error: %v", err)
+	}
+	if totalBytes != 224 {
+		t.Errorf("Expected %v bytes, got %v", 224, totalBytes)
+	}
+	if data.TransactionData.PaymentAddress != address {
+		t.Errorf("Expected payment address %v, got %v", address, data.TransactionData.PaymentAddress)
+	}
+	if data.TransactionData.Amount != expectedAmount {
+		t.Errorf("Expected amount %v, got %v", expectedAmount, data.TransactionData.Amount)
+	}
+	if data.TransactionData.FeeAmount != expectedFeeAmount {
+		t.Errorf("Expected flat fee amount %v, got %v", expectedFeeAmount, data.TransactionData.FeeAmount)
+	}
+	if data.TransactionData.ChangeAmount != 0 {
+		t.Errorf("Expected change amount %v, got %v", 0, data.TransactionData.ChangeAmount)
+	}
+	if data.TransactionData.shouldAddChangeToTransaction() {
+		t.Errorf("Expected to not add change, but did.")
 	}
 }

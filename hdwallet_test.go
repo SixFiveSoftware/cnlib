@@ -322,3 +322,66 @@ func TestEncryptionWithDefaultKeysEndToEnd(t *testing.T) {
 		t.Errorf("Expected %v, got %v", messageString, decryptedString)
 	}
 }
+
+func TestImportPrivateKey(t *testing.T) {
+	encodedKey := "L2uv4eejGywPPmsESp3N9Vum9HGX6gBg6RTWJ5oakN9HFTiSKB8i"
+	expectedAddress := "1Ad4RSbPrFvo4T5eRMFCoieYf9AuhYdL3h"
+
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	imported, err := wallet.importPrivateKey(encodedKey)
+
+	if err != nil {
+		t.Errorf("Expected key, got error: %v", err)
+	}
+
+	if imported.wif.String() != encodedKey {
+		t.Errorf("Expected encoded string %v, got %v", encodedKey, imported.wif.String())
+	}
+
+	if imported.Legacy != expectedAddress {
+		t.Errorf("Expected base58check address %v, got %v", expectedAddress, imported.Legacy)
+	}
+}
+
+func TestImportPrivateKeyP2SHSegwit(t *testing.T) {
+	encodedKey := "L3mDwYGp77Zjvqse4YPwbJ7R2M1Zh4vp1RM69JXhbzutVjKwwx9s"
+	expectedAddress := "3CFfFMGHUc6rj1JHuTjQYbEmDngnPQF9ev"
+
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	imported, err := wallet.importPrivateKey(encodedKey)
+
+	if err != nil {
+		t.Errorf("Expected key, got error: %v", err)
+	}
+
+	if imported.wif.String() != encodedKey {
+		t.Errorf("Expected encoded string %v, got %v", encodedKey, imported.wif.String())
+	}
+
+	if imported.LegacySegwit != expectedAddress {
+		t.Errorf("Expected base58check address %v, got %v", expectedAddress, imported.LegacySegwit)
+	}
+}
+
+func TestImportPrivateKeyNativeSegwit(t *testing.T) {
+	encodedKey := "L2hgQ3HC3Ru88Jkn5TDwReqeZPhWW4AePebUVFnEQCGJnTPQLgAv"
+	expectedAddress := "bc1q2ef8pkkefnamef2sv97dls5ktrq3jlg2ru8ceu"
+
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	imported, err := wallet.importPrivateKey(encodedKey)
+
+	if err != nil {
+		t.Errorf("Expected key, got error: %v", err)
+	}
+
+	if imported.wif.String() != encodedKey {
+		t.Errorf("Expected encoded string %v, got %v", encodedKey, imported.wif.String())
+	}
+
+	if imported.NativeSegwit != expectedAddress {
+		t.Errorf("Expected base58check address %v, got %v", expectedAddress, imported.NativeSegwit)
+	}
+}

@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcutil"
+	"github.com/btcsuite/btcutil/base58"
 	"github.com/btcsuite/btcutil/hdkeychain"
 
 	"github.com/tyler-smith/go-bip39"
@@ -19,6 +21,14 @@ type HDWallet struct {
 	Basecoin         *Basecoin
 	WalletWords      string // space-separated string of user's recovery words
 	masterPrivateKey *hdkeychain.ExtendedKey
+}
+
+// ImportedPrivateKey encapsulates the three possible receive addresses to check for funds.
+type ImportedPrivateKey struct {
+	wif          *btcutil.WIF
+	Legacy       string
+	LegacySegwit string
+	NativeSegwit string
 }
 
 // GetFullBIP39WordListString returns all 2,048 BIP39 mnemonic words as a space-separated string.
@@ -161,4 +171,27 @@ func masterPrivateKey(wordString string, basecoin *Basecoin) (*hdkeychain.Extend
 		return nil, err
 	}
 	return masterKey, nil
+}
+
+func (wallet *HDWallet) importPrivateKey(encodedKey string) (*ImportedPrivateKey, error) {
+	wif, err := btcutil.DecodeWIF(encodedKey)
+	if err != nil {
+		return nil, err
+	}
+
+	serializedPubkey := wif.SerializePubKey()
+	hash160 := btcutil.Hash160(serializedPubkey)
+	ua := NewUsableAddress(wallet, nil)
+
+	// legacy
+	legacy := base58.CheckEncode(hash160, 0)
+
+	// legacy segwit
+	ls := ua.BIP49AddressFromPubkeyHash(hash160)
+
+	// native segwit
+	ns := ua.BIP84AddressFromPubkeyHash(hash160)
+
+	retval := ImportedPrivateKey{wif: wif, Legacy: legacy, LegacySegwit: ls, NativeSegwit: ns}
+	return &retval, nil
 }

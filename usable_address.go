@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"errors"
 
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcutil"
 )
@@ -50,6 +49,19 @@ func (ua *UsableAddress) MetaAddress() *MetaAddress {
 	return &ma
 }
 
+// BIP49AddressFromPubkeyHash returns a P2SH-P2WPKH address from a pubkey's Hash160.
+func (ua *UsableAddress) BIP49AddressFromPubkeyHash(hash []byte) string {
+	scriptSig, _ := txscript.NewScriptBuilder().AddOp(txscript.OP_0).AddData(hash).Script()
+	addrHash, _ := btcutil.NewAddressScriptHash(scriptSig, ua.Wallet.Basecoin.defaultNetParams())
+	return addrHash.EncodeAddress()
+}
+
+// BIP84AddressFromPubkeyHash returns a native P2WPKH address from a pubkey's Hash160.
+func (ua *UsableAddress) BIP84AddressFromPubkeyHash(hash []byte) string {
+	addrHash, _ := btcutil.NewAddressWitnessPubKeyHash(hash, ua.Wallet.Basecoin.defaultNetParams())
+	return addrHash.EncodeAddress()
+}
+
 /// Unexposed methods
 
 func (ua *UsableAddress) generateAddress() (string, error) {
@@ -70,11 +82,7 @@ func (ua *UsableAddress) buildBIP49Address(path *DerivationPath) string {
 	ecPub := ecPriv.PubKey()
 	pubkeyBytes := ecPub.SerializeCompressed()
 	keyHash := btcutil.Hash160(pubkeyBytes)
-
-	scriptSig, _ := txscript.NewScriptBuilder().AddOp(txscript.OP_0).AddData(keyHash).Script()
-	addrHash, _ := btcutil.NewAddressScriptHash(scriptSig, &chaincfg.MainNetParams)
-
-	return addrHash.EncodeAddress()
+	return ua.BIP49AddressFromPubkeyHash(keyHash)
 }
 
 func (ua *UsableAddress) buildSegwitAddress(path *DerivationPath) string {
@@ -84,6 +92,5 @@ func (ua *UsableAddress) buildSegwitAddress(path *DerivationPath) string {
 	ecPub := ecPriv.PubKey()
 	pubkeyBytes := ecPub.SerializeCompressed()
 	keyHash := btcutil.Hash160(pubkeyBytes)
-	addrHash, _ := btcutil.NewAddressWitnessPubKeyHash(keyHash, ua.Wallet.Basecoin.defaultNetParams())
-	return addrHash.EncodeAddress()
+	return ua.BIP84AddressFromPubkeyHash(keyHash)
 }

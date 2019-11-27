@@ -93,14 +93,25 @@ func (ah *AddressHelper) HRPFromAddress(addr string) (string, error) {
 
 /// Unexposed methods
 
-func (ah *AddressHelper) bytesPerInput() uint {
-	if ah.Basecoin.Purpose == bip84purpose {
-		return p2wpkhSegwitInputSize
+func (ah *AddressHelper) bytesPerInput(utxo *UTXO) int {
+	purpose := bip49purpose
+	if utxo == nil {
+		if ah.Basecoin.Purpose == bip84purpose {
+			purpose = bip84purpose
+		}
 	}
-	return p2shSegwitInputSize
+
+	if utxo.Path.Purpose == bip84purpose {
+		purpose = bip84purpose
+	}
+
+	if purpose == bip49purpose {
+		return p2shSegwitInputSize
+	}
+	return p2wpkhSegwitInputSize
 }
 
-func (ah *AddressHelper) bytesPerChangeOuptut() uint {
+func (ah *AddressHelper) bytesPerChangeOuptut() int {
 	if ah.Basecoin.Purpose == bip84purpose {
 		return p2wpkhOutputSize
 	}
@@ -108,10 +119,12 @@ func (ah *AddressHelper) bytesPerChangeOuptut() uint {
 }
 
 // totalBytes computes number of bytes a tx will be, given number of inputs, destination address, and if includes change or not.
-func (ah *AddressHelper) totalBytes(numInputs uint16, address string, includeChange bool) (uint, error) {
-	total := uint(baseSize)
+func (ah *AddressHelper) totalBytes(utxos []*UTXO, address string, includeChange bool) (int, error) {
+	total := baseSize
 
-	total = total + (ah.bytesPerInput() * uint(numInputs))
+	for _, utxo := range utxos {
+		total += ah.bytesPerInput(utxo)
+	}
 
 	if includeChange {
 		total = total + ah.bytesPerChangeOuptut()
@@ -126,7 +139,7 @@ func (ah *AddressHelper) totalBytes(numInputs uint16, address string, includeCha
 	return total, nil
 }
 
-func (ah *AddressHelper) bytesPerOutputAddress(addr string) (uint, error) {
+func (ah *AddressHelper) bytesPerOutputAddress(addr string) (int, error) {
 	dec, decErr := btcutil.DecodeAddress(addr, ah.Basecoin.defaultNetParams())
 	if decErr != nil {
 		return 0, decErr

@@ -109,7 +109,9 @@ func TestSegwitAddressHRP(t *testing.T) {
 }
 
 func TestBytesPerInputBIP84Input(t *testing.T) {
-	bpi := addressHelperTestHelpers().bytesPerInput()
+	path := NewDerivationPath(84, 0, 0, 0, 0)
+	utxo := NewUTXO("previous txid", 0, 1, path, true)
+	bpi := addressHelperTestHelpers().bytesPerInput(utxo)
 	if bpi != p2wpkhSegwitInputSize {
 		t.Errorf("Expected %v bytes, got %v", p2wpkhSegwitInputSize, bpi)
 	}
@@ -118,7 +120,9 @@ func TestBytesPerInputBIP84Input(t *testing.T) {
 func TestBytesPerInputBIP49Input(t *testing.T) {
 	bc := NewBaseCoin(49, 0, 0)
 	ah := NewAddressHelper(bc)
-	bpi := ah.bytesPerInput()
+	path := NewDerivationPath(49, 0, 0, 0, 0)
+	utxo := NewUTXO("previous txid", 0, 1, path, true)
+	bpi := ah.bytesPerInput(utxo)
 
 	if bpi != p2shSegwitInputSize {
 		t.Errorf("Expected %v bytes, got %v", p2shSegwitInputSize, bpi)
@@ -145,10 +149,13 @@ func TestBytesPerChangeOuptutBIP49(t *testing.T) {
 func TestTotalBytes_SingleBIP49Input_TwoBIP49Outputs(t *testing.T) {
 	address := "35dKN7xvHH3xnBWUrWzJtkjfrAFXk6hyH8"
 	bc := NewBaseCoin(49, 0, 0)
-	expectedBytes := uint(166)
+	expectedBytes := 166
 	ah := NewAddressHelper(bc)
+	path := NewDerivationPath(49, 0, 0, 0, 0)
+	utxo := NewUTXO("previous txid", 0, 1, path, true)
+	utxos := []*UTXO{utxo}
 
-	bytes, err := ah.totalBytes(1, address, true)
+	bytes, err := ah.totalBytes(utxos, address, true)
 	if err != nil {
 		t.Errorf("Expcted byte count, got error: %v", err)
 	}
@@ -159,9 +166,12 @@ func TestTotalBytes_SingleBIP49Input_TwoBIP49Outputs(t *testing.T) {
 
 func TestTotalBytes_SingleBIP84Input_TwoBIP84Outputs(t *testing.T) {
 	address := "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4"
-	expectedBytes := uint(141)
+	expectedBytes := 141
+	path := NewDerivationPath(84, 0, 0, 0, 0)
+	utxo := NewUTXO("previous txid", 0, 1, path, true)
+	utxos := []*UTXO{utxo}
 
-	bytes, err := addressHelperTestHelpers().totalBytes(1, address, true)
+	bytes, err := addressHelperTestHelpers().totalBytes(utxos, address, true)
 	if err != nil {
 		t.Errorf("Expcted byte count, got error: %v", err)
 	}
@@ -173,10 +183,13 @@ func TestTotalBytes_SingleBIP84Input_TwoBIP84Outputs(t *testing.T) {
 func TestTotalBytes_SingleBIP49Input_LegacyOutput_BIP49Change(t *testing.T) {
 	address := "1LqBGSKuX5yYUonjxT5qGfpUsXKYYWeabA"
 	bc := NewBaseCoin(49, 0, 0)
-	expectedBytes := uint(168)
+	expectedBytes := 168
 	ah := NewAddressHelper(bc)
+	path := NewDerivationPath(49, 0, 0, 0, 0)
+	utxo := NewUTXO("previous txid", 0, 1, path, true)
+	utxos := []*UTXO{utxo}
 
-	bytes, err := ah.totalBytes(1, address, true)
+	bytes, err := ah.totalBytes(utxos, address, true)
 	if err != nil {
 		t.Errorf("Expcted byte count, got error: %v", err)
 	}

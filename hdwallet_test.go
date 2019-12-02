@@ -329,7 +329,7 @@ func TestImportPrivateKey(t *testing.T) {
 
 	bc := NewBaseCoin(84, 0, 0)
 	wallet := NewHDWalletFromWords(w, bc)
-	imported, err := wallet.importPrivateKey(encodedKey)
+	imported, err := wallet.ImportPrivateKey(encodedKey)
 
 	if err != nil {
 		t.Errorf("Expected key, got error: %v", err)
@@ -350,7 +350,7 @@ func TestImportPrivateKeyP2SHSegwit(t *testing.T) {
 
 	bc := NewBaseCoin(84, 0, 0)
 	wallet := NewHDWalletFromWords(w, bc)
-	imported, err := wallet.importPrivateKey(encodedKey)
+	imported, err := wallet.ImportPrivateKey(encodedKey)
 
 	if err != nil {
 		t.Errorf("Expected key, got error: %v", err)
@@ -371,7 +371,7 @@ func TestImportPrivateKeyNativeSegwit(t *testing.T) {
 
 	bc := NewBaseCoin(84, 0, 0)
 	wallet := NewHDWalletFromWords(w, bc)
-	imported, err := wallet.importPrivateKey(encodedKey)
+	imported, err := wallet.ImportPrivateKey(encodedKey)
 
 	if err != nil {
 		t.Errorf("Expected key, got error: %v", err)

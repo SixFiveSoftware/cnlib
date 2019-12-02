@@ -25,10 +25,11 @@ type HDWallet struct {
 
 // ImportedPrivateKey encapsulates the three possible receive addresses to check for funds.
 type ImportedPrivateKey struct {
-	wif          *btcutil.WIF
-	Legacy       string
-	LegacySegwit string
-	NativeSegwit string
+	wif             *btcutil.WIF
+	Legacy          string
+	LegacySegwit    string
+	NativeSegwit    string
+	PrivateKeyAsWIF string
 }
 
 // GetFullBIP39WordListString returns all 2,048 BIP39 mnemonic words as a space-separated string.
@@ -146,6 +147,30 @@ func (wallet *HDWallet) DecryptWithDefaultKey(body []byte) ([]byte, error) {
 	return Decrypt(body, privkeyBytes)
 }
 
+// ImportPrivateKey accepts an encoded private key from a paper wallet/QR code, decodes it, and returns a ref to an ImportedPrivateKey struct, or error if failed.
+func (wallet *HDWallet) ImportPrivateKey(encodedKey string) (*ImportedPrivateKey, error) {
+	wif, err := btcutil.DecodeWIF(encodedKey)
+	if err != nil {
+		return nil, err
+	}
+
+	serializedPubkey := wif.SerializePubKey()
+	hash160 := btcutil.Hash160(serializedPubkey)
+	ua := NewUsableAddress(wallet, nil)
+
+	// legacy
+	legacy := base58.CheckEncode(hash160, 0)
+
+	// legacy segwit
+	ls := ua.BIP49AddressFromPubkeyHash(hash160)
+
+	// native segwit
+	ns := ua.BIP84AddressFromPubkeyHash(hash160)
+
+	retval := ImportedPrivateKey{wif: wif, Legacy: legacy, LegacySegwit: ls, NativeSegwit: ns, PrivateKeyAsWIF: wif.String()}
+	return &retval, nil
+}
+
 /// Unexported functions
 
 func (wallet *HDWallet) metaAddress(change int, index int) *MetaAddress {
@@ -171,27 +196,4 @@ func masterPrivateKey(wordString string, basecoin *Basecoin) (*hdkeychain.Extend
 		return nil, err
 	}
 	return masterKey, nil
-}
-
-func (wallet *HDWallet) importPrivateKey(encodedKey string) (*ImportedPrivateKey, error) {
-	wif, err := btcutil.DecodeWIF(encodedKey)
-	if err != nil {
-		return nil, err
-	}
-
-	serializedPubkey := wif.SerializePubKey()
-	hash160 := btcutil.Hash160(serializedPubkey)
-	ua := NewUsableAddress(wallet, nil)
-
-	// legacy
-	legacy := base58.CheckEncode(hash160, 0)
-
-	// legacy segwit
-	ls := ua.BIP49AddressFromPubkeyHash(hash160)
-
-	// native segwit
-	ns := ua.BIP84AddressFromPubkeyHash(hash160)
-
-	retval := ImportedPrivateKey{wif: wif, Legacy: legacy, LegacySegwit: ls, NativeSegwit: ns}
-	return &retval, nil
 }

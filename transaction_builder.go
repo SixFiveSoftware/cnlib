@@ -6,6 +6,7 @@ import (
 	"errors"
 	"math"
 
+	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
@@ -25,20 +26,29 @@ func (tb transactionBuilder) buildTxFromData(data *TransactionData) (*Transactio
 	if decAddrErr != nil {
 		return nil, decAddrErr
 	}
-	txout := wire.NewTxOut(int64(data.Amount), decAddr.ScriptAddress())
+	destPkScript, err := txscript.PayToAddrScript(decAddr)
+	if err != nil {
+		return nil, err
+	}
+	txout := wire.NewTxOut(int64(data.Amount), destPkScript)
 	tx.AddTxOut(txout)
 
 	// calculate change
 	var transactionChangeMetadata *TransactionChangeMetadata
 	if data.shouldAddChangeToTransaction() {
-		changeAddr := tb.wallet.ChangeAddressForIndex(data.ChangePath.Index)
-		decChange, decChangeErr := btcutil.DecodeAddress(changeAddr.Address, data.basecoin.defaultNetParams())
+		changeMetaAddr := tb.wallet.ChangeAddressForIndex(data.ChangePath.Index)
+		changeAddr := changeMetaAddr.Address
+		decChange, decChangeErr := btcutil.DecodeAddress(changeAddr, data.basecoin.defaultNetParams())
 		if decChangeErr != nil {
 			return nil, decChangeErr
 		}
-		changeOut := wire.NewTxOut(int64(data.ChangeAmount), decChange.ScriptAddress())
+		changePkScript, err := txscript.PayToAddrScript(decChange)
+		if err != nil {
+			return nil, err
+		}
+		changeOut := wire.NewTxOut(int64(data.ChangeAmount), changePkScript)
 		tx.AddTxOut(changeOut)
-		metadata := TransactionChangeMetadata{Address: changeAddr.Address, Path: data.ChangePath, VoutIndex: 1}
+		metadata := TransactionChangeMetadata{Address: changeAddr, Path: data.ChangePath, VoutIndex: 1}
 		transactionChangeMetadata = &metadata
 	}
 
@@ -70,7 +80,7 @@ func (tb transactionBuilder) buildTxFromData(data *TransactionData) (*Transactio
 	}
 
 	// sign inputs
-	err := tb.signInputsForTx(tx, data)
+	err = tb.signInputsForTx(tx, data)
 	if err != nil {
 		return nil, err
 	}
@@ -117,18 +127,66 @@ func (tb transactionBuilder) signInputsForTx(tx *wire.MsgTx, data *TransactionDa
 			return err
 		}
 
-		sourcePkScript, err := txscript.PayToAddrScript(sourceAddress)
-		if err != nil {
-			return err
+		if _, ok := sourceAddress.(*btcutil.AddressWitnessPubKeyHash); ok {
+			err := spendSegwitInput(tx, txin, i, int64(utxo.Amount), sourceAddress, signer.derivedPrivateKey)
+			if err != nil {
+				return err
+			}
 		}
-
-		sigScript, err := txscript.SignatureScript(tx, i, sourcePkScript, txscript.SigHashAll, signer.derivedPrivateKey, false)
-		if err != nil {
-			return err
+		if _, ok := sourceAddress.(*btcutil.AddressPubKeyHash); ok {
+			err := spendKeyHashInput(tx, txin, i, int64(utxo.Amount), sourceAddress, signer.derivedPrivateKey)
+			if err != nil {
+				return err
+			}
 		}
-
-		txin.SignatureScript = sigScript
+		if _, ok := sourceAddress.(*btcutil.AddressScriptHash); ok {
+			err := spendSegwitInput(tx, txin, i, int64(utxo.Amount), sourceAddress, signer.derivedPrivateKey)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
+	return nil
+}
+
+func spendSegwitInput(tx *wire.MsgTx, txIn *wire.TxIn, idx int, amount int64, address btcutil.Address, privKey *btcec.PrivateKey) error {
+	witnessProgram, err := txscript.PayToAddrScript(address)
+	if err != nil {
+		return err
+	}
+
+	if _, ok := address.(*btcutil.AddressScriptHash); ok {
+		bldr := txscript.NewScriptBuilder()
+		bldr.AddData(witnessProgram)
+		sigScript, err := bldr.Script()
+		if err != nil {
+			return err
+		}
+		txIn.SignatureScript = sigScript
+	}
+
+	txSigHashes := txscript.NewTxSigHashes(tx)
+	witnessScript, err := txscript.WitnessSignature(tx, txSigHashes, idx, amount, witnessProgram, txscript.SigHashAll, privKey, false)
+	if err != nil {
+		return err
+	}
+
+	txIn.Witness = witnessScript
+	return nil
+}
+
+func spendKeyHashInput(tx *wire.MsgTx, txIn *wire.TxIn, idx int, amount int64, address btcutil.Address, privKey *btcec.PrivateKey) error {
+	sourcePkScript, err := txscript.PayToAddrScript(address)
+	if err != nil {
+		return err
+	}
+
+	sigScript, err := txscript.SignatureScript(tx, idx, sourcePkScript, txscript.SigHashAll, privKey, false)
+	if err != nil {
+		return err
+	}
+
+	txIn.SignatureScript = sigScript
 	return nil
 }

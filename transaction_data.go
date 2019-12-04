@@ -2,6 +2,8 @@ package cnlib
 
 import "errors"
 
+import "github.com/btcsuite/btcd/wire"
+
 /// Type Definitions
 
 // Transaction is an interface for a
@@ -193,6 +195,19 @@ func (td *TransactionData) UTXOAtIndex(index int) (*UTXO, error) {
 	return td.availableUtxos[index], nil
 }
 
+// requiredUTXOAtIndex returns a utxo that has been selected to be included in the outgoing transaction, or error if out of bounds.
+func (td *TransactionData) requiredUTXOAtIndex(index int) (*UTXO, error) {
+	if index < 0 {
+		return nil, errors.New("index must be greater than 0")
+	}
+
+	if index > len(td.requiredUtxos)-1 {
+		return nil, errors.New("index must be within range of utxos")
+	}
+
+	return td.requiredUtxos[index], nil
+}
+
 // AddUTXO Adds a utxo to the private array.
 func (t *TransactionDataStandard) AddUTXO(utxo *UTXO) {
 	t.TransactionData.AddUTXO(utxo)
@@ -337,4 +352,24 @@ func (td *TransactionData) shouldAddChangeToTransaction() bool {
 
 func (td *TransactionData) utxoCount() int {
 	return len(td.requiredUtxos)
+}
+
+func (td *TransactionData) getSuggestedSequence() uint32 {
+	if td.RBFOption == MustBeRBF {
+		return wire.MaxTxInSequenceNum - 2
+	}
+	if td.RBFOption == MustNotBeRBF {
+		return wire.MaxTxInSequenceNum
+	}
+	if td.RBFOption == AllowedToBeRBF {
+		includesUnconfirmedUTXOs := false
+		for _, utxo := range td.requiredUtxos {
+			includesUnconfirmedUTXOs = includesUnconfirmedUTXOs || !utxo.IsConfirmed
+		}
+		if includesUnconfirmedUTXOs {
+			return wire.MaxTxInSequenceNum - 2
+		}
+		return wire.MaxTxInSequenceNum
+	}
+	return wire.MaxTxInSequenceNum
 }

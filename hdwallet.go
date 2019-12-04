@@ -23,13 +23,12 @@ type HDWallet struct {
 	masterPrivateKey *hdkeychain.ExtendedKey
 }
 
-// ImportedPrivateKey encapsulates the three possible receive addresses to check for funds.
+// ImportedPrivateKey encapsulates the possible receive addresses to check for funds. When found, set that address to `SelectedAddress`.
 type ImportedPrivateKey struct {
-	wif             *btcutil.WIF
-	Legacy          string
-	LegacySegwit    string
-	NativeSegwit    string
-	PrivateKeyAsWIF string
+	wif               *btcutil.WIF
+	PossibleAddresses string // space-separated list of addresses
+	PrivateKeyAsWIF   string
+	SelectedAddress   string
 }
 
 // GetFullBIP39WordListString returns all 2,048 BIP39 mnemonic words as a space-separated string.
@@ -156,18 +155,20 @@ func (wallet *HDWallet) ImportPrivateKey(encodedKey string) (*ImportedPrivateKey
 
 	serializedPubkey := wif.SerializePubKey()
 	hash160 := btcutil.Hash160(serializedPubkey)
-	ua := NewUsableAddress(wallet, nil)
+	basecoin := NewBaseCoin(84, 0, 0)
 
 	// legacy
 	legacy := base58.CheckEncode(hash160, 0)
 
 	// legacy segwit
-	ls := ua.BIP49AddressFromPubkeyHash(hash160)
+	ls := bip49AddressFromPubkeyHash(hash160, basecoin)
 
 	// native segwit
-	ns := ua.BIP84AddressFromPubkeyHash(hash160)
+	ns := bip84AddressFromPubkeyHash(hash160, basecoin)
 
-	retval := ImportedPrivateKey{wif: wif, Legacy: legacy, LegacySegwit: ls, NativeSegwit: ns, PrivateKeyAsWIF: wif.String()}
+	addrs := []string{legacy, ls, ns}
+	joined := strings.Join(addrs, " ")
+	retval := ImportedPrivateKey{wif: wif, PossibleAddresses: joined, PrivateKeyAsWIF: wif.String(), SelectedAddress: ""}
 	return &retval, nil
 }
 
@@ -179,7 +180,7 @@ func (wallet *HDWallet) metaAddress(change int, index int) *MetaAddress {
 	}
 	c := wallet.Basecoin
 	path := NewDerivationPath(c.Purpose, c.Coin, c.Account, change, index)
-	ua := NewUsableAddress(wallet, path)
+	ua := NewUsableAddressWithDerivationPath(wallet, path)
 	ma := ua.MetaAddress()
 	return ma
 }

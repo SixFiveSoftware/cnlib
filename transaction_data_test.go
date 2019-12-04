@@ -15,7 +15,7 @@ func TestNewTransactionDataStandard_SingleOutput_SingleInput_SatisfiesAmount(t *
 	utxoAmount := 100000000 // 1.0 BTC
 	changePath := NewDerivationPath(84, 0, 0, 1, 0)
 	utxoPath := NewDerivationPath(49, 0, 0, 0, 0)
-	utxo := NewUTXO("previous txid", 0, utxoAmount, utxoPath, true)
+	utxo := NewUTXO("previous txid", 0, utxoAmount, utxoPath, nil, true)
 	utxos := []*UTXO{utxo}
 	feeRate := 30
 	totalBytes, bytesErr := addressHelper().totalBytes(utxos, address, true)
@@ -71,8 +71,8 @@ func TestTransactionDataStandard_SingleOutput_DoubleInput_WithChange(t *testing.
 	utxoAmount := 30000000           // 0.3 BTC
 	changePath := NewDerivationPath(84, 0, 0, 1, 0)
 	utxoPath := NewDerivationPath(49, 0, 0, 0, 0)
-	utxo1 := NewUTXO("previous txid", 0, utxoAmount, utxoPath, true)
-	utxo2 := NewUTXO("previous txid", 1, utxoAmount, utxoPath, true)
+	utxo1 := NewUTXO("previous txid", 0, utxoAmount, utxoPath, nil, true)
+	utxo2 := NewUTXO("previous txid", 1, utxoAmount, utxoPath, nil, true)
 	utxos := []*UTXO{utxo1, utxo2}
 	feeRate := 30
 	totalBytes, tbErr := ah.totalBytes(utxos, address, true)
@@ -131,7 +131,7 @@ func TestNewTransactionDataStandard_SingleInput_SingleOutput_NoChange(t *testing
 	utxoAmount := 50004020           // 0.50004020 BTC
 	changePath := NewDerivationPath(84, 0, 0, 1, 0)
 	utxoPath := NewDerivationPath(49, 0, 0, 0, 0)
-	utxo := NewUTXO("previous txid", 0, utxoAmount, utxoPath, true)
+	utxo := NewUTXO("previous txid", 0, utxoAmount, utxoPath, nil, true)
 	utxos := []*UTXO{utxo}
 	feeRate := 30
 	totalBytes, tbErr := ah.totalBytes(utxos, address, false)
@@ -191,8 +191,8 @@ func TestNewTransactionStandard_SingleOutput_DoubleInput_NoChange(t *testing.T) 
 	utxoAmount2 := 30005000   // 0.30005000 BTC
 	changePath := NewDerivationPath(84, 0, 0, 1, 0)
 	utxoPath := NewDerivationPath(49, 0, 0, 0, 0)
-	utxo1 := NewUTXO("previous txid", 0, utxoAmount1, utxoPath, true)
-	utxo2 := NewUTXO("previous txid", 1, utxoAmount2, utxoPath, true)
+	utxo1 := NewUTXO("previous txid", 0, utxoAmount1, utxoPath, nil, true)
+	utxo2 := NewUTXO("previous txid", 1, utxoAmount2, utxoPath, nil, true)
 	utxos := []*UTXO{utxo1, utxo2}
 	feeRate := 30
 	totalBytes, tbErr := ah.totalBytes(utxos, address, false)
@@ -252,8 +252,8 @@ func TestNewTransactionStandard_SingleOutput_DoubleInput_InsufficientFunds(t *te
 	utxoAmount2 := 10000000   // 0.10000000 BTC
 	changePath := NewDerivationPath(84, 0, 0, 1, 0)
 	utxoPath := NewDerivationPath(49, 0, 0, 0, 0)
-	utxo1 := NewUTXO("previous txid", 0, utxoAmount1, utxoPath, true)
-	utxo2 := NewUTXO("previous txid", 1, utxoAmount2, utxoPath, true)
+	utxo1 := NewUTXO("previous txid", 0, utxoAmount1, utxoPath, nil, true)
+	utxo2 := NewUTXO("previous txid", 1, utxoAmount2, utxoPath, nil, true)
 	utxos := []*UTXO{utxo1, utxo2}
 	feeRate := 30
 
@@ -279,8 +279,8 @@ func TestNewTransactionDataStandard_SingleBIP84Output_SingleBIP49Input(t *testin
 	utxoAmount2 := 30000000   // 0.3 BTC
 	changePath := NewDerivationPath(84, 0, 0, 1, 0)
 	utxoPath := NewDerivationPath(49, 0, 0, 0, 0)
-	utxo1 := NewUTXO("previous txid", 0, utxoAmount1, utxoPath, true)
-	utxo2 := NewUTXO("previous txid", 1, utxoAmount2, utxoPath, true)
+	utxo1 := NewUTXO("previous txid", 0, utxoAmount1, utxoPath, nil, true)
+	utxo2 := NewUTXO("previous txid", 1, utxoAmount2, utxoPath, nil, true)
 	utxos := []*UTXO{utxo1, utxo2}
 	feeRate := 30
 	totalBytes, tbErr := ah.totalBytes(utxos, address, true)
@@ -338,9 +338,9 @@ func TestNewTransactionDataStandard_CostOfChangeIsBeneficial(t *testing.T) {
 	ah := addressHelperTestHelpers()
 	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
 	path1 := NewDerivationPath(49, 0, 0, 1, 3)
-	utxo1 := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 100000, path1, true)
+	utxo1 := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 100000, path1, nil, true)
 	path2 := NewDerivationPath(49, 0, 0, 0, 2)
-	utxo2 := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 100000, path2, true)
+	utxo2 := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 100000, path2, nil, true)
 	utxos := []*UTXO{utxo1, utxo2}
 	changePath := NewDerivationPath(49, 0, 0, 1, 5)
 	feeRate := 10
@@ -431,9 +431,9 @@ func TestNewTransactionDataFlatFee_WithChange(t *testing.T) {
 	path1 := NewDerivationPath(49, 0, 0, 1, 3)
 	path2 := NewDerivationPath(49, 0, 0, 0, 2)
 	path3 := NewDerivationPath(49, 0, 0, 0, 8)
-	utxo1 := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 2221, path1, true)
-	utxo2 := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 15935, path2, true)
-	utxo3 := NewUTXO("3013fcd9ea8fd65a69709f07fed2c1fd765d57664486debcb72ef47f2ea415f6", 0, 15526, path3, true)
+	utxo1 := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 2221, path1, nil, true)
+	utxo2 := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 15935, path2, nil, true)
+	utxo3 := NewUTXO("3013fcd9ea8fd65a69709f07fed2c1fd765d57664486debcb72ef47f2ea415f6", 0, 15526, path3, nil, true)
 	utxos := []*UTXO{utxo1, utxo2, utxo3}
 	changePath := NewDerivationPath(49, 0, 0, 1, 5)
 	paymentAmount := 20000
@@ -474,8 +474,8 @@ func TestNewTransactionDataFlatFee_DustyTransaction_NoChange(t *testing.T) {
 	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
 	path1 := NewDerivationPath(49, 0, 0, 1, 3)
 	path2 := NewDerivationPath(49, 0, 0, 0, 2)
-	utxo1 := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 20000, path1, true)
-	utxo2 := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 10100, path2, true)
+	utxo1 := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 20000, path1, nil, true)
+	utxo2 := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 10100, path2, nil, true)
 	utxos := []*UTXO{utxo1, utxo2}
 	changePath := NewDerivationPath(49, 0, 0, 1, 5)
 	paymentAmount := 20000
@@ -520,8 +520,8 @@ func TestNewTransactionDataSendMax_UsesAllUTXOs_AmountIsTotalMinusFee(t *testing
 	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
 	path1 := NewDerivationPath(49, 0, 0, 1, 3)
 	path2 := NewDerivationPath(49, 0, 0, 0, 2)
-	utxo1 := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 20000, path1, true)
-	utxo2 := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 10000, path2, true)
+	utxo1 := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 20000, path1, nil, true)
+	utxo2 := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 10000, path2, nil, true)
 	utxos := []*UTXO{utxo1, utxo2}
 	inputAmount := utxo1.Amount + utxo2.Amount
 	totalBytes, tbErr := ah.totalBytes(utxos, address, false)
@@ -565,7 +565,7 @@ func TestNewTransactionDataSendMax_JustEnoughFunds(t *testing.T) {
 	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
 	feeRate := 5
 	path1 := NewDerivationPath(49, 0, 0, 1, 3)
-	utxo := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 670, path1, true)
+	utxo := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 670, path1, nil, true)
 	utxos := []*UTXO{utxo}
 	inputAmount := utxo.Amount
 	totalBytes, tbErr := ah.totalBytes(utxos, address, false)
@@ -615,7 +615,7 @@ func TestNewTransactionDataSendMax_InsufficientFunds(t *testing.T) {
 	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
 	feeRate := 5
 	path1 := NewDerivationPath(39, 0, 0, 1, 3)
-	utxo := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 100, path1, true)
+	utxo := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 100, path1, nil, true)
 	utxos := []*UTXO{utxo}
 
 	// when
@@ -638,8 +638,8 @@ func TestNewTransactionDataSendMax_ToNativeSegwit(t *testing.T) {
 	feeRate := 5
 	path1 := NewDerivationPath(49, 0, 0, 1, 3)
 	path2 := NewDerivationPath(49, 0, 0, 0, 2)
-	utxo1 := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 20000, path1, true)
-	utxo2 := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 10000, path2, true)
+	utxo1 := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 20000, path1, nil, true)
+	utxo2 := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 10000, path2, nil, true)
 	utxos := []*UTXO{utxo1, utxo2}
 	inputAmount := utxo1.Amount + utxo2.Amount
 	totalBytes, tbErr := ah.totalBytes(utxos, address, false) // 224

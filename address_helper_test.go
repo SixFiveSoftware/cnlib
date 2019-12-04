@@ -110,7 +110,7 @@ func TestSegwitAddressHRP(t *testing.T) {
 
 func TestBytesPerInputBIP84Input(t *testing.T) {
 	path := NewDerivationPath(84, 0, 0, 0, 0)
-	utxo := NewUTXO("previous txid", 0, 1, path, true)
+	utxo := NewUTXO("previous txid", 0, 1, path, nil, true)
 	bpi := addressHelperTestHelpers().bytesPerInput(utxo)
 	if bpi != p2wpkhSegwitInputSize {
 		t.Errorf("Expected %v bytes, got %v", p2wpkhSegwitInputSize, bpi)
@@ -121,7 +121,7 @@ func TestBytesPerInputBIP49Input(t *testing.T) {
 	bc := NewBaseCoin(49, 0, 0)
 	ah := NewAddressHelper(bc)
 	path := NewDerivationPath(49, 0, 0, 0, 0)
-	utxo := NewUTXO("previous txid", 0, 1, path, true)
+	utxo := NewUTXO("previous txid", 0, 1, path, nil, true)
 	bpi := ah.bytesPerInput(utxo)
 
 	if bpi != p2shSegwitInputSize {
@@ -152,7 +152,7 @@ func TestTotalBytes_SingleBIP49Input_TwoBIP49Outputs(t *testing.T) {
 	expectedBytes := 166
 	ah := NewAddressHelper(bc)
 	path := NewDerivationPath(49, 0, 0, 0, 0)
-	utxo := NewUTXO("previous txid", 0, 1, path, true)
+	utxo := NewUTXO("previous txid", 0, 1, path, nil, true)
 	utxos := []*UTXO{utxo}
 
 	bytes, err := ah.totalBytes(utxos, address, true)
@@ -168,7 +168,7 @@ func TestTotalBytes_SingleBIP84Input_TwoBIP84Outputs(t *testing.T) {
 	address := "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4"
 	expectedBytes := 141
 	path := NewDerivationPath(84, 0, 0, 0, 0)
-	utxo := NewUTXO("previous txid", 0, 1, path, true)
+	utxo := NewUTXO("previous txid", 0, 1, path, nil, true)
 	utxos := []*UTXO{utxo}
 
 	bytes, err := addressHelperTestHelpers().totalBytes(utxos, address, true)
@@ -186,7 +186,7 @@ func TestTotalBytes_SingleBIP49Input_LegacyOutput_BIP49Change(t *testing.T) {
 	expectedBytes := 168
 	ah := NewAddressHelper(bc)
 	path := NewDerivationPath(49, 0, 0, 0, 0)
-	utxo := NewUTXO("previous txid", 0, 1, path, true)
+	utxo := NewUTXO("previous txid", 0, 1, path, nil, true)
 	utxos := []*UTXO{utxo}
 
 	bytes, err := ah.totalBytes(utxos, address, true)

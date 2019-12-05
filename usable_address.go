@@ -79,9 +79,9 @@ func bip84AddressFromPubkeyHash(hash []byte, basecoin *Basecoin) string {
 func (ua *UsableAddress) generateAddress() (string, error) {
 	purpose := ua.DerivationPath.Purpose
 
-	if purpose == 84 {
+	if purpose == bip84purpose {
 		return ua.buildSegwitAddress(ua.DerivationPath), nil
-	} else if purpose == 49 {
+	} else if purpose == bip49purpose {
 		return ua.buildBIP49Address(ua.DerivationPath), nil
 	}
 	return "", errors.New("Unrecognized Address Purpose")

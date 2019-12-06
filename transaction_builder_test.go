@@ -164,7 +164,7 @@ func TestTransactionBuilder_BuildsNativeSegwitTransaction(t *testing.T) {
 func TestTransactionBuilder_BuildP2KH_NoChange(t *testing.T) {
 	basecoin := NewBaseCoin(49, 0, 0)
 	path := NewDerivationPath(49, 0, 0, 1, 7)
-	utxo := NewUTXO("f14914f76ad26e0c1aa5a68c82b021b854c93850fde12f8e3188c14be6dc384e", 1, 33253, path, nil, true)
+	utxo := NewUTXO("f14914f76ad26e0c1aa5a68c82b021b854c93850fde12f8e3188c14be6dc384e", 1, 33255, path, nil, true)
 	amount := 23147
 	feeAmount := 10108
 	changePath := NewDerivationPath(49, 0, 0, 1, 2)
@@ -175,10 +175,11 @@ func TestTransactionBuilder_BuildP2KH_NoChange(t *testing.T) {
 	success, err := data.Generate()
 	if !success {
 		t.Errorf("Expected to generate transaction, got error: %v", err)
+		return
 	}
 
-	expectedEncodedTx := "010000000001014e38dce64bc188318e2fe1fd5038c954b821b0828ca6a51a0c6ed26af71449f10100000017160014b4381165b195b3286079d46eb2dc8058e6f02241ffffffff016b5a0000000000001976a914b4716e71b900b957e49f749c8432b910417788e888ac02483045022100f8a78ff2243c591ffb7af46ed670b173e5e5dd3f19853493f5c3bda85425f8ef02203d152fdc632388da527c4a58b796a8a40d1a9d15176d80dedfef96a38ecc9ae7012103a45ef894ab9e6f2e55683561181be9e69b20207af746d60b95fab33476dc932420a10700"
-	expectedTxid := "77cf4bddf3d133fc37a08e18c47607702e0aec095606f364081d22a4680c3e97"
+	expectedEncodedTx := "010000000001014e38dce64bc188318e2fe1fd5038c954b821b0828ca6a51a0c6ed26af71449f10100000017160014b4381165b195b3286079d46eb2dc8058e6f02241fdffffff016b5a0000000000001976a914b4716e71b900b957e49f749c8432b910417788e888ac024730440220178747a1153ea347c4c5596a7241d8d68df62adef76d44da850da2cc9382faa002207c209d0319a9593ce4f36599dedab9c60d86d7ea826a239f654e305ebf10a1e1012103a45ef894ab9e6f2e55683561181be9e69b20207af746d60b95fab33476dc932420a10700"
+	expectedTxid := "86a9dc5bef7933df26d2b081376084e456a5bd3c2f2df28e758ff062b05a8c17"
 
 	wallet := NewHDWalletFromWords(w, basecoin)
 

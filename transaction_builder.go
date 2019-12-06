@@ -20,16 +20,18 @@ type transactionBuilder struct {
 }
 
 type cnSecretsSource struct {
-	wallet        *HDWallet
-	usableAddress *UsableAddress
+	wallet          *HDWallet
+	usableAddresses map[string]*UsableAddress
 }
 
 func (s cnSecretsSource) GetKey(addr btcutil.Address) (*btcec.PrivateKey, bool, error) {
-	return s.usableAddress.derivedPrivateKey, true, nil
+	script := s.usableAddresses[addr.EncodeAddress()]
+	return script.derivedPrivateKey, true, nil
 }
 
 func (s cnSecretsSource) GetScript(addr btcutil.Address) ([]byte, error) {
-	pk := s.usableAddress.derivedPrivateKey
+	script := s.usableAddresses[addr.EncodeAddress()]
+	pk := script.derivedPrivateKey
 	hash := btcutil.Hash160(pk.PubKey().SerializeCompressed())
 	scriptSig, err := txscript.NewScriptBuilder().AddOp(txscript.OP_0).AddData(hash).Script()
 	if err != nil {
@@ -132,6 +134,7 @@ func (tb transactionBuilder) buildTxFromData(data *TransactionData) (*Transactio
 func (tb transactionBuilder) signInputsForTx(tx *wire.MsgTx, data *TransactionData) error {
 	prevPkScripts := make([][]byte, data.utxoCount())
 	inputValues := make([]btcutil.Amount, data.utxoCount())
+	secretsSource := cnSecretsSource{wallet: tb.wallet, usableAddresses: make(map[string]*UsableAddress)}
 
 	for i := range tx.TxIn {
 		utxo, _ := data.requiredUTXOAtIndex(i)
@@ -166,23 +169,26 @@ func (tb transactionBuilder) signInputsForTx(tx *wire.MsgTx, data *TransactionDa
 
 		prevPkScripts[i] = pkScript
 		inputValues[i] = btcutil.Amount(utxo.Amount)
+		secretsSource.usableAddresses[address] = signer
+	}
 
-		source := cnSecretsSource{wallet: tb.wallet, usableAddress: signer}
-		scriptsErr := txauthor.AddAllInputScripts(tx, prevPkScripts, inputValues, source)
-		if scriptsErr != nil {
-			return scriptsErr
-		}
+	scriptsErr := txauthor.AddAllInputScripts(tx, prevPkScripts, inputValues, secretsSource)
+	if scriptsErr != nil {
+		return scriptsErr
+	}
 
-		// verify
+	// verify
+	for i := range tx.TxIn {
 		flags := txscript.StandardVerifyFlags
-		vm, verErr := txscript.NewEngine(pkScript, tx, i, flags, nil, nil, int64(utxo.Amount))
+		pkScript := prevPkScripts[i]
+		inputValue := inputValues[i]
+		vm, verErr := txscript.NewEngine(pkScript, tx, i, flags, nil, nil, int64(inputValue))
 		if verErr != nil {
 			return verErr
 		}
 		if vmErr := vm.Execute(); vmErr != nil {
 			return vmErr
 		}
-
 	}
 
 	return nil

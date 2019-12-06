@@ -182,3 +182,73 @@ func TestTransationBuilder_BuildSingleUTXO(t *testing.T) {
 	assert.Equal(t, 0, meta.TransactionChangeMetadata.Path.Index)
 	assert.Equal(t, changeAmount, data.TransactionData.ChangeAmount)
 }
+
+func TestTransactionBuilder_TestNet(t *testing.T) {
+	basecoin := NewBaseCoin(49, 1, 0)
+	path := NewDerivationPath(49, 1, 0, 0, 0)
+	utxo := NewUTXO("1cfd000efbe248c48b499b0a5d76ea7687ee76cad8481f71277ee283df32af26", 0, 1250000000, path, nil, true)
+	amount := 9523810
+	feeAmount := 830
+	changeAmount := 1240475360
+	changePath := NewDerivationPath(49, 1, 0, 1, 0)
+	toAddress := "2N8o4Mu5PRAR27TC2eai62CRXarTbQmjyCx"
+
+	data := NewTransactionDataFlatFee(toAddress, basecoin, amount, feeAmount, changePath, 644)
+	data.AddUTXO(utxo)
+	success, err := data.Generate()
+
+	assert.True(t, success)
+	assert.Nil(t, err)
+
+	expectedEncodedTx := "0100000000010126af32df83e27e27711f48d8ca76ee8776ea765d0a9b498bc448e2fb0e00fd1c000000001716001438971f73930f6c141d977ac4fd4a727c854935b3fdffffff02625291000000000017a914aa8f293a04a7df8794b743e14ffb96c2a30a1b2787e026f0490000000017a914251dd11457a259c3ba47e5cca3717fe4214e02988702473044022070fcdf8a06f3c78b37de8f7ddc7cf5980ffde68a1cf467f97884a87dc788f82b022036ee54919d02ff02b63c1f01a383ecc66bed85540f728cabf103945b06e42d03012103a1af804ac108a8a51782198c2d034b28bf90c8803f5a53f76276fa69a4eae77f84020000"
+	expectedTxid := "5eb44c7faaa9c17c886588a1e20461d60fbfe1e504e7bac5af3469fdd9039837"
+	expectedChangeAddress := "2MvdUi5o3f2tnEFh9yGvta6FzptTZtkPJC8"
+
+	wallet := NewHDWalletFromWords(words, basecoin)
+	builder := transactionBuilder{wallet: wallet}
+	meta, err := builder.buildTxFromData(data.TransactionData)
+
+	assert.Nil(t, err)
+	assert.Equal(t, toAddress, data.TransactionData.PaymentAddress)
+	assert.Equal(t, expectedEncodedTx, meta.EncodedTx)
+	assert.Equal(t, expectedTxid, meta.Txid)
+	assert.Equal(t, expectedChangeAddress, meta.TransactionChangeMetadata.Address)
+	assert.Equal(t, 1, meta.TransactionChangeMetadata.VoutIndex)
+	assert.Equal(t, 0, meta.TransactionChangeMetadata.Path.Index)
+	assert.Equal(t, changeAmount, data.TransactionData.ChangeAmount)
+}
+
+func TestTransactionBuilder_SendToNativeSegwit_BuildsProperly(t *testing.T) {
+	basecoin := NewBaseCoin(49, 0, 0)
+	path := NewDerivationPath(49, 0, 0, 0, 80)
+	utxo := NewUTXO("94b5bcfbd52a405b291d906e636c8e133407e68a75b0a1ccc492e131ff5d8f90", 0, 10261, path, nil, true)
+	amount := 5000
+	feeAmount := 1000
+	changeAmount := 4261
+	changePath := NewDerivationPath(49, 0, 0, 1, 102)
+	toAddress := "bc1ql2sdag2nm9csz4wmlj735jxw88ym3yukyzmrpj"
+
+	data := NewTransactionDataFlatFee(toAddress, basecoin, amount, feeAmount, changePath, 500000)
+	data.AddUTXO(utxo)
+	success, err := data.Generate()
+
+	assert.True(t, success)
+	assert.Nil(t, err)
+
+	expectedEncodedTx := "01000000000101908f5dff31e192c4cca1b0758ae60734138e6c636e901d295b402ad5fbbcb594000000001716001442288ee31111f7187e8cfe8c82917c4734da4c2efdffffff028813000000000000160014faa0dea153d9710155dbfcbd1a48ce39c9b89396a51000000000000017a914aa71651e8f7c618a4576873254ec80c4dfaa068b87024830450221008dfac831b8a958ece0e4a55271a9d013cdc7239792ec3f896af90370c475d3d502201f1d6d9a0ac62fd21be6bfc4a1ad92f03354f65f64258a0f65247e337bf8faee01210270d4003d27b5340df1895ef3a5aee2ae2fe3ed7383c01ba623723e702b6c83c120a10700"
+	expectedTxid := "1f1ffca0eda219b09116743d2c9b9dcf8eefd10d240bdc4e66678d72a6e4614d"
+	expectedChangeAddress := "3HEEdyeVwoGZf86jq8ovUhw9FiXkwCdY79"
+
+	wallet := NewHDWalletFromWords(words, basecoin)
+	builder := transactionBuilder{wallet: wallet}
+	meta, err := builder.buildTxFromData(data.TransactionData)
+
+	assert.Nil(t, err)
+	assert.Equal(t, toAddress, data.TransactionData.PaymentAddress)
+	assert.Equal(t, expectedEncodedTx, meta.EncodedTx)
+	assert.Equal(t, expectedTxid, meta.Txid)
+	assert.Equal(t, expectedChangeAddress, meta.TransactionChangeMetadata.Address)
+	assert.Equal(t, 1, meta.TransactionChangeMetadata.VoutIndex)
+	assert.Equal(t, 102, meta.TransactionChangeMetadata.Path.Index)
+	assert.Equal(t, changeAmount, data.TransactionData.ChangeAmount)
+}

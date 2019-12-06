@@ -170,7 +170,7 @@ func TestTransationBuilder_BuildSingleUTXO(t *testing.T) {
 	expectedTxid := "221ced4e8784290dea336afa1b0a06fa868812e51abbdca3126ce8d99335a6e2"
 	expectedChangeAddress := "34K56kSjgUCUSD8GTtuF7c9Zzwokbs6uZ7"
 
-	wallet := NewHDWalletFromWords(words, basecoin)
+	wallet := NewHDWalletFromWords(w, basecoin)
 	builder := transactionBuilder{wallet: wallet}
 	meta, err := builder.buildTxFromData(data.TransactionData)
 
@@ -204,7 +204,7 @@ func TestTransactionBuilder_TestNet(t *testing.T) {
 	expectedTxid := "5eb44c7faaa9c17c886588a1e20461d60fbfe1e504e7bac5af3469fdd9039837"
 	expectedChangeAddress := "2MvdUi5o3f2tnEFh9yGvta6FzptTZtkPJC8"
 
-	wallet := NewHDWalletFromWords(words, basecoin)
+	wallet := NewHDWalletFromWords(w, basecoin)
 	builder := transactionBuilder{wallet: wallet}
 	meta, err := builder.buildTxFromData(data.TransactionData)
 
@@ -239,7 +239,7 @@ func TestTransactionBuilder_SendToNativeSegwit_BuildsProperly(t *testing.T) {
 	expectedTxid := "1f1ffca0eda219b09116743d2c9b9dcf8eefd10d240bdc4e66678d72a6e4614d"
 	expectedChangeAddress := "3HEEdyeVwoGZf86jq8ovUhw9FiXkwCdY79"
 
-	wallet := NewHDWalletFromWords(words, basecoin)
+	wallet := NewHDWalletFromWords(w, basecoin)
 	builder := transactionBuilder{wallet: wallet}
 	meta, err := builder.buildTxFromData(data.TransactionData)
 

@@ -1,6 +1,7 @@
 package cnlib
 
 import "testing"
+import "github.com/stretchr/testify/assert"
 
 func TestTransactionBuilderBuildsTxCorrect(t *testing.T) {
 	basecoin := NewBaseCoin(49, 0, 0)
@@ -14,9 +15,10 @@ func TestTransactionBuilderBuildsTxCorrect(t *testing.T) {
 
 	data := NewTransactionDataFlatFee(toAddress, basecoin, amount, feeAmount, changePath, 539943)
 	data.AddUTXO(utxo)
-	if ok, err := data.Generate(); !ok {
-		t.Errorf("Expected to generate transaction, got error: %v", err)
-	}
+	success, err := data.Generate()
+
+	assert.True(t, success)
+	assert.Nil(t, err)
 
 	expectedEncodedTx := "01000000000101878fc7978e6b76b5b959e791320174997af9888c9861c6fd17dc3f99feda081a0100000017160014509060a6bedf13087124c0aeafc6e3db4e1e9a08fdffffff02103500000000000017a9146daec6ddb6faaf01f83f515045822a94d0c2331e87804b2a000000000017a914e0bc3e6f5f4080b4f007c6307ba579595e459a0687024730440220031851e7fc75043bfa4bb7234478408fd024a50088fee8e16953d347bcfc37ae022050604330a862f1e6d3d2941e0bc5911d3b2f55c8e396e4d0d8c43acbf7e66f16012103d447f34dd13359a8fc64ed3977fcecea3f6802f842f9a9f857de07453b715735273d0800"
 	expectedTxid := "20d9d7eae4283573e042de272c0fc6af7df5a1100c4871127fa07c9022da1945"
@@ -26,32 +28,16 @@ func TestTransactionBuilderBuildsTxCorrect(t *testing.T) {
 
 	builder := transactionBuilder{wallet: wallet}
 	meta, err := builder.buildTxFromData(data.TransactionData)
-	if err != nil {
-		t.Errorf("Expected to build tx metadata, got error: %v", err)
-		return
-	}
 
-	if data.TransactionData.PaymentAddress != toAddress {
-		t.Errorf("Expected toAddress to be %v, got %v", toAddress, data.TransactionData.PaymentAddress)
-	}
-	if data.TransactionData.ChangeAmount != changeAmount {
-		t.Errorf("Expected change amount to be %v, got %v", changeAmount, data.TransactionData.ChangeAmount)
-	}
-	if meta.EncodedTx != expectedEncodedTx {
-		t.Errorf("Expected encoded tx to be %v,\ngot %v", expectedEncodedTx, meta.EncodedTx)
-	}
-	if meta.Txid != expectedTxid {
-		t.Errorf("Expected txid to be %v,\ngot %v", expectedTxid, meta.Txid)
-	}
-	if meta.TransactionChangeMetadata.VoutIndex != 1 {
-		t.Errorf("Expected change vout index to be %v, got %v", 1, meta.VoutIndex)
-	}
-	if meta.TransactionChangeMetadata.Path.Index != 56 {
-		t.Errorf("Expected change path index to be %v, got %v", 56, meta.TransactionChangeMetadata.Path.Index)
-	}
-	if meta.TransactionChangeMetadata.Address != expectedChangeAddress {
-		t.Errorf("Expected change address to be %v, got %v", expectedChangeAddress, meta.TransactionChangeMetadata.Address)
-	}
+	assert.Nil(t, err)
+
+	assert.Equal(t, toAddress, data.TransactionData.PaymentAddress)
+	assert.Equal(t, changeAmount, data.TransactionData.ChangeAmount)
+	assert.Equal(t, expectedEncodedTx, meta.EncodedTx)
+	assert.Equal(t, expectedTxid, meta.Txid)
+	assert.Equal(t, 1, meta.TransactionChangeMetadata.VoutIndex)
+	assert.Equal(t, 56, meta.TransactionChangeMetadata.Path.Index)
+	assert.Equal(t, expectedChangeAddress, meta.TransactionChangeMetadata.Address)
 }
 
 func TestTransactionBuilder_TwoInputs_BuildsTransaction(t *testing.T) {
@@ -69,9 +55,10 @@ func TestTransactionBuilder_TwoInputs_BuildsTransaction(t *testing.T) {
 	data := NewTransactionDataFlatFee(toAddress, basecoin, amount, feeAmount, changePath, 540220)
 	data.AddUTXO(utxo1)
 	data.AddUTXO(utxo2)
-	if ok, err := data.Generate(); !ok {
-		t.Errorf("Expected to generate transaction, got error: %v", err)
-	}
+	success, err := data.Generate()
+
+	assert.True(t, success)
+	assert.Nil(t, err)
 
 	expectedEncodedTx := "01000000000102f912d392d48eec83d0d642a78b433b24d0c3188baf13f4d769233a965091cc24010000001716001436386ac950d557ae06bfffc51e7b8fa08474c05ffdffffff480aacb2cd21a7ed718fc550c158539617d08de86dc8c15eaa8890fc201c61ed010000001716001480e1e7dc2f6436a60abec5e9e7f6b62b0b9985c4fdffffff02c0c62d000000000017a914795c7bc23aebac7ddea222bb13c5357b32ed0cd487c63a01000000000017a914a4a2fab6264d22efbfc997f30738ccc6db0f8c058702483045022100be58ec4344d27e7a9a014703f3c2b7ac2c284d7fb933c0fea71a266b3d19c7980220149fb4345f5612f080ee2f4e3c45138d2e054141f567e2b3ce024daa909efbec0121027c3fde52baba263e526ee5acc051f7fd69000eb633b8cf7decd1334db8fb44ee02483045022100c8303887f614e851c9dafe26a952ec1593af9f88b7587f66fa18a6089c59be7b02200fcee28275114efde7ca62f6c24d14552c38f211b4c3790c679f48a9ab1972d4012103cbd9a8066a39e1d05ec26b72116e84b8b852b6784a6359ebb35f5794445245883c3e0800"
 	expectedTxid := "f94e7111736dd2a5fd1c5bbcced153f90d17ee1b032f166dda785354f4063651"
@@ -81,32 +68,16 @@ func TestTransactionBuilder_TwoInputs_BuildsTransaction(t *testing.T) {
 
 	builder := transactionBuilder{wallet: wallet}
 	meta, err := builder.buildTxFromData(data.TransactionData)
-	if err != nil {
-		t.Errorf("Expected to build tx metadata, got error: %v", err)
-		return
-	}
 
-	if data.TransactionData.PaymentAddress != toAddress {
-		t.Errorf("Expected toAddress to be %v, got %v", toAddress, data.TransactionData.PaymentAddress)
-	}
-	if data.TransactionData.ChangeAmount != changeAmount {
-		t.Errorf("Expected change amount to be %v, got %v", changeAmount, data.TransactionData.ChangeAmount)
-	}
-	if meta.EncodedTx != expectedEncodedTx {
-		t.Errorf("Expected encoded tx to be %v,\ngot %v", expectedEncodedTx, meta.EncodedTx)
-	}
-	if meta.Txid != expectedTxid {
-		t.Errorf("Expected txid to be %v,\ngot %v", expectedTxid, meta.Txid)
-	}
-	if meta.TransactionChangeMetadata.VoutIndex != 1 {
-		t.Errorf("Expected change vout index to be %v, got %v", 1, meta.VoutIndex)
-	}
-	if meta.TransactionChangeMetadata.Path.Index != 58 {
-		t.Errorf("Expected change path index to be %v, got %v", 58, meta.TransactionChangeMetadata.Path.Index)
-	}
-	if meta.TransactionChangeMetadata.Address != expectedChangeAddress {
-		t.Errorf("Expected change address to be %v, got %v", expectedChangeAddress, meta.TransactionChangeMetadata.Address)
-	}
+	assert.Nil(t, err)
+
+	assert.Equal(t, toAddress, data.TransactionData.PaymentAddress)
+	assert.Equal(t, changeAmount, data.TransactionData.ChangeAmount)
+	assert.Equal(t, expectedEncodedTx, meta.EncodedTx)
+	assert.Equal(t, expectedTxid, meta.Txid)
+	assert.Equal(t, 1, meta.TransactionChangeMetadata.VoutIndex)
+	assert.Equal(t, 58, meta.TransactionChangeMetadata.Path.Index)
+	assert.Equal(t, expectedChangeAddress, meta.TransactionChangeMetadata.Address)
 }
 
 func TestTransactionBuilder_BuildsNativeSegwitTransaction(t *testing.T) {
@@ -121,9 +92,10 @@ func TestTransactionBuilder_BuildsNativeSegwitTransaction(t *testing.T) {
 
 	data := NewTransactionDataFlatFee(toAddress, basecoin, amount, feeAmount, changePath, 590582)
 	data.AddUTXO(utxo)
-	if ok, err := data.Generate(); !ok {
-		t.Errorf("Expected to generate transaction, got error: %v", err)
-	}
+	success, err := data.Generate()
+
+	assert.True(t, success)
+	assert.Nil(t, err)
 
 	expectedEncodedTx := "01000000000101699a3389145d5c84658eb362d714f10b2f0ffdf758ca0d1aa0ac2d1fed9b9aa80000000000fdffffff021b26000000000000160014933c5165df610846d08f026d18332610c13eef7fb04f0100000000001600144227d834f1aae95273f0c87495f4ff0cb366545202483045022100b232240638739a01414442f38f5e2747c891746597edaffbb0120b89120d12fd02201f5de6f8b938492c28459d07f5824fdddd0b869e522680429ca7b08515cd6eaf012103e775fd51f0dfb8cd865d9ff1cca2a158cf651fe997fdc9fee9c1d3b5e995ea77f6020900"
 	expectedTxid := "fe7f9a6de3203eb300cc66159e762251d675b5555dbd215c3574e75a762ca402"
@@ -133,32 +105,16 @@ func TestTransactionBuilder_BuildsNativeSegwitTransaction(t *testing.T) {
 
 	builder := transactionBuilder{wallet: wallet}
 	meta, err := builder.buildTxFromData(data.TransactionData)
-	if err != nil {
-		t.Errorf("Expected to build tx metadata, got error: %v", err)
-		return
-	}
 
-	if data.TransactionData.PaymentAddress != toAddress {
-		t.Errorf("Expected toAddress to be %v, got %v", toAddress, data.TransactionData.PaymentAddress)
-	}
-	if data.TransactionData.ChangeAmount != changeAmount {
-		t.Errorf("Expected change amount to be %v, got %v", changeAmount, data.TransactionData.ChangeAmount)
-	}
-	if meta.EncodedTx != expectedEncodedTx {
-		t.Errorf("Expected encoded tx to be %v,\ngot %v", expectedEncodedTx, meta.EncodedTx)
-	}
-	if meta.Txid != expectedTxid {
-		t.Errorf("Expected txid to be %v,\ngot %v", expectedTxid, meta.Txid)
-	}
-	if meta.TransactionChangeMetadata.VoutIndex != 1 {
-		t.Errorf("Expected change vout index to be %v, got %v", 1, meta.VoutIndex)
-	}
-	if meta.TransactionChangeMetadata.Path.Index != 1 {
-		t.Errorf("Expected change path index to be %v, got %v", 56, meta.TransactionChangeMetadata.Path.Index)
-	}
-	if meta.TransactionChangeMetadata.Address != expectedChangeAddress {
-		t.Errorf("Expected change address to be %v, got %v", expectedChangeAddress, meta.TransactionChangeMetadata.Address)
-	}
+	assert.Nil(t, err)
+
+	assert.Equal(t, toAddress, data.TransactionData.PaymentAddress)
+	assert.Equal(t, changeAmount, data.TransactionData.ChangeAmount)
+	assert.Equal(t, expectedEncodedTx, meta.EncodedTx)
+	assert.Equal(t, expectedTxid, meta.Txid)
+	assert.Equal(t, 1, meta.TransactionChangeMetadata.VoutIndex)
+	assert.Equal(t, 1, meta.TransactionChangeMetadata.Path.Index)
+	assert.Equal(t, expectedChangeAddress, meta.TransactionChangeMetadata.Address)
 }
 
 func TestTransactionBuilder_BuildP2KH_NoChange(t *testing.T) {
@@ -173,10 +129,9 @@ func TestTransactionBuilder_BuildP2KH_NoChange(t *testing.T) {
 	data := NewTransactionDataFlatFee(toAddress, basecoin, amount, feeAmount, changePath, 500000)
 	data.AddUTXO(utxo)
 	success, err := data.Generate()
-	if !success {
-		t.Errorf("Expected to generate transaction, got error: %v", err)
-		return
-	}
+
+	assert.True(t, success)
+	assert.Nil(t, err)
 
 	expectedEncodedTx := "010000000001014e38dce64bc188318e2fe1fd5038c954b821b0828ca6a51a0c6ed26af71449f10100000017160014b4381165b195b3286079d46eb2dc8058e6f02241fdffffff016b5a0000000000001976a914b4716e71b900b957e49f749c8432b910417788e888ac024730440220178747a1153ea347c4c5596a7241d8d68df62adef76d44da850da2cc9382faa002207c209d0319a9593ce4f36599dedab9c60d86d7ea826a239f654e305ebf10a1e1012103a45ef894ab9e6f2e55683561181be9e69b20207af746d60b95fab33476dc932420a10700"
 	expectedTxid := "86a9dc5bef7933df26d2b081376084e456a5bd3c2f2df28e758ff062b05a8c17"
@@ -186,21 +141,44 @@ func TestTransactionBuilder_BuildP2KH_NoChange(t *testing.T) {
 	builder := transactionBuilder{wallet: wallet}
 	meta, err := builder.buildTxFromData(data.TransactionData)
 
-	if err != nil {
-		t.Errorf("Expected to build transaction, got error: %v", err)
-		return
-	}
+	assert.Nil(t, err)
 
-	if data.TransactionData.PaymentAddress != toAddress {
-		t.Errorf("Expected toAddress to be %v, got %v", toAddress, data.TransactionData.PaymentAddress)
-	}
-	if meta.EncodedTx != expectedEncodedTx {
-		t.Errorf("Expected encoded tx to be %v,\ngot %v", expectedEncodedTx, meta.EncodedTx)
-	}
-	if meta.Txid != expectedTxid {
-		t.Errorf("Expected txid to be %v,\ngot %v", expectedTxid, meta.Txid)
-	}
-	if meta.TransactionChangeMetadata != nil {
-		t.Errorf("Expected change metadata to be nil")
-	}
+	assert.Equal(t, toAddress, data.TransactionData.PaymentAddress)
+	assert.Equal(t, expectedEncodedTx, meta.EncodedTx)
+	assert.Equal(t, expectedTxid, meta.Txid)
+	assert.Nil(t, meta.TransactionChangeMetadata)
+}
+
+func TestTransationBuilder_BuildSingleUTXO(t *testing.T) {
+	basecoin := NewBaseCoin(49, 0, 0)
+	path := NewDerivationPath(49, 0, 0, 0, 0)
+	utxo := NewUTXO("3480e31ea00efeb570472983ff914694f62804e768a6c6b4d1b6cd70a1cd3efa", 1, 449893, path, nil, true)
+	amount := 218384
+	feeAmount := 668
+	changeAmount := 230841
+	changePath := NewDerivationPath(49, 0, 0, 1, 0)
+	toAddress := "3ERQiyXSeUYmxxqKyg8XwqGo4W7utgDrTR"
+
+	data := NewTransactionDataFlatFee(toAddress, basecoin, amount, feeAmount, changePath, 500000)
+	data.AddUTXO(utxo)
+	success, err := data.Generate()
+
+	assert.True(t, success)
+	assert.Nil(t, err)
+
+	expectedEncodedTx := "01000000000101fa3ecda170cdb6d1b4c6a668e70428f6944691ff83294770b5fe0ea01ee380340100000017160014f990679acafe25c27615373b40bf22446d24ff44fdffffff02105503000000000017a9148ba60342bf59f73327fecab2bef17c1612888c3587b98503000000000017a9141cc1e09a63d1ae795a7130e099b28a0b1d8e4fae870247304402203fba433a9111661c367ac362a3194a845ca04d1a577056c6f605b9ef2e93b69e02206f61d199c258aa35754e4a24896f3ce1ca418e510c6424fc82e40d9c8ccfccdf0121039b3b694b8fc5b5e07fb069c783cac754f5d38c3e08bed1960e31fdb1dda35c2420a10700"
+	expectedTxid := "221ced4e8784290dea336afa1b0a06fa868812e51abbdca3126ce8d99335a6e2"
+	expectedChangeAddress := "34K56kSjgUCUSD8GTtuF7c9Zzwokbs6uZ7"
+
+	wallet := NewHDWalletFromWords(words, basecoin)
+	builder := transactionBuilder{wallet: wallet}
+	meta, err := builder.buildTxFromData(data.TransactionData)
+
+	assert.Nil(t, err)
+	assert.Equal(t, expectedEncodedTx, meta.EncodedTx)
+	assert.Equal(t, expectedTxid, meta.Txid)
+	assert.Equal(t, expectedChangeAddress, meta.TransactionChangeMetadata.Address)
+	assert.Equal(t, 1, meta.TransactionChangeMetadata.VoutIndex)
+	assert.Equal(t, 0, meta.TransactionChangeMetadata.Path.Index)
+	assert.Equal(t, changeAmount, data.TransactionData.ChangeAmount)
 }

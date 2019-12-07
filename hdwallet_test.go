@@ -17,17 +17,9 @@ func TestGetFullBIP39WordListString(t *testing.T) {
 	wl := GetFullBIP39WordListString()
 	words := strings.Split(wl, " ")
 
-	if len(words) != 2048 {
-		t.Errorf("Expected 2048 words, got %v", len(words))
-	}
-
-	if words[0] != "abandon" {
-		t.Errorf("Expected first word to be 'abandon', got %v", words[0])
-	}
-
-	if words[len(words)-1] != "zoo" {
-		t.Errorf("Expected last word to be 'zoo', got %v", words[len(words)-1])
-	}
+	assert.Equal(t, 2048, len(words))
+	assert.Equal(t, "abandon", words[0])
+	assert.Equal(t, "zoo", words[len(words)-1])
 }
 
 func TestNewWordListFromEntropy(t *testing.T) {
@@ -37,65 +29,35 @@ func TestNewWordListFromEntropy(t *testing.T) {
 	// first set
 	bs1 := make([]byte, size)
 	n1, err := rand.Read(bs1)
-	if err != nil {
-		t.Errorf("Expected bytes1 to be created properly. error: %v", err)
-		return
-	}
-
-	if n1 != size {
-		t.Errorf("Expected %v bytes, got %v", size, n1)
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, size, n1)
 
 	wordString1 := NewWordListFromEntropy(bs1)
 	words1 := strings.Split(wordString1, " ")
 
-	if len(words1) != expectedWordLen {
-		t.Errorf("Expected word list len to be %v, got %v", expectedWordLen, len(words1))
-	}
+	assert.Equal(t, expectedWordLen, len(words1))
 
 	// second set
 	bs2 := make([]byte, size)
 	n2, err := rand.Read(bs2)
-	if err != nil {
-		t.Errorf("Expected bytes2 to be created properly. error: %v", err)
-		return
-	}
-
-	if n2 != size {
-		t.Errorf("Expected %v bytes, got %v", size, n2)
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, size, n2)
 
 	wordString2 := NewWordListFromEntropy(bs2)
 	words2 := strings.Split(wordString2, " ")
 
-	if len(words2) != expectedWordLen {
-		t.Errorf("Expected word list len to be %v, got %v", expectedWordLen, len(words2))
-	}
-
-	if wordString1 == wordString2 {
-		t.Errorf("Expected two wordStrings to be different, but were the same.")
-	}
+	assert.Equal(t, expectedWordLen, len(words2))
+	assert.NotEqual(t, wordString1, wordString2)
 }
 
 func TestNewHDWalletFromWords(t *testing.T) {
 	bc := NewBaseCoin(84, 0, 0)
 	wallet := NewHDWalletFromWords(w, bc)
 
-	if wallet.WalletWords != w {
-		t.Errorf("Expected wallet words to equal provided words: %v,\n...but got: %v", w, wallet.WalletWords)
-	}
-
-	if wallet.Basecoin.Purpose != bc.Purpose {
-		t.Errorf("Expected purpose %v to equal provided purpose %v.", wallet.Basecoin.Purpose, bc.Purpose)
-	}
-
-	if wallet.Basecoin.Coin != bc.Coin {
-		t.Errorf("Expected coin %v to equal provided coin %v.", wallet.Basecoin.Coin, bc.Coin)
-	}
-
-	if wallet.Basecoin.Account != bc.Account {
-		t.Errorf("Expected account %v to equal provided account %v.", wallet.Basecoin.Account, bc.Account)
-	}
+	assert.Equal(t, w, wallet.WalletWords)
+	assert.Equal(t, bc.Purpose, wallet.Basecoin.Purpose)
+	assert.Equal(t, bc.Coin, wallet.Basecoin.Coin)
+	assert.Equal(t, bc.Account, wallet.Basecoin.Account)
 }
 
 func TestSigningKey(t *testing.T) {
@@ -107,9 +69,7 @@ func TestSigningKey(t *testing.T) {
 	skString := hex.EncodeToString(sk)
 	expected := "8eca986c3aeb26f5ce7717b6c246ebee58ff490ee74c43ce3c4021bb723bd750"
 
-	if skString != expected {
-		t.Errorf("Expected private key hex to be %v, got %v", expected, skString)
-	}
+	assert.Equal(t, expected, skString)
 }
 
 func TestSigningPublicKey(t *testing.T) {
@@ -121,9 +81,7 @@ func TestSigningPublicKey(t *testing.T) {
 	pkString := hex.EncodeToString(pk)
 	expected := "024458596b5c97e716e82015a72c37b5d3fe0c5dc70a4b83d72e7d2eb65920633e"
 
-	if pkString != expected {
-		t.Errorf("Expected private key hex to be %v, got %v", expected, pkString)
-	}
+	assert.Equal(t, expected, pkString)
 }
 
 func TestCoinNinjaVerificationKeyHexString(t *testing.T) {
@@ -133,9 +91,7 @@ func TestCoinNinjaVerificationKeyHexString(t *testing.T) {
 	pkString := wallet.CoinNinjaVerificationKeyHexString()
 	expected := "024458596b5c97e716e82015a72c37b5d3fe0c5dc70a4b83d72e7d2eb65920633e"
 
-	if pkString != expected {
-		t.Errorf("Expected private key hex to be %v, got %v", expected, pkString)
-	}
+	assert.Equal(t, expected, pkString)
 }
 
 func TestReceiveAddressForIndex_ValidIndex(t *testing.T) {
@@ -148,18 +104,11 @@ func TestReceiveAddressForIndex_ValidIndex(t *testing.T) {
 	expectedPath := NewDerivationPath(84, 0, 0, 0, i)
 	expectedKey := "0430d54fd0dd420a6e5f8d3624f5f3482cae350f79d5f0753bf5beef9c2d91af3c04717159ce0828a7f686c2c7510b7aa7d4c685ebc2051642ccbebc7099e2f679"
 
-	if ma.Address != expectedAddress {
-		t.Errorf("Expected address %v, got %v", expectedAddress, ma.Address)
-	}
+	assert.Equal(t, expectedAddress, ma.Address)
 
 	// dereference both to compare values, not pointers
-	if *ma.DerivationPath != *expectedPath {
-		t.Errorf("Expected path %v, got %v", expectedPath, ma.DerivationPath)
-	}
-
-	if ma.UncompressedPublicKey != expectedKey {
-		t.Errorf("Expected key %v, got %v", expectedKey, ma.UncompressedPublicKey)
-	}
+	assert.Equal(t, *expectedPath, *ma.DerivationPath)
+	assert.Equal(t, expectedKey, ma.UncompressedPublicKey)
 }
 
 func TestReceiveAddressForIndex_InvalidIndex(t *testing.T) {
@@ -169,9 +118,7 @@ func TestReceiveAddressForIndex_InvalidIndex(t *testing.T) {
 
 	ma := wallet.ReceiveAddressForIndex(i)
 
-	if ma != nil {
-		t.Errorf("Expected MetaAddress to be nil.")
-	}
+	assert.Nil(t, ma)
 }
 
 func TestChangeAddressForIndex_ValidIndex(t *testing.T) {
@@ -184,18 +131,11 @@ func TestChangeAddressForIndex_ValidIndex(t *testing.T) {
 	expectedPath := NewDerivationPath(84, 0, 0, 1, i)
 	expectedKey := ""
 
-	if ma.Address != expectedAddress {
-		t.Errorf("Expected address %v, got %v", expectedAddress, ma.Address)
-	}
+	assert.Equal(t, expectedAddress, ma.Address)
 
 	// dereference both to compare values, not pointers
-	if *ma.DerivationPath != *expectedPath {
-		t.Errorf("Expected path %v, got %v", expectedPath, ma.DerivationPath)
-	}
-
-	if ma.UncompressedPublicKey != expectedKey {
-		t.Errorf("Expected key %v, got %v", expectedKey, ma.UncompressedPublicKey)
-	}
+	assert.Equal(t, *expectedPath, *ma.DerivationPath)
+	assert.Equal(t, expectedKey, ma.UncompressedPublicKey)
 }
 
 func TestChangeAddressForIndex_InvalidIndex(t *testing.T) {
@@ -205,9 +145,7 @@ func TestChangeAddressForIndex_InvalidIndex(t *testing.T) {
 
 	ma := wallet.ChangeAddressForIndex(i)
 
-	if ma != nil {
-		t.Errorf("Expected MetaAddress to be nil.")
-	}
+	assert.Nil(t, ma)
 }
 
 func TestUpdateCoin(t *testing.T) {
@@ -218,16 +156,12 @@ func TestUpdateCoin(t *testing.T) {
 	expAddr2 := "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu"
 
 	ma1 := wallet.ReceiveAddressForIndex(0)
-	if ma1.Address != expAddr1 {
-		t.Errorf("Expected address %v, got %v", expAddr1, ma1.Address)
-	}
+	assert.Equal(t, expAddr1, ma1.Address)
 
 	wallet.UpdateCoin(newCoin)
 
 	ma2 := wallet.ReceiveAddressForIndex(0)
-	if ma2.Address != expAddr2 {
-		t.Errorf("Expected address %v, got %v", expAddr2, ma2.Address)
-	}
+	assert.Equal(t, expAddr2, ma2.Address)
 }
 
 func TestCheckForAddress_AddressExistsInRange(t *testing.T) {
@@ -237,12 +171,8 @@ func TestCheckForAddress_AddressExistsInRange(t *testing.T) {
 
 	ma, err := wallet.CheckForAddress(expectedAddrAt10, 20)
 
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-	if ma.Address != expectedAddrAt10 {
-		t.Errorf("Expected to find %v, got %v", expectedAddrAt10, ma.Address)
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, expectedAddrAt10, ma.Address)
 }
 
 func TestCheckForAddress_AddressDoesNotExist(t *testing.T) {
@@ -252,12 +182,8 @@ func TestCheckForAddress_AddressDoesNotExist(t *testing.T) {
 
 	ma, err := wallet.CheckForAddress(expectedAddrAt30, 20)
 
-	if err == nil {
-		t.Errorf("Expected error, got nil")
-	}
-	if ma != nil {
-		t.Errorf("Expected MetaAddress to be nil, got %v", ma.Address)
-	}
+	assert.NotNil(t, err)
+	assert.Nil(t, ma)
 }
 
 func TestEncyptWithEphemeralKey(t *testing.T) {
@@ -315,13 +241,8 @@ func TestImportPrivateKey(t *testing.T) {
 	wallet := NewHDWalletFromWords(w, bc)
 	imported, err := wallet.ImportPrivateKey(encodedKey)
 
-	if err != nil {
-		t.Errorf("Expected key, got error: %v", err)
-	}
-
-	if imported.wif.String() != encodedKey {
-		t.Errorf("Expected encoded string %v, got %v", encodedKey, imported.wif.String())
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, encodedKey, imported.wif.String())
 
 	addrs := strings.Split(imported.PossibleAddresses, " ")
 	found := false
@@ -330,9 +251,7 @@ func TestImportPrivateKey(t *testing.T) {
 			found = true
 		}
 	}
-	if !found {
-		t.Errorf("Expected base58check p2pkh address %v, from %v", expectedAddress, imported.PossibleAddresses)
-	}
+	assert.Truef(t, found, "Expected base58check p2pkh address %v, from %v", expectedAddress, imported.PossibleAddresses)
 }
 
 func TestImportPrivateKeyP2SHSegwit(t *testing.T) {
@@ -343,13 +262,8 @@ func TestImportPrivateKeyP2SHSegwit(t *testing.T) {
 	wallet := NewHDWalletFromWords(w, bc)
 	imported, err := wallet.ImportPrivateKey(encodedKey)
 
-	if err != nil {
-		t.Errorf("Expected key, got error: %v", err)
-	}
-
-	if imported.wif.String() != encodedKey {
-		t.Errorf("Expected encoded string %v, got %v", encodedKey, imported.wif.String())
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, encodedKey, imported.wif.String())
 
 	addrs := strings.Split(imported.PossibleAddresses, " ")
 	found := false
@@ -358,9 +272,7 @@ func TestImportPrivateKeyP2SHSegwit(t *testing.T) {
 			found = true
 		}
 	}
-	if !found {
-		t.Errorf("Expected base58check p2sh-p2wkph address %v, from %v", expectedAddress, imported.PossibleAddresses)
-	}
+	assert.Truef(t, found, "Expected base58check p2sh-p2wkph address %v, from %v", expectedAddress, imported.PossibleAddresses)
 }
 
 func TestImportPrivateKeyNativeSegwit(t *testing.T) {
@@ -371,13 +283,8 @@ func TestImportPrivateKeyNativeSegwit(t *testing.T) {
 	wallet := NewHDWalletFromWords(w, bc)
 	imported, err := wallet.ImportPrivateKey(encodedKey)
 
-	if err != nil {
-		t.Errorf("Expected key, got error: %v", err)
-	}
-
-	if imported.wif.String() != encodedKey {
-		t.Errorf("Expected encoded string %v, got %v", encodedKey, imported.wif.String())
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, encodedKey, imported.wif.String())
 
 	addrs := strings.Split(imported.PossibleAddresses, " ")
 	found := false
@@ -386,7 +293,5 @@ func TestImportPrivateKeyNativeSegwit(t *testing.T) {
 			found = true
 		}
 	}
-	if !found {
-		t.Errorf("Expected segwit address %v, from %v", expectedAddress, imported.PossibleAddresses)
-	}
+	assert.Truef(t, found, "Expected segwit address %v, from %v", expectedAddress, imported.PossibleAddresses)
 }

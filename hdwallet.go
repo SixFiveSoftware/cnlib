@@ -5,10 +5,12 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil"
 	"github.com/btcsuite/btcutil/base58"
 	"github.com/btcsuite/btcutil/hdkeychain"
 
+	"git.coinninja.net/engineering/cryptor"
 	"github.com/tyler-smith/go-bip39"
 	"github.com/tyler-smith/go-bip39/wordlists"
 )
@@ -55,8 +57,7 @@ func NewHDWalletFromWords(wordString string, basecoin *Basecoin) *HDWallet {
 
 // SigningKey returns the private key at the m/42 path.
 func (wallet *HDWallet) SigningKey() []byte {
-	kf := keyFactory{Wallet: wallet}
-	ec, _ := kf.signingMasterKey().ECPrivKey()
+	ec := wallet.signingPrivateKey()
 	return ec.Serialize()
 }
 
@@ -119,7 +120,19 @@ func (wallet *HDWallet) SignatureSigningData(message []byte) string {
 // EncryptWithEphemeralKey encrypts a given body (byte slice) using ECDH symmetric key encryption by creating an ephemeral keypair from entropy and given uncompressed public key.
 func (wallet *HDWallet) EncryptWithEphemeralKey(body []byte, entropy []byte, recipientUncompressedPubkey string) ([]byte, error) {
 	pubkeyBytes, _ := hex.DecodeString(recipientUncompressedPubkey)
-	return Encrypt(body, pubkeyBytes, entropy) // Encrypt(body, pubkeyBytes, privkeyBytes.Serialize())
+	publicKey, err := btcec.ParsePubKey(pubkeyBytes, btcec.S256())
+	if err != nil {
+		return nil, err
+	}
+
+	m, err := bip39.NewMnemonic(entropy)
+	if err != nil {
+		return nil, err
+	}
+	w := NewHDWalletFromWords(m, wallet.Basecoin)
+	privateKey, err := w.masterPrivateKey.ECPrivKey()
+
+	return cryptor.Encrypt(body, privateKey, publicKey)
 }
 
 // DecryptWithKeyFromDerivationPath decrypts a given payload with the key derived from given derivation path.
@@ -127,22 +140,24 @@ func (wallet *HDWallet) DecryptWithKeyFromDerivationPath(body []byte, path *Deri
 	kf := keyFactory{Wallet: wallet}
 	pk := kf.indexPrivateKey(path)
 	ecpk, _ := pk.ECPrivKey()
-	privkeyBytes := ecpk.Serialize()
 
-	return Decrypt(body, privkeyBytes)
+	return cryptor.Decrypt(body, ecpk)
 }
 
 // EncryptWithDefaultKey encrypts a payload using signing key (m/42) and recipient's public key.
 func (wallet *HDWallet) EncryptWithDefaultKey(body []byte, recipientUncompressedPubkey string) ([]byte, error) {
 	pubkeyBytes, _ := hex.DecodeString(recipientUncompressedPubkey)
-	privkeyBytes := wallet.SigningKey()
-	return Encrypt(body, pubkeyBytes, privkeyBytes)
+	publicKey, err := btcec.ParsePubKey(pubkeyBytes, btcec.S256())
+	if err != nil {
+		return nil, err
+	}
+
+	return cryptor.Encrypt(body, wallet.signingPrivateKey(), publicKey)
 }
 
 // DecryptWithDefaultKey decrypts a payload using signing key (m/42) and included sender public key (expected to be last 65 bytes of payload).
 func (wallet *HDWallet) DecryptWithDefaultKey(body []byte) ([]byte, error) {
-	privkeyBytes := wallet.SigningKey()
-	return Decrypt(body, privkeyBytes)
+	return cryptor.Decrypt(body, wallet.signingPrivateKey())
 }
 
 // ImportPrivateKey accepts an encoded private key from a paper wallet/QR code, decodes it, and returns a ref to an ImportedPrivateKey struct, or error if failed.
@@ -196,4 +211,10 @@ func masterPrivateKey(wordString string, basecoin *Basecoin) (*hdkeychain.Extend
 		return nil, err
 	}
 	return masterKey, nil
+}
+
+func (wallet *HDWallet) signingPrivateKey() *btcec.PrivateKey {
+	kf := keyFactory{Wallet: wallet}
+	ec, _ := kf.signingMasterKey().ECPrivKey()
+	return ec
 }

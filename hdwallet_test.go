@@ -3,9 +3,10 @@ package cnlib
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -260,41 +261,32 @@ func TestCheckForAddress_AddressDoesNotExist(t *testing.T) {
 }
 
 func TestEncyptWithEphemeralKey(t *testing.T) {
-	// Skip for now.
-	t.Skip()
 	aliceWords := "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 	bobWords := "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong"
 	messageString := "hey dude"
 	message := []byte(messageString)
 	c := NewBaseCoin(84, 0, 0)
-	entropy := []byte("01010101010101010101010101010101")
+	entropy, err := hex.DecodeString("01010101010101010101010101010101")
+	assert.Nil(t, err)
+	assert.Equal(t, 16, len(entropy))
 
 	aliceWallet := NewHDWalletFromWords(aliceWords, c)
-	fmt.Println("alice privkey: ", hex.EncodeToString(aliceWallet.SigningKey()))
 	bobWallet := NewHDWalletFromWords(bobWords, c)
 	bobUCPK := bobWallet.ReceiveAddressForIndex(0).UncompressedPublicKey
+	assert.Equal(t, 130, len(bobUCPK))
 
 	enc, encErr := aliceWallet.EncryptWithEphemeralKey(message, entropy, bobUCPK)
-	fmt.Println("enc: ", hex.EncodeToString(enc))
-	if encErr != nil {
-		t.Errorf("Should have received an encrypted payload, got %v.", encErr)
-	}
+	assert.Nil(t, encErr)
 
 	bobPath := NewDerivationPath(84, 0, 0, 0, 0)
 	dec, decErr := bobWallet.DecryptWithKeyFromDerivationPath(enc, bobPath)
-	fmt.Println("dec: ", hex.EncodeToString(dec))
-	if decErr != nil {
-		t.Errorf("Should have decrypted an encrypted payload, got %v", decErr)
-	}
-	decryptedString := hex.EncodeToString(dec)
-	if decryptedString != messageString {
-		t.Errorf("Expected %v, got %v", messageString, decryptedString)
-	}
+	assert.Nil(t, decErr)
+
+	decryptedString := string(dec)
+	assert.Equal(t, messageString, decryptedString)
 }
 
 func TestEncryptionWithDefaultKeysEndToEnd(t *testing.T) {
-	// Skip for now.
-	t.Skip()
 	aliceWords := "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 	bobWords := "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong"
 	messageString := "hey dude"
@@ -302,25 +294,17 @@ func TestEncryptionWithDefaultKeysEndToEnd(t *testing.T) {
 	c := NewBaseCoin(84, 0, 0)
 
 	aliceWallet := NewHDWalletFromWords(aliceWords, c)
-	fmt.Println("alice privkey: ", hex.EncodeToString(aliceWallet.SigningKey()))
 	bobWallet := NewHDWalletFromWords(bobWords, c)
 	bobCPK := bobWallet.CoinNinjaVerificationKeyHexString()
 
 	enc, encErr := aliceWallet.EncryptWithDefaultKey(message, bobCPK)
-	fmt.Println("enc: ", hex.EncodeToString(enc))
-	if encErr != nil {
-		t.Errorf("Should have received an encrypted payload, got %v.", encErr)
-	}
+	assert.Nil(t, encErr)
 
 	dec, decErr := bobWallet.DecryptWithDefaultKey(enc)
-	fmt.Println("dec: ", hex.EncodeToString(dec))
-	if decErr != nil {
-		t.Errorf("Should have decrypted an encrypted payload, got %v", decErr)
-	}
-	decryptedString := hex.EncodeToString(dec)
-	if decryptedString != messageString {
-		t.Errorf("Expected %v, got %v", messageString, decryptedString)
-	}
+	assert.Nil(t, decErr)
+
+	decryptedString := string(dec)
+	assert.Equal(t, messageString, decryptedString)
 }
 
 func TestImportPrivateKey(t *testing.T) {

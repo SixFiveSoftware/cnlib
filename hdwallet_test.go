@@ -331,7 +331,7 @@ func TestImportPrivateKey(t *testing.T) {
 		}
 	}
 	if !found {
-		t.Errorf("Expected base58check address %v, from %v", expectedAddress, imported.PossibleAddresses)
+		t.Errorf("Expected base58check p2pkh address %v, from %v", expectedAddress, imported.PossibleAddresses)
 	}
 }
 
@@ -359,7 +359,7 @@ func TestImportPrivateKeyP2SHSegwit(t *testing.T) {
 		}
 	}
 	if !found {
-		t.Errorf("Expected base58check address %v, from %v", expectedAddress, imported.PossibleAddresses)
+		t.Errorf("Expected base58check p2sh-p2wkph address %v, from %v", expectedAddress, imported.PossibleAddresses)
 	}
 }
 
@@ -379,9 +379,6 @@ func TestImportPrivateKeyNativeSegwit(t *testing.T) {
 		t.Errorf("Expected encoded string %v, got %v", encodedKey, imported.wif.String())
 	}
 
-	// if imported.NativeSegwit != expectedAddress {
-	// 	t.Errorf("Expected base58check address %v, got %v", expectedAddress, imported.NativeSegwit)
-	// }
 	addrs := strings.Split(imported.PossibleAddresses, " ")
 	found := false
 	for _, item := range addrs {
@@ -390,6 +387,6 @@ func TestImportPrivateKeyNativeSegwit(t *testing.T) {
 		}
 	}
 	if !found {
-		t.Errorf("Expected base58check address %v, from %v", expectedAddress, imported.PossibleAddresses)
+		t.Errorf("Expected segwit address %v, from %v", expectedAddress, imported.PossibleAddresses)
 	}
 }

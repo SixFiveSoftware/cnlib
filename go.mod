@@ -13,6 +13,6 @@ require (
 	github.com/tyler-smith/go-bip32 v0.0.0-20170922074101-2c9cfd177564
 	github.com/tyler-smith/go-bip39 v1.0.2
 	github.com/worldiety/std v0.0.5
-	golang.org/x/crypto v0.0.0-20191119213627-4f8c1d86b1ba // indirect
+	golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413 // indirect
 	golang.org/x/mobile v0.0.0-20191031020345-0945064e013a // indirect
 )

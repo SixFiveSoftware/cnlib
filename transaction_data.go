@@ -6,13 +6,6 @@ import "github.com/btcsuite/btcd/wire"
 
 /// Type Definitions
 
-// Transaction is an interface for a
-type Transaction interface {
-	AddUTXO(utxo *UTXO)
-	Generate() (bool, error) // bool if succeeds or not, and if not, associated error
-	utxoCount() int
-}
-
 // Following constants are used for RBFOption.
 const (
 	MustBeRBF      = 0

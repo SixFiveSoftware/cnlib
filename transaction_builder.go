@@ -97,7 +97,7 @@ func (tb transactionBuilder) buildTxFromData(data *TransactionData) (*Transactio
 		}
 
 		// prev tx outpoint
-		if utxo.Index < 0 || utxo.Index > math.MaxUint32 {
+		if utxo.Index < 0 || uint32(utxo.Index) > math.MaxUint32 {
 			return nil, errors.New("previous utxo index out of bounds")
 		}
 		newHash, newHashErr := chainhash.NewHashFromStr(utxo.Txid)
@@ -123,7 +123,7 @@ func (tb transactionBuilder) buildTxFromData(data *TransactionData) (*Transactio
 	}
 
 	// set locktime
-	if data.Locktime < 0 || data.Locktime > math.MaxUint32 {
+	if data.Locktime < 0 || uint32(data.Locktime) > math.MaxUint32 {
 		return nil, errors.New("Locktime out of bounds")
 	}
 	tx.LockTime = uint32(data.Locktime)

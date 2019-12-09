@@ -1,49 +1,45 @@
 package cnlib
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
 func TestMetaAddress_Receive_Segwit_Address(t *testing.T) {
 	path := NewDerivationPath(84, 0, 0, 0, 0)
 	coin := NewBaseCoin(84, 0, 0)
 	wallet := NewHDWalletFromWords(w, coin)
-	usableAddress := NewUsableAddressWithDerivationPath(wallet, path)
-	meta := usableAddress.MetaAddress()
+
+	usableAddress, err := NewUsableAddressWithDerivationPath(wallet, path)
+	assert.Nil(t, err)
+
+	meta, err := usableAddress.MetaAddress()
+	assert.Nil(t, err)
+
 	expectedAddr := "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu"
 	expectedPubkey := "0430d54fd0dd420a6e5f8d3624f5f3482cae350f79d5f0753bf5beef9c2d91af3c04717159ce0828a7f686c2c7510b7aa7d4c685ebc2051642ccbebc7099e2f679"
 
-	if meta.Address != expectedAddr {
-		t.Errorf("Expected address %v, got %v", expectedAddr, meta.Address)
-	}
-
-	if meta.DerivationPath != path {
-		t.Errorf("Expected path %v, got %v", path, meta.DerivationPath)
-	}
-
-	if meta.UncompressedPublicKey != expectedPubkey {
-		t.Errorf("Expected pubkey %v, got %v", expectedPubkey, meta.UncompressedPublicKey)
-	}
+	assert.Equal(t, expectedAddr, meta.Address)
+	assert.Equal(t, path, meta.DerivationPath)
+	assert.Equal(t, expectedPubkey, meta.UncompressedPublicKey)
 }
 
 func TestMetaAddress_Change_Segwit_Address(t *testing.T) {
 	path := NewDerivationPath(84, 0, 0, 1, 0)
 	coin := NewBaseCoin(84, 0, 0)
 	wallet := NewHDWalletFromWords(w, coin)
-	usableAddress := NewUsableAddressWithDerivationPath(wallet, path)
-	meta := usableAddress.MetaAddress()
+	usableAddress, err := NewUsableAddressWithDerivationPath(wallet, path)
+	assert.Nil(t, err)
+
+	meta, err := usableAddress.MetaAddress()
+	assert.Nil(t, err)
+
 	expectedAddr := "bc1q8c6fshw2dlwun7ekn9qwf37cu2rn755upcp6el"
 	expectedPubkey := ""
 
-	if meta.Address != expectedAddr {
-		t.Errorf("Expected address %v, got %v", expectedAddr, meta.Address)
-	}
-
-	if meta.DerivationPath != path {
-		t.Errorf("Expected path %v, got %v", path, meta.DerivationPath)
-	}
-
-	if meta.UncompressedPublicKey != expectedPubkey {
-		t.Errorf("Expected pubkey empty string, got %v", meta.UncompressedPublicKey)
-	}
+	assert.Equal(t, expectedAddr, meta.Address)
+	assert.Equal(t, path, meta.DerivationPath)
+	assert.Equal(t, expectedPubkey, meta.UncompressedPublicKey)
 }
 
 func TestMetaAddress_RegTestAddresses(t *testing.T) {
@@ -65,73 +61,74 @@ func TestMetaAddress_RegTestAddresses(t *testing.T) {
 
 	wallet := NewHDWalletFromWords(w, bc)
 
-	rua0 := NewUsableAddressWithDerivationPath(wallet, rpath0).MetaAddress().Address
-	rua1 := NewUsableAddressWithDerivationPath(wallet, rpath1).MetaAddress().Address
-	rua2 := NewUsableAddressWithDerivationPath(wallet, rpath2).MetaAddress().Address
-	cua0 := NewUsableAddressWithDerivationPath(wallet, cpath0).MetaAddress().Address
-	cua1 := NewUsableAddressWithDerivationPath(wallet, cpath1).MetaAddress().Address
-	cua2 := NewUsableAddressWithDerivationPath(wallet, cpath2).MetaAddress().Address
+	rua0, err := NewUsableAddressWithDerivationPath(wallet, rpath0)
+	assert.Nil(t, err)
+	rua1, err := NewUsableAddressWithDerivationPath(wallet, rpath1)
+	assert.Nil(t, err)
+	rua2, err := NewUsableAddressWithDerivationPath(wallet, rpath2)
+	assert.Nil(t, err)
+	cua0, err := NewUsableAddressWithDerivationPath(wallet, cpath0)
+	assert.Nil(t, err)
+	cua1, err := NewUsableAddressWithDerivationPath(wallet, cpath1)
+	assert.Nil(t, err)
+	cua2, err := NewUsableAddressWithDerivationPath(wallet, cpath2)
+	assert.Nil(t, err)
 
-	if rua0 != rexp0 {
-		t.Errorf("Expected address %v, got %v", rexp0, rua0)
-	}
-	if rua1 != rexp1 {
-		t.Errorf("Expected address %v, got %v", rexp1, rua1)
-	}
-	if rua2 != rexp2 {
-		t.Errorf("Expected address %v, got %v", rexp2, rua2)
-	}
-	if cua0 != cexp0 {
-		t.Errorf("Expected address %v, got %v", cexp0, cua0)
-	}
-	if cua1 != cexp1 {
-		t.Errorf("Expected address %v, got %v", cexp1, cua1)
-	}
-	if cua2 != cexp2 {
-		t.Errorf("Expected address %v, got %v", cexp2, cua2)
-	}
+	rua0meta, err := rua0.MetaAddress()
+	assert.Nil(t, err)
+	rua1meta, err := rua1.MetaAddress()
+	assert.Nil(t, err)
+	rua2meta, err := rua2.MetaAddress()
+	assert.Nil(t, err)
+	cua0meta, err := cua0.MetaAddress()
+	assert.Nil(t, err)
+	cua1meta, err := cua1.MetaAddress()
+	assert.Nil(t, err)
+	cua2meta, err := cua2.MetaAddress()
+	assert.Nil(t, err)
+
+	assert.Equal(t, rexp0, rua0meta.Address)
+	assert.Equal(t, rexp1, rua1meta.Address)
+	assert.Equal(t, rexp2, rua2meta.Address)
+	assert.Equal(t, cexp0, cua0meta.Address)
+	assert.Equal(t, cexp1, cua1meta.Address)
+	assert.Equal(t, cexp2, cua2meta.Address)
 }
 
 func TestMetaAddress_Receive_LegacySegwit_Address(t *testing.T) {
 	path := NewDerivationPath(49, 0, 0, 0, 0)
 	coin := NewBaseCoin(49, 0, 0)
 	wallet := NewHDWalletFromWords(w, coin)
-	usableAddress := NewUsableAddressWithDerivationPath(wallet, path)
-	meta := usableAddress.MetaAddress()
+
+	usableAddress, err := NewUsableAddressWithDerivationPath(wallet, path)
+	assert.Nil(t, err)
+
+	meta, err := usableAddress.MetaAddress()
+	assert.Nil(t, err)
+
 	expectedAddr := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
 	expectedPubkey := "049b3b694b8fc5b5e07fb069c783cac754f5d38c3e08bed1960e31fdb1dda35c2449bdd1f0ae7d37a04991d4f5927efd359c13189437d9eae0faf7d003ffd04c89"
 
-	if meta.Address != expectedAddr {
-		t.Errorf("Expected address %v, got %v", expectedAddr, meta.Address)
-	}
-
-	if meta.DerivationPath != path {
-		t.Errorf("Expected path %v, got %v", path, meta.DerivationPath)
-	}
-
-	if meta.UncompressedPublicKey != expectedPubkey {
-		t.Errorf("Expected pubkey %v, got %v", expectedPubkey, meta.UncompressedPublicKey)
-	}
+	assert.Equal(t, expectedAddr, meta.Address)
+	assert.Equal(t, path, meta.DerivationPath)
+	assert.Equal(t, expectedPubkey, meta.UncompressedPublicKey)
 }
 
 func TestMetaAddress_Change_LegacySegwit_Address(t *testing.T) {
 	path := NewDerivationPath(49, 0, 0, 1, 0)
 	coin := NewBaseCoin(49, 0, 0)
 	wallet := NewHDWalletFromWords(w, coin)
-	usableAddress := NewUsableAddressWithDerivationPath(wallet, path)
-	meta := usableAddress.MetaAddress()
+
+	usableAddress, err := NewUsableAddressWithDerivationPath(wallet, path)
+	assert.Nil(t, err)
+
+	meta, err := usableAddress.MetaAddress()
+	assert.Nil(t, err)
+
 	expectedAddr := "34K56kSjgUCUSD8GTtuF7c9Zzwokbs6uZ7"
 	expectedPubkey := ""
 
-	if meta.Address != expectedAddr {
-		t.Errorf("Expected address %v, got %v", expectedAddr, meta.Address)
-	}
-
-	if meta.DerivationPath != path {
-		t.Errorf("Expected path %v, got %v", path, meta.DerivationPath)
-	}
-
-	if meta.UncompressedPublicKey != expectedPubkey {
-		t.Errorf("Expected pubkey empty string, got %v", meta.UncompressedPublicKey)
-	}
+	assert.Equal(t, expectedAddr, meta.Address)
+	assert.Equal(t, path, meta.DerivationPath)
+	assert.Equal(t, expectedPubkey, meta.UncompressedPublicKey)
 }

@@ -145,23 +145,16 @@ func (ah *AddressHelper) bytesPerOutputAddress(addr string) (int, error) {
 		return 0, decErr
 	}
 
-	if _, ok := dec.(*btcutil.AddressPubKey); ok {
+	switch dec.(type) {
+	case *btcutil.AddressPubKey:
 		return p2DefaultOutputSize, nil
-	}
-
-	if _, ok := dec.(*btcutil.AddressPubKeyHash); ok {
+	case *btcutil.AddressPubKeyHash:
 		return p2pkhOutputSize, nil
-	}
-
-	if _, ok := dec.(*btcutil.AddressScriptHash); ok {
+	case *btcutil.AddressScriptHash:
 		return p2shOutputSize, nil
-	}
-
-	if _, ok := dec.(*btcutil.AddressWitnessPubKeyHash); ok {
+	case *btcutil.AddressWitnessPubKeyHash:
 		return p2wpkhOutputSize, nil
-	}
-
-	if _, ok := dec.(*btcutil.AddressWitnessScriptHash); ok {
+	case *btcutil.AddressWitnessScriptHash:
 		return p2wpkhOutputSize, nil
 	}
 

@@ -67,16 +67,22 @@ func (tb transactionBuilder) buildTxFromData(data *TransactionData) (*Transactio
 	// calculate change
 	var transactionChangeMetadata *TransactionChangeMetadata
 	if data.shouldAddChangeToTransaction() {
-		changeMetaAddr := tb.wallet.ChangeAddressForIndex(data.ChangePath.Index)
-		changeAddr := changeMetaAddr.Address
-		decChange, decChangeErr := btcutil.DecodeAddress(changeAddr, data.basecoin.defaultNetParams())
-		if decChangeErr != nil {
-			return nil, decChangeErr
+		changeMetaAddr, err := tb.wallet.ChangeAddressForIndex(data.ChangePath.Index)
+		if err != nil {
+			return nil, err
 		}
+
+		changeAddr := changeMetaAddr.Address
+		decChange, err := btcutil.DecodeAddress(changeAddr, data.basecoin.defaultNetParams())
+		if err != nil {
+			return nil, err
+		}
+
 		changePkScript, err := txscript.PayToAddrScript(decChange)
 		if err != nil {
 			return nil, err
 		}
+
 		changeOut := wire.NewTxOut(int64(data.ChangeAmount), changePkScript)
 		tx.AddTxOut(changeOut)
 		metadata := TransactionChangeMetadata{Address: changeAddr, Path: data.ChangePath, VoutIndex: 1}
@@ -139,20 +145,22 @@ func (tb transactionBuilder) signInputsForTx(tx *wire.MsgTx, data *TransactionDa
 	for i := range tx.TxIn {
 		utxo, _ := data.requiredUTXOAtIndex(i)
 
-		var signer *UsableAddress
-		if utxo.Path != nil {
-			signer = NewUsableAddressWithDerivationPath(tb.wallet, utxo.Path)
-		} else if utxo.ImportedPrivateKey != nil {
-			signer = NewUsableAddressWithImportedPrivateKey(tb.wallet, utxo.ImportedPrivateKey)
-		} else {
-			return errors.New("no private key available to sign input")
-		}
-
 		var address string
 		if utxo.Path != nil {
-			address = signer.MetaAddress().Address
+			signer, err := NewUsableAddressWithDerivationPath(tb.wallet, utxo.Path)
+			if err != nil {
+				return err
+			}
+			meta, err := signer.MetaAddress()
+			if err != nil {
+				return err
+			}
+			address = meta.Address
+			secretsSource.usableAddresses[address] = signer
 		} else if utxo.ImportedPrivateKey != nil && utxo.ImportedPrivateKey.SelectedAddress != "" {
+			signer := NewUsableAddressWithImportedPrivateKey(tb.wallet, utxo.ImportedPrivateKey)
 			address = utxo.ImportedPrivateKey.SelectedAddress
+			secretsSource.usableAddresses[address] = signer
 		} else {
 			return errors.New("no source address available to sign input")
 		}
@@ -169,7 +177,6 @@ func (tb transactionBuilder) signInputsForTx(tx *wire.MsgTx, data *TransactionDa
 
 		prevPkScripts[i] = pkScript
 		inputValues[i] = btcutil.Amount(utxo.Amount)
-		secretsSource.usableAddresses[address] = signer
 	}
 
 	scriptsErr := txauthor.AddAllInputScripts(tx, prevPkScripts, inputValues, secretsSource)

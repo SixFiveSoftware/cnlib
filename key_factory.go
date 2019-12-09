@@ -2,6 +2,7 @@ package cnlib
 
 import (
 	"encoding/hex"
+	"errors"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -17,58 +18,87 @@ type keyFactory struct {
 
 /// Receiver methods
 
-func (kf keyFactory) indexPrivateKey(path *DerivationPath) *hdkeychain.ExtendedKey {
-	purposeKey, _ := kf.Wallet.masterPrivateKey.Child(hardened(path.Purpose))
-	coinKey, _ := purposeKey.Child(hardened(path.Coin))
-	accountKey, _ := coinKey.Child(hardened(path.Account))
-	changeKey, _ := accountKey.Child(uint32(path.Change))
-	indexKey, _ := changeKey.Child(uint32(path.Index))
-	return indexKey
+func (kf keyFactory) indexPrivateKey(path *DerivationPath) (*hdkeychain.ExtendedKey, error) {
+	purposeKey, err := kf.Wallet.masterPrivateKey.Child(hardened(path.Purpose))
+	if err != nil {
+		return nil, err
+	}
+	coinKey, err := purposeKey.Child(hardened(path.Coin))
+	if err != nil {
+		return nil, err
+	}
+	accountKey, err := coinKey.Child(hardened(path.Account))
+	if err != nil {
+		return nil, err
+	}
+	changeKey, err := accountKey.Child(uint32(path.Change))
+	if err != nil {
+		return nil, err
+	}
+	indexKey, err := changeKey.Child(uint32(path.Index))
+	if err != nil {
+		return nil, err
+	}
+	return indexKey, nil
 }
 
-func (kf keyFactory) indexPublicKey(path *DerivationPath) *btcec.PublicKey {
-	ecpub, _ := kf.indexPrivateKey(path).ECPubKey()
-	return ecpub
+func (kf keyFactory) indexPublicKey(path *DerivationPath) (*btcec.PublicKey, error) {
+	pk, err := kf.indexPrivateKey(path)
+	if err != nil {
+		return nil, err
+	}
+	return pk.ECPubKey()
 }
 
-func (kf keyFactory) signingMasterKey() *hdkeychain.ExtendedKey {
+func (kf keyFactory) signingMasterKey() (*hdkeychain.ExtendedKey, error) {
 	masterKey := kf.Wallet.masterPrivateKey
 	if masterKey == nil {
-		return nil
+		return nil, errors.New("missing master private key")
 	}
-	childKey, childErr := masterKey.Child(42)
-	if childErr != nil {
-		return nil
+	childKey, err := masterKey.Child(42)
+	if err != nil {
+		return nil, err
 	}
-	return childKey
+	return childKey, nil
 }
 
-func (kf keyFactory) signData(message []byte) []byte {
+func (kf keyFactory) signData(message []byte) ([]byte, error) {
 	messageHash := chainhash.DoubleHashB(message)
-	key, keyErr := kf.signingMasterKey().ECPrivKey()
-	if keyErr != nil {
-		return nil
+
+	key, err := kf.signingMasterKey()
+	if err != nil {
+		return nil, err
 	}
 
-	signature, signErr := key.Sign(messageHash)
-
-	if signErr != nil {
-		return nil
+	privKey, err := key.ECPrivKey()
+	if err != nil {
+		return nil, err
 	}
 
-	verified := signature.Verify(messageHash, key.PubKey())
+	signature, err := privKey.Sign(messageHash)
+
+	if err != nil {
+		return nil, err
+	}
+
+	verified := signature.Verify(messageHash, privKey.PubKey())
 
 	if !verified {
-		return nil
+		return nil, errors.New("failed to sign data")
 	}
 
-	return signature.Serialize()
+	return signature.Serialize(), nil
 }
 
-func (kf keyFactory) signatureSigningData(message []byte) string {
-	sign := kf.signData(message)
-	if len(sign) == 0 {
-		return ""
+func (kf keyFactory) signatureSigningData(message []byte) (string, error) {
+	sign, err := kf.signData(message)
+	if err != nil {
+		return "", err
 	}
-	return hex.EncodeToString(sign)
+
+	if len(sign) == 0 {
+		return "", errors.New("signature is empty")
+	}
+
+	return hex.EncodeToString(sign), nil
 }

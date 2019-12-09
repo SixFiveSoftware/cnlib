@@ -2,6 +2,8 @@ package cnlib
 
 import "github.com/btcsuite/btcd/chaincfg"
 
+import "errors"
+
 /// Type Declaration
 
 // Basecoin is used to provide information about the current user's wallet.
@@ -37,19 +39,19 @@ func (bc *Basecoin) UpdateAccount(account int) {
 }
 
 // GetBech32HRP returns a Bech32 HRP string derived from Purpose and Coin
-func (bc *Basecoin) GetBech32HRP() string {
+func (bc *Basecoin) GetBech32HRP() (string, error) {
 	if bc == nil {
-		return ""
+		return "", errors.New("no basecoin provided")
 	}
 
 	basecoin := *bc
 	if basecoin.Purpose != 84 {
-		return ""
+		return "", errors.New("basecoin purpose is not a segwit purpose")
 	}
 	if basecoin.Coin == 0 {
-		return "bc"
+		return "bc", nil
 	}
-	return "bcrt"
+	return "bcrt", nil
 }
 
 func (bc *Basecoin) isTestNet() bool {

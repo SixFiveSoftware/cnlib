@@ -3,6 +3,7 @@ package cnlib
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"strings"
 	"testing"
 
@@ -32,7 +33,9 @@ func TestNewWordListFromEntropy(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, size, n1)
 
-	wordString1 := NewWordListFromEntropy(bs1)
+	wordString1, err := NewWordListFromEntropy(bs1)
+	assert.Nil(t, err)
+
 	words1 := strings.Split(wordString1, " ")
 
 	assert.Equal(t, expectedWordLen, len(words1))
@@ -43,7 +46,9 @@ func TestNewWordListFromEntropy(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, size, n2)
 
-	wordString2 := NewWordListFromEntropy(bs2)
+	wordString2, err := NewWordListFromEntropy(bs2)
+	assert.Nil(t, err)
+
 	words2 := strings.Split(wordString2, " ")
 
 	assert.Equal(t, expectedWordLen, len(words2))
@@ -64,7 +69,8 @@ func TestSigningKey(t *testing.T) {
 	bc := NewBaseCoin(84, 0, 0)
 	wallet := NewHDWalletFromWords(w, bc)
 
-	sk := wallet.SigningKey()
+	sk, err := wallet.SigningKey()
+	assert.Nil(t, err)
 
 	skString := hex.EncodeToString(sk)
 	expected := "8eca986c3aeb26f5ce7717b6c246ebee58ff490ee74c43ce3c4021bb723bd750"
@@ -76,7 +82,8 @@ func TestSigningPublicKey(t *testing.T) {
 	bc := NewBaseCoin(84, 0, 0)
 	wallet := NewHDWalletFromWords(w, bc)
 
-	pk := wallet.SigningPublicKey()
+	pk, err := wallet.SigningPublicKey()
+	assert.Nil(t, err)
 
 	pkString := hex.EncodeToString(pk)
 	expected := "024458596b5c97e716e82015a72c37b5d3fe0c5dc70a4b83d72e7d2eb65920633e"
@@ -88,7 +95,9 @@ func TestCoinNinjaVerificationKeyHexString(t *testing.T) {
 	bc := NewBaseCoin(84, 0, 0)
 	wallet := NewHDWalletFromWords(w, bc)
 
-	pkString := wallet.CoinNinjaVerificationKeyHexString()
+	pkString, err := wallet.CoinNinjaVerificationKeyHexString()
+	assert.Nil(t, err)
+
 	expected := "024458596b5c97e716e82015a72c37b5d3fe0c5dc70a4b83d72e7d2eb65920633e"
 
 	assert.Equal(t, expected, pkString)
@@ -99,7 +108,9 @@ func TestReceiveAddressForIndex_ValidIndex(t *testing.T) {
 	bc := NewBaseCoin(84, 0, 0)
 	wallet := NewHDWalletFromWords(w, bc)
 
-	ma := wallet.ReceiveAddressForIndex(i)
+	ma, err := wallet.ReceiveAddressForIndex(i)
+	assert.Nil(t, err)
+
 	expectedAddress := "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu"
 	expectedPath := NewDerivationPath(84, 0, 0, 0, i)
 	expectedKey := "0430d54fd0dd420a6e5f8d3624f5f3482cae350f79d5f0753bf5beef9c2d91af3c04717159ce0828a7f686c2c7510b7aa7d4c685ebc2051642ccbebc7099e2f679"
@@ -116,8 +127,9 @@ func TestReceiveAddressForIndex_InvalidIndex(t *testing.T) {
 	bc := NewBaseCoin(84, 0, 0)
 	wallet := NewHDWalletFromWords(w, bc)
 
-	ma := wallet.ReceiveAddressForIndex(i)
-
+	ma, err := wallet.ReceiveAddressForIndex(i)
+	assert.NotNil(t, err)
+	// assert equal error?
 	assert.Nil(t, ma)
 }
 
@@ -126,7 +138,9 @@ func TestChangeAddressForIndex_ValidIndex(t *testing.T) {
 	bc := NewBaseCoin(84, 0, 0)
 	wallet := NewHDWalletFromWords(w, bc)
 
-	ma := wallet.ChangeAddressForIndex(i)
+	ma, err := wallet.ChangeAddressForIndex(i)
+	assert.Nil(t, err)
+
 	expectedAddress := "bc1q8c6fshw2dlwun7ekn9qwf37cu2rn755upcp6el"
 	expectedPath := NewDerivationPath(84, 0, 0, 1, i)
 	expectedKey := ""
@@ -143,7 +157,8 @@ func TestChangeAddressForIndex_InvalidIndex(t *testing.T) {
 	bc := NewBaseCoin(84, 0, 0)
 	wallet := NewHDWalletFromWords(w, bc)
 
-	ma := wallet.ChangeAddressForIndex(i)
+	ma, err := wallet.ChangeAddressForIndex(i)
+	assert.EqualError(t, errors.New("index cannot be negative"), err.Error())
 
 	assert.Nil(t, ma)
 }
@@ -155,12 +170,16 @@ func TestUpdateCoin(t *testing.T) {
 	expAddr1 := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
 	expAddr2 := "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu"
 
-	ma1 := wallet.ReceiveAddressForIndex(0)
+	ma1, err := wallet.ReceiveAddressForIndex(0)
+	assert.Nil(t, err)
+
 	assert.Equal(t, expAddr1, ma1.Address)
 
 	wallet.UpdateCoin(newCoin)
 
-	ma2 := wallet.ReceiveAddressForIndex(0)
+	ma2, err := wallet.ReceiveAddressForIndex(0)
+	assert.Nil(t, err)
+
 	assert.Equal(t, expAddr2, ma2.Address)
 }
 
@@ -182,7 +201,7 @@ func TestCheckForAddress_AddressDoesNotExist(t *testing.T) {
 
 	ma, err := wallet.CheckForAddress(expectedAddrAt30, 20)
 
-	assert.NotNil(t, err)
+	assert.EqualError(t, errors.New("address not found"), err.Error())
 	assert.Nil(t, ma)
 }
 
@@ -198,7 +217,10 @@ func TestEncyptWithEphemeralKey(t *testing.T) {
 
 	aliceWallet := NewHDWalletFromWords(aliceWords, c)
 	bobWallet := NewHDWalletFromWords(bobWords, c)
-	bobUCPK := bobWallet.ReceiveAddressForIndex(0).UncompressedPublicKey
+	bobAddr, err := bobWallet.ReceiveAddressForIndex(0)
+	assert.Nil(t, err)
+	bobUCPK := bobAddr.UncompressedPublicKey
+
 	assert.Equal(t, 130, len(bobUCPK))
 
 	enc, encErr := aliceWallet.EncryptWithEphemeralKey(message, entropy, bobUCPK)
@@ -221,7 +243,8 @@ func TestEncryptionWithDefaultKeysEndToEnd(t *testing.T) {
 
 	aliceWallet := NewHDWalletFromWords(aliceWords, c)
 	bobWallet := NewHDWalletFromWords(bobWords, c)
-	bobCPK := bobWallet.CoinNinjaVerificationKeyHexString()
+	bobCPK, err := bobWallet.CoinNinjaVerificationKeyHexString()
+	assert.Nil(t, err)
 
 	enc, encErr := aliceWallet.EncryptWithDefaultKey(message, bobCPK)
 	assert.Nil(t, encErr)

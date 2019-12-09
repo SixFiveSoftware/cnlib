@@ -1,6 +1,9 @@
 package cnlib
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
 func addressHelperTestHelpers() *AddressHelper {
 	bc := NewBaseCoin(84, 0, 0)
@@ -18,9 +21,7 @@ func TestBase58CheckEncoding_ValidAddress_ReturnsTrue(t *testing.T) {
 
 	for _, addr := range addresses {
 		valid := addressHelperTestHelpers().AddressIsBase58CheckEncoded(addr)
-		if !valid {
-			t.Errorf("Expected %v to be base58Check encoded", addr)
-		}
+		assert.True(t, valid)
 	}
 
 }
@@ -52,9 +53,7 @@ func TestBase58CheckEncoding_InvalidAddresses_ReturnFalse(t *testing.T) {
 
 	for _, addr := range addresses {
 		valid := addressHelperTestHelpers().AddressIsBase58CheckEncoded(addr)
-		if valid {
-			t.Errorf("Expected %v to not be base58Check encoded", addr)
-		}
+		assert.False(t, valid)
 	}
 }
 
@@ -68,9 +67,7 @@ func TestSegwitAddress_ValidAddresses_ReturnTrue(t *testing.T) {
 
 	for _, addr := range addresses {
 		valid := addressHelperTestHelpers().AddressIsValidSegwitAddress(addr)
-		if !valid {
-			t.Errorf("Expected %v to be valid segwit address.", addr)
-		}
+		assert.True(t, valid)
 	}
 }
 
@@ -82,9 +79,7 @@ func TestSegwitAddress_InvalidAddresses_ReturnFalse(t *testing.T) {
 
 	for _, addr := range addresses {
 		valid := addressHelperTestHelpers().AddressIsValidSegwitAddress(addr)
-		if valid {
-			t.Errorf("Expected %v to be invalid segwit address.", addr)
-		}
+		assert.False(t, valid)
 	}
 }
 
@@ -94,27 +89,24 @@ func TestSegwitAddressHRP(t *testing.T) {
 	legacyAddr := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
 	helper := addressHelperTestHelpers()
 
-	bcHrp, bcErr := helper.HRPFromAddress(bcAddr)
-	if bcErr != nil || bcHrp != "bc" {
-		t.Errorf("Expected hrp of bc, got %v. Error: %v", bcHrp, bcErr)
-	}
-	rtHrp, rtErr := helper.HRPFromAddress(rtAddr)
-	if rtErr != nil || rtHrp != "bcrt" {
-		t.Errorf("Expected hrp of bcrt, got %v. Error: %v", rtHrp, rtErr)
-	}
-	laHrp, laErr := helper.HRPFromAddress(legacyAddr)
-	if laErr == nil || laHrp != "" {
-		t.Errorf("Expected error, got %v. Error: %v", laHrp, laErr)
-	}
+	bcHrp, err := helper.HRPFromAddress(bcAddr)
+	assert.Nil(t, err)
+	assert.Equal(t, "bc", bcHrp)
+
+	rtHrp, err := helper.HRPFromAddress(rtAddr)
+	assert.Nil(t, err)
+	assert.Equal(t, "bcrt", rtHrp)
+
+	laHrp, err := helper.HRPFromAddress(legacyAddr)
+	assert.NotNil(t, err)
+	assert.Equal(t, "", laHrp)
 }
 
 func TestBytesPerInputBIP84Input(t *testing.T) {
 	path := NewDerivationPath(84, 0, 0, 0, 0)
 	utxo := NewUTXO("previous txid", 0, 1, path, nil, true)
 	bpi := addressHelperTestHelpers().bytesPerInput(utxo)
-	if bpi != p2wpkhSegwitInputSize {
-		t.Errorf("Expected %v bytes, got %v", p2wpkhSegwitInputSize, bpi)
-	}
+	assert.Equal(t, p2wpkhSegwitInputSize, bpi)
 }
 
 func TestBytesPerInputBIP49Input(t *testing.T) {
@@ -123,27 +115,19 @@ func TestBytesPerInputBIP49Input(t *testing.T) {
 	path := NewDerivationPath(49, 0, 0, 0, 0)
 	utxo := NewUTXO("previous txid", 0, 1, path, nil, true)
 	bpi := ah.bytesPerInput(utxo)
-
-	if bpi != p2shSegwitInputSize {
-		t.Errorf("Expected %v bytes, got %v", p2shSegwitInputSize, bpi)
-	}
+	assert.Equal(t, p2shSegwitInputSize, bpi)
 }
 
 func TestBytesPerChangeOuptutBIP84(t *testing.T) {
 	bpco := addressHelperTestHelpers().bytesPerChangeOuptut()
-	if bpco != p2wpkhOutputSize {
-		t.Errorf("Expected %v bytes, got %v", p2wpkhOutputSize, bpco)
-	}
+	assert.Equal(t, p2wpkhOutputSize, bpco)
 }
 
 func TestBytesPerChangeOuptutBIP49(t *testing.T) {
 	bc := NewBaseCoin(49, 0, 0)
 	ah := NewAddressHelper(bc)
 	bpco := ah.bytesPerChangeOuptut()
-
-	if bpco != p2shOutputSize {
-		t.Errorf("Expected %v bytes, got %v", p2shOutputSize, bpco)
-	}
+	assert.Equal(t, p2shOutputSize, bpco)
 }
 
 func TestTotalBytes_SingleBIP49Input_TwoBIP49Outputs(t *testing.T) {
@@ -156,12 +140,8 @@ func TestTotalBytes_SingleBIP49Input_TwoBIP49Outputs(t *testing.T) {
 	utxos := []*UTXO{utxo}
 
 	bytes, err := ah.totalBytes(utxos, address, true)
-	if err != nil {
-		t.Errorf("Expcted byte count, got error: %v", err)
-	}
-	if bytes != expectedBytes {
-		t.Errorf("Expected %v bytes, got %v", expectedBytes, bytes)
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, expectedBytes, bytes)
 }
 
 func TestTotalBytes_SingleBIP84Input_TwoBIP84Outputs(t *testing.T) {
@@ -172,12 +152,8 @@ func TestTotalBytes_SingleBIP84Input_TwoBIP84Outputs(t *testing.T) {
 	utxos := []*UTXO{utxo}
 
 	bytes, err := addressHelperTestHelpers().totalBytes(utxos, address, true)
-	if err != nil {
-		t.Errorf("Expcted byte count, got error: %v", err)
-	}
-	if bytes != expectedBytes {
-		t.Errorf("Expected %v bytes, got %v", expectedBytes, bytes)
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, expectedBytes, bytes)
 }
 
 func TestTotalBytes_SingleBIP49Input_LegacyOutput_BIP49Change(t *testing.T) {
@@ -190,10 +166,6 @@ func TestTotalBytes_SingleBIP49Input_LegacyOutput_BIP49Change(t *testing.T) {
 	utxos := []*UTXO{utxo}
 
 	bytes, err := ah.totalBytes(utxos, address, true)
-	if err != nil {
-		t.Errorf("Expcted byte count, got error: %v", err)
-	}
-	if bytes != expectedBytes {
-		t.Errorf("Expected %v bytes, got %v", expectedBytes, bytes)
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, expectedBytes, bytes)
 }

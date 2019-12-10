@@ -15,10 +15,18 @@ const (
 
 const dustThreshold = 1000
 
-// RBFOption is a typedef to int
-type RBFOption int
+// RBFOption is a struct wrapping an int for RBF preferred value. Value should be `MustBeRBF` (0), `MustNotBeRBF` (1), or `AllowedToBeRBF` (2).
+type RBFOption struct {
+	Value int
+}
+
+// NewRBFOption returns a pointer to RBFOption.
+func NewRBFOption(value int) *RBFOption {
+	return &RBFOption{Value: value}
+}
 
 // TransactionData is the main object containing all info necessary to build a bitcoin transaction.
+// Will retain references to all pointers, no need to carry on externally.
 type TransactionData struct {
 	PaymentAddress string
 	availableUtxos []*UTXO
@@ -30,7 +38,7 @@ type TransactionData struct {
 	ChangeAmount   int
 	ChangePath     *DerivationPath
 	Locktime       int
-	RBFOption      RBFOption
+	RBFOption      *RBFOption
 }
 
 // TransactionDataStandard adopts the Transaction interface, customizing the generation of the transaction.
@@ -59,9 +67,9 @@ Once created, add all available utxos one at a time using `addUTXO` function, as
 @param coin The coin representing the current user's wallet.
 @param amount The amount which you would like to send to the receipient.
 @param feeRate The fee rate to be multiplied by the estimated transaction size.
-@param changePath The derivative path for receiving change, if any.
+@param changePath The derivative path for receiving change, if any. Retains reference.
 @param blockHeight The current block height, used to calculate the locktime (blockHeight + 1).
-@param rbfOption A value passed to the transaction builder to determind replaceability.
+@param rbfOption A ref to a RBFOption object passed to the transaction builder to determind replaceability. Retains reference.
 @return Returns an instantiated object if fully able to satisfy amount+fee with UTXOs, or nil if insufficient funds.
 */
 func NewTransactionDataStandard(
@@ -71,7 +79,7 @@ func NewTransactionDataStandard(
 	feeRate int,
 	changePath *DerivationPath,
 	blockHeight int,
-	rbfOption RBFOption,
+	rbfOption *RBFOption,
 ) *TransactionDataStandard {
 	td := TransactionData{
 		PaymentAddress: paymentAddress,
@@ -102,7 +110,7 @@ Default RBFOption is MustBeRBF.
 @param coin The coin representing the current user's wallet.
 @param amount The amount which you would like to send to the receipient.
 @param flatFee The flat-fee to pay, NOT a rate. This fee, added to amount, will equal the total deducted from the wallet.
-@param changePath The derivative path for receiving change, if any.
+@param changePath The derivative path for receiving change, if any. Retains reference.
 @param blockHeight The current block height, used to calculate the locktime (blockHeight + 1).
 @return Returns an instantiated object if fully able to satisfy amount+fee with UTXOs, or nil if insufficient funds.
 */
@@ -114,6 +122,7 @@ func NewTransactionDataFlatFee(
 	changePath *DerivationPath,
 	blockHeight int,
 ) *TransactionDataFlatFee {
+	rbf := NewRBFOption(MustBeRBF)
 	td := TransactionData{
 		PaymentAddress: paymentAddress,
 		availableUtxos: []*UTXO{},
@@ -125,7 +134,7 @@ func NewTransactionDataFlatFee(
 		ChangeAmount:   0,
 		ChangePath:     changePath,
 		Locktime:       blockHeight,
-		RBFOption:      MustBeRBF,
+		RBFOption:      rbf,
 	}
 	tdff := TransactionDataFlatFee{TransactionData: &td}
 	return &tdff
@@ -151,6 +160,7 @@ func NewTransactionDataSendingMax(
 	feeRate int,
 	blockHeight int,
 ) *TransactionDataSendMax {
+	rbf := NewRBFOption(MustNotBeRBF)
 	td := TransactionData{
 		PaymentAddress: paymentAddress,
 		availableUtxos: []*UTXO{},
@@ -162,7 +172,7 @@ func NewTransactionDataSendingMax(
 		ChangeAmount:   0,
 		ChangePath:     nil,
 		Locktime:       blockHeight,
-		RBFOption:      MustNotBeRBF,
+		RBFOption:      rbf,
 	}
 	tdsm := TransactionDataSendMax{TransactionData: &td}
 	return &tdsm
@@ -348,13 +358,13 @@ func (td *TransactionData) utxoCount() int {
 }
 
 func (td *TransactionData) getSuggestedSequence() uint32 {
-	if td.RBFOption == MustBeRBF {
+	if td.RBFOption.Value == MustBeRBF {
 		return wire.MaxTxInSequenceNum - 2
 	}
-	if td.RBFOption == MustNotBeRBF {
+	if td.RBFOption.Value == MustNotBeRBF {
 		return wire.MaxTxInSequenceNum
 	}
-	if td.RBFOption == AllowedToBeRBF {
+	if td.RBFOption.Value == AllowedToBeRBF {
 		includesUnconfirmedUTXOs := false
 		for _, utxo := range td.requiredUtxos {
 			includesUnconfirmedUTXOs = includesUnconfirmedUTXOs || !utxo.IsConfirmed

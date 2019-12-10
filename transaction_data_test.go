@@ -31,8 +31,9 @@ func TestNewTransactionDataStandard_SingleOutput_SingleInput_SatisfiesAmount(t *
 	expectedLocktime := 500000
 
 	// when
+	rbf := NewRBFOption(MustBeRBF)
 	data := NewTransactionDataStandard(
-		address, addressHelper().Basecoin, paymentAmount, feeRate, changePath, 500000, MustBeRBF,
+		address, addressHelper().Basecoin, paymentAmount, feeRate, changePath, 500000, rbf,
 	)
 	data.AddUTXO(utxo)
 	success, err := data.Generate()
@@ -47,6 +48,7 @@ func TestNewTransactionDataStandard_SingleOutput_SingleInput_SatisfiesAmount(t *
 	assert.Equal(t, expectedNumberOfUTXOs, data.TransactionData.utxoCount())
 	assert.Equal(t, expectedLocktime, data.TransactionData.Locktime)
 	assert.True(t, data.TransactionData.shouldAddChangeToTransaction())
+	assert.Equal(t, rbf.Value, data.TransactionData.RBFOption.Value)
 }
 
 func TestTransactionDataStandard_SingleOutput_DoubleInput_WithChange(t *testing.T) {
@@ -72,10 +74,10 @@ func TestTransactionDataStandard_SingleOutput_DoubleInput_WithChange(t *testing.
 	expectedChangeAmount := amountFromUTXOs - paymentAmount - expectedFeeAmount
 	expectedNumberOfUTXOs := 2
 	expectedLocktime := 500000
-	expectedRBFOption := RBFOption(AllowedToBeRBF)
+	expectedRBFOption := NewRBFOption(AllowedToBeRBF)
 
 	// when
-	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, AllowedToBeRBF)
+	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, expectedRBFOption)
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
@@ -90,7 +92,7 @@ func TestTransactionDataStandard_SingleOutput_DoubleInput_WithChange(t *testing.
 	assert.Equal(t, expectedNumberOfUTXOs, data.TransactionData.utxoCount())
 	assert.Equal(t, expectedLocktime, data.TransactionData.Locktime)
 	assert.True(t, data.TransactionData.shouldAddChangeToTransaction())
-	assert.Equal(t, expectedRBFOption, data.TransactionData.RBFOption)
+	assert.Equal(t, expectedRBFOption.Value, data.TransactionData.RBFOption.Value)
 }
 
 func TestNewTransactionDataStandard_SingleInput_SingleOutput_NoChange(t *testing.T) {
@@ -115,10 +117,10 @@ func TestNewTransactionDataStandard_SingleInput_SingleOutput_NoChange(t *testing
 	expectedChangeAmount := amountFromUTXOs - paymentAmount - expectedFeeAmount
 	expectedNumberOfUTXOs := 1
 	expectedLocktime := 500000
-	expectedRBFOption := RBFOption(AllowedToBeRBF)
+	expectedRBFOption := NewRBFOption(AllowedToBeRBF)
 
 	// when
-	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, AllowedToBeRBF)
+	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, expectedRBFOption)
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
@@ -133,7 +135,7 @@ func TestNewTransactionDataStandard_SingleInput_SingleOutput_NoChange(t *testing
 	assert.Equal(t, expectedNumberOfUTXOs, data.TransactionData.utxoCount())
 	assert.Equal(t, expectedLocktime, data.TransactionData.Locktime)
 	assert.False(t, data.TransactionData.shouldAddChangeToTransaction())
-	assert.Equal(t, expectedRBFOption, data.TransactionData.RBFOption)
+	assert.Equal(t, expectedRBFOption.Value, data.TransactionData.RBFOption.Value)
 }
 
 func TestNewTransactionStandard_SingleOutput_DoubleInput_NoChange(t *testing.T) {
@@ -160,10 +162,10 @@ func TestNewTransactionStandard_SingleOutput_DoubleInput_NoChange(t *testing.T) 
 	expectedChangeAmount := 0
 	expectedNumberOfUTXOs := len(utxos)
 	expectedLocktime := 500000
-	expectedRBFOption := RBFOption(AllowedToBeRBF)
+	expectedRBFOption := NewRBFOption(AllowedToBeRBF)
 
 	// when
-	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, AllowedToBeRBF)
+	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, expectedRBFOption)
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
@@ -178,7 +180,7 @@ func TestNewTransactionStandard_SingleOutput_DoubleInput_NoChange(t *testing.T) 
 	assert.Equal(t, expectedNumberOfUTXOs, data.TransactionData.utxoCount())
 	assert.Equal(t, expectedLocktime, data.TransactionData.Locktime)
 	assert.False(t, data.TransactionData.shouldAddChangeToTransaction())
-	assert.Equal(t, expectedRBFOption, data.TransactionData.RBFOption)
+	assert.Equal(t, expectedRBFOption.Value, data.TransactionData.RBFOption.Value)
 }
 
 func TestNewTransactionStandard_SingleOutput_DoubleInput_InsufficientFunds(t *testing.T) {
@@ -194,9 +196,10 @@ func TestNewTransactionStandard_SingleOutput_DoubleInput_InsufficientFunds(t *te
 	utxo2 := NewUTXO("previous txid", 1, utxoAmount2, utxoPath, nil, true)
 	utxos := []*UTXO{utxo1, utxo2}
 	feeRate := 30
+	rbf := NewRBFOption(AllowedToBeRBF)
 
 	// when
-	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, AllowedToBeRBF)
+	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, rbf)
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
@@ -227,10 +230,10 @@ func TestNewTransactionDataStandard_SingleBIP84Output_SingleBIP49Input(t *testin
 	expectedChangeAmount := (utxoAmount1 + utxoAmount2) - paymentAmount - expectedFeeAmount
 	expectedNumberOfUTXOs := len(utxos)
 	expectedLocktime := 500000
-	expectedRBFOption := RBFOption(AllowedToBeRBF)
+	expectedRBFOption := NewRBFOption(AllowedToBeRBF)
 
 	// when
-	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, AllowedToBeRBF)
+	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, expectedRBFOption)
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
@@ -247,7 +250,7 @@ func TestNewTransactionDataStandard_SingleBIP84Output_SingleBIP49Input(t *testin
 	assert.Equal(t, expectedNumberOfUTXOs, data.TransactionData.utxoCount())
 	assert.Equal(t, expectedLocktime, data.TransactionData.Locktime)
 	assert.True(t, data.TransactionData.shouldAddChangeToTransaction())
-	assert.Equal(t, expectedRBFOption, data.TransactionData.RBFOption)
+	assert.Equal(t, expectedRBFOption.Value, data.TransactionData.RBFOption.Value)
 }
 
 func TestNewTransactionDataStandard_CostOfChangeIsBeneficial(t *testing.T) {
@@ -268,10 +271,10 @@ func TestNewTransactionDataStandard_CostOfChangeIsBeneficial(t *testing.T) {
 	expectedFeeAmount := feeRate*totalBytes + dustyChange
 	paymentAmount := utxo1.Amount + utxo2.Amount - expectedFeeAmount
 	expectedLocktime := 500000
-	expectedRBFOption := RBFOption(AllowedToBeRBF)
+	expectedRBFOption := NewRBFOption(AllowedToBeRBF)
 
 	// when
-	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, AllowedToBeRBF)
+	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, expectedRBFOption)
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
@@ -286,13 +289,13 @@ func TestNewTransactionDataStandard_CostOfChangeIsBeneficial(t *testing.T) {
 	assert.Equal(t, len(utxos), data.TransactionData.utxoCount())
 	assert.Equal(t, expectedLocktime, data.TransactionData.Locktime)
 	assert.False(t, data.TransactionData.shouldAddChangeToTransaction())
-	assert.Equal(t, expectedRBFOption, data.TransactionData.RBFOption)
+	assert.Equal(t, expectedRBFOption.Value, data.TransactionData.RBFOption.Value)
 
 	// when again
 	paymentAmount = 194000
 	expectedFeeAmount = 2560
 	expectedChange := 3440
-	goodData := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, AllowedToBeRBF)
+	goodData := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, expectedRBFOption)
 	for _, utxo := range utxos {
 		goodData.AddUTXO(utxo)
 	}
@@ -307,7 +310,7 @@ func TestNewTransactionDataStandard_CostOfChangeIsBeneficial(t *testing.T) {
 	assert.Equal(t, len(utxos), goodData.TransactionData.utxoCount())
 	assert.Equal(t, expectedLocktime, goodData.TransactionData.Locktime)
 	assert.True(t, goodData.TransactionData.shouldAddChangeToTransaction())
-	assert.Equal(t, expectedRBFOption, goodData.TransactionData.RBFOption)
+	assert.Equal(t, expectedRBFOption.Value, goodData.TransactionData.RBFOption.Value)
 }
 
 func TestNewTransactionDataFlatFee_WithChange(t *testing.T) {
@@ -325,7 +328,7 @@ func TestNewTransactionDataFlatFee_WithChange(t *testing.T) {
 	paymentAmount := 20000
 	flatFeeAmount := 10000
 	expectedChange := 3682
-	expectedRBFOption := RBFOption(MustBeRBF)
+	expectedRBFOption := NewRBFOption(MustBeRBF)
 
 	// when
 	data := NewTransactionDataFlatFee(address, ah.Basecoin, paymentAmount, flatFeeAmount, changePath, 500000)
@@ -344,7 +347,7 @@ func TestNewTransactionDataFlatFee_WithChange(t *testing.T) {
 	assert.Equal(t, len(utxos), data.TransactionData.utxoCount())
 	assert.Equal(t, 500000, data.TransactionData.Locktime)
 	assert.True(t, data.TransactionData.shouldAddChangeToTransaction())
-	assert.Equal(t, expectedRBFOption, data.TransactionData.RBFOption)
+	assert.Equal(t, expectedRBFOption.Value, data.TransactionData.RBFOption.Value)
 }
 
 func TestNewTransactionDataFlatFee_DustyTransaction_NoChange(t *testing.T) {
@@ -360,6 +363,7 @@ func TestNewTransactionDataFlatFee_DustyTransaction_NoChange(t *testing.T) {
 	paymentAmount := 20000
 	expectedFeeAmount := 10000
 	expectedChange := 0
+	expectedRBFOption := NewRBFOption(MustBeRBF)
 
 	// when
 	data := NewTransactionDataFlatFee(address, ah.Basecoin, paymentAmount, expectedFeeAmount, changePath, 500000)
@@ -377,6 +381,7 @@ func TestNewTransactionDataFlatFee_DustyTransaction_NoChange(t *testing.T) {
 	assert.Equal(t, len(utxos), data.TransactionData.utxoCount())
 	assert.Equal(t, expectedChange, data.TransactionData.ChangeAmount)
 	assert.False(t, data.TransactionData.shouldAddChangeToTransaction())
+	assert.Equal(t, expectedRBFOption.Value, data.TransactionData.RBFOption.Value)
 }
 
 func TestNewTransactionDataSendMax_UsesAllUTXOs_AmountIsTotalMinusFee(t *testing.T) {
@@ -395,6 +400,7 @@ func TestNewTransactionDataSendMax_UsesAllUTXOs_AmountIsTotalMinusFee(t *testing
 
 	expectedFeeAmount := feeRate * totalBytes // 1,125
 	expectedAmount := inputAmount - expectedFeeAmount
+	expectedRBFOption := NewRBFOption(MustNotBeRBF)
 
 	// when
 	data := NewTransactionDataSendingMax(address, ah.Basecoin, feeRate, 500000)
@@ -411,6 +417,7 @@ func TestNewTransactionDataSendMax_UsesAllUTXOs_AmountIsTotalMinusFee(t *testing
 	assert.Equal(t, expectedFeeAmount, data.TransactionData.FeeAmount)
 	assert.Equal(t, 0, data.TransactionData.ChangeAmount)
 	assert.False(t, data.TransactionData.shouldAddChangeToTransaction())
+	assert.Equal(t, expectedRBFOption.Value, data.TransactionData.RBFOption.Value)
 }
 
 func TestNewTransactionDataSendMax_JustEnoughFunds(t *testing.T) {
@@ -427,6 +434,7 @@ func TestNewTransactionDataSendMax_JustEnoughFunds(t *testing.T) {
 
 	expectedFeeAmount := feeRate * totalBytes         // 670
 	expectedAmount := inputAmount - expectedFeeAmount // 0
+	expectedRBFOption := NewRBFOption(MustNotBeRBF)
 
 	// when
 	data := NewTransactionDataSendingMax(address, ah.Basecoin, feeRate, 500000)
@@ -445,6 +453,7 @@ func TestNewTransactionDataSendMax_JustEnoughFunds(t *testing.T) {
 	assert.Equal(t, 670, data.TransactionData.FeeAmount)
 	assert.Equal(t, 0, data.TransactionData.ChangeAmount)
 	assert.False(t, data.TransactionData.shouldAddChangeToTransaction())
+	assert.Equal(t, expectedRBFOption.Value, data.TransactionData.RBFOption.Value)
 }
 
 func TestNewTransactionDataSendMax_InsufficientFunds(t *testing.T) {
@@ -484,6 +493,7 @@ func TestNewTransactionDataSendMax_ToNativeSegwit(t *testing.T) {
 
 	expectedFeeAmount := feeRate * totalBytes // 1,120
 	expectedAmount := inputAmount - expectedFeeAmount
+	expectedRBFOption := NewRBFOption(MustNotBeRBF)
 
 	// when
 	data := NewTransactionDataSendingMax(address, ah.Basecoin, feeRate, 500000)
@@ -501,4 +511,5 @@ func TestNewTransactionDataSendMax_ToNativeSegwit(t *testing.T) {
 	assert.Equal(t, expectedFeeAmount, data.TransactionData.FeeAmount)
 	assert.Equal(t, 0, data.TransactionData.ChangeAmount)
 	assert.False(t, data.TransactionData.shouldAddChangeToTransaction())
+	assert.Equal(t, expectedRBFOption.Value, data.TransactionData.RBFOption.Value)
 }

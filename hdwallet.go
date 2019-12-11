@@ -39,7 +39,15 @@ func GetFullBIP39WordListString() string {
 
 // NewWordListFromEntropy returns a space-separated list of mnemonic words from entropy.
 func NewWordListFromEntropy(entropy []byte) (string, error) {
-	return bip39.NewMnemonic(entropy)
+	words, err := bip39.NewMnemonic(entropy)
+	if err != nil {
+		return "", err
+	}
+	valid := bip39.IsMnemonicValid(words)
+	if !valid {
+		return "", errors.New("invalid mnemonic")
+	}
+	return words, nil
 }
 
 // NewHDWalletFromWords returns a pointer to an HDWallet, containing the Basecoin, words, and unexported master private key.

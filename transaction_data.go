@@ -8,9 +8,9 @@ import "github.com/btcsuite/btcd/wire"
 
 // Following constants are used for RBFOption.
 const (
-	MustBeRBF      = 0
-	MustNotBeRBF   = 1
-	AllowedToBeRBF = 2
+	MustBeRBF      int = 0
+	MustNotBeRBF   int = 1
+	AllowedToBeRBF int = 2
 )
 
 const dustThreshold = 1000

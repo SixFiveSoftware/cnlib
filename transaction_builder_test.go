@@ -26,8 +26,7 @@ func TestTransactionBuilderBuildsTxCorrect(t *testing.T) {
 
 	wallet := NewHDWalletFromWords(w, basecoin)
 
-	builder := transactionBuilder{wallet: wallet}
-	meta, err := builder.buildTxFromData(data.TransactionData)
+	meta, err := wallet.BuildTransactionMetadata(data.TransactionData)
 
 	assert.Nil(t, err)
 
@@ -66,8 +65,7 @@ func TestTransactionBuilder_TwoInputs_BuildsTransaction(t *testing.T) {
 
 	wallet := NewHDWalletFromWords(w, basecoin)
 
-	builder := transactionBuilder{wallet: wallet}
-	meta, err := builder.buildTxFromData(data.TransactionData)
+	meta, err := wallet.BuildTransactionMetadata(data.TransactionData)
 
 	assert.Nil(t, err)
 
@@ -103,8 +101,7 @@ func TestTransactionBuilder_BuildsNativeSegwitTransaction(t *testing.T) {
 
 	wallet := NewHDWalletFromWords(w, basecoin)
 
-	builder := transactionBuilder{wallet: wallet}
-	meta, err := builder.buildTxFromData(data.TransactionData)
+	meta, err := wallet.BuildTransactionMetadata(data.TransactionData)
 
 	assert.Nil(t, err)
 
@@ -138,8 +135,7 @@ func TestTransactionBuilder_BuildP2KH_NoChange(t *testing.T) {
 
 	wallet := NewHDWalletFromWords(w, basecoin)
 
-	builder := transactionBuilder{wallet: wallet}
-	meta, err := builder.buildTxFromData(data.TransactionData)
+	meta, err := wallet.BuildTransactionMetadata(data.TransactionData)
 
 	assert.Nil(t, err)
 
@@ -171,8 +167,7 @@ func TestTransationBuilder_BuildSingleUTXO(t *testing.T) {
 	expectedChangeAddress := "34K56kSjgUCUSD8GTtuF7c9Zzwokbs6uZ7"
 
 	wallet := NewHDWalletFromWords(w, basecoin)
-	builder := transactionBuilder{wallet: wallet}
-	meta, err := builder.buildTxFromData(data.TransactionData)
+	meta, err := wallet.BuildTransactionMetadata(data.TransactionData)
 
 	assert.Nil(t, err)
 	assert.Equal(t, expectedEncodedTx, meta.EncodedTx)
@@ -205,8 +200,7 @@ func TestTransactionBuilder_TestNet(t *testing.T) {
 	expectedChangeAddress := "2MvdUi5o3f2tnEFh9yGvta6FzptTZtkPJC8"
 
 	wallet := NewHDWalletFromWords(w, basecoin)
-	builder := transactionBuilder{wallet: wallet}
-	meta, err := builder.buildTxFromData(data.TransactionData)
+	meta, err := wallet.BuildTransactionMetadata(data.TransactionData)
 
 	assert.Nil(t, err)
 	assert.Equal(t, toAddress, data.TransactionData.PaymentAddress)
@@ -240,8 +234,7 @@ func TestTransactionBuilder_SendToNativeSegwit_BuildsProperly(t *testing.T) {
 	expectedChangeAddress := "3HEEdyeVwoGZf86jq8ovUhw9FiXkwCdY79"
 
 	wallet := NewHDWalletFromWords(w, basecoin)
-	builder := transactionBuilder{wallet: wallet}
-	meta, err := builder.buildTxFromData(data.TransactionData)
+	meta, err := wallet.BuildTransactionMetadata(data.TransactionData)
 
 	assert.Nil(t, err)
 	assert.Equal(t, toAddress, data.TransactionData.PaymentAddress)

@@ -247,6 +247,12 @@ func (wallet *HDWallet) ImportPrivateKey(encodedKey string) (*ImportedPrivateKey
 	return &retval, nil
 }
 
+// BuildTransactionMetadata will generate the tx metadata needed for client to consume.
+func (wallet *HDWallet) BuildTransactionMetadata(data *TransactionData) (*TransactionMetadata, error) {
+	builder := transactionBuilder{wallet: wallet}
+	return builder.buildTxFromData(data)
+}
+
 /// Unexported functions
 
 func (wallet *HDWallet) metaAddress(change int, index int) (*MetaAddress, error) {

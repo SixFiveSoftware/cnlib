@@ -347,14 +347,15 @@ func (t *TransactionDataSendMax) Generate() (bool, error) {
 	return true, nil
 }
 
+// UtxoCount returns count of UTXOs required to satisfy the transaction, not all UTXOs passed in before calling `Generate`.
+func (td *TransactionData) UtxoCount() int {
+	return len(td.requiredUtxos)
+}
+
 /// Unexported Functions
 
 func (td *TransactionData) shouldAddChangeToTransaction() bool {
 	return td.ChangeAmount > 0
-}
-
-func (td *TransactionData) utxoCount() int {
-	return len(td.requiredUtxos)
 }
 
 func (td *TransactionData) getSuggestedSequence() uint32 {

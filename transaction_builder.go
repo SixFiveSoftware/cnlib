@@ -90,7 +90,7 @@ func (tb transactionBuilder) buildTxFromData(data *TransactionData) (*Transactio
 	}
 
 	// populate utxos as inputs
-	for i := 0; i < data.utxoCount(); i++ {
+	for i := 0; i < data.UtxoCount(); i++ {
 		utxo, utxoErr := data.requiredUTXOAtIndex(i)
 		if utxoErr != nil {
 			return nil, utxoErr
@@ -138,8 +138,8 @@ func (tb transactionBuilder) buildTxFromData(data *TransactionData) (*Transactio
 }
 
 func (tb transactionBuilder) signInputsForTx(tx *wire.MsgTx, data *TransactionData) error {
-	prevPkScripts := make([][]byte, data.utxoCount())
-	inputValues := make([]btcutil.Amount, data.utxoCount())
+	prevPkScripts := make([][]byte, data.UtxoCount())
+	inputValues := make([]btcutil.Amount, data.UtxoCount())
 	secretsSource := cnSecretsSource{wallet: tb.wallet, usableAddresses: make(map[string]*UsableAddress)}
 
 	for i := range tx.TxIn {

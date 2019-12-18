@@ -223,12 +223,12 @@ func TestEncyptWithEphemeralKey(t *testing.T) {
 
 	assert.Equal(t, 130, len(bobUCPK))
 
-	enc, encErr := aliceWallet.EncryptWithEphemeralKey(message, entropy, bobUCPK)
+	enc, encErr := aliceWallet.EncryptWithEphemeralKey(entropy, message, bobUCPK)
 	assert.Nil(t, encErr)
 
 	bobPath := NewDerivationPath(84, 0, 0, 0, 0)
-	dec, decErr := bobWallet.DecryptWithKeyFromDerivationPath(enc, bobPath)
-	assert.Nil(t, decErr)
+	dec, err := bobWallet.DecryptWithKeyFromDerivationPath(bobPath, enc)
+	assert.Nil(t, err)
 
 	decryptedString := string(dec)
 	assert.Equal(t, messageString, decryptedString)
@@ -246,11 +246,11 @@ func TestEncryptionWithDefaultKeysEndToEnd(t *testing.T) {
 	bobCPK, err := bobWallet.CoinNinjaVerificationKeyHexString()
 	assert.Nil(t, err)
 
-	enc, encErr := aliceWallet.EncryptWithDefaultKey(message, bobCPK)
-	assert.Nil(t, encErr)
+	enc, err := aliceWallet.EncryptMessage(message, bobCPK)
+	assert.Nil(t, err)
 
-	dec, decErr := bobWallet.DecryptWithDefaultKey(enc)
-	assert.Nil(t, decErr)
+	dec, err := bobWallet.DecryptMessage(enc)
+	assert.Nil(t, err)
 
 	decryptedString := string(dec)
 	assert.Equal(t, messageString, decryptedString)

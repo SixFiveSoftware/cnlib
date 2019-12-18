@@ -146,7 +146,7 @@ func (wallet *HDWallet) SignatureSigningData(message []byte) (string, error) {
 }
 
 // EncryptWithEphemeralKey encrypts a given body (byte slice) using ECDH symmetric key encryption by creating an ephemeral keypair from entropy and given uncompressed public key.
-func (wallet *HDWallet) EncryptWithEphemeralKey(body []byte, entropy []byte, recipientUncompressedPubkey string) ([]byte, error) {
+func (wallet *HDWallet) EncryptWithEphemeralKey(entropy []byte, body []byte, recipientUncompressedPubkey string) ([]byte, error) {
 	pubkeyBytes, err := hex.DecodeString(recipientUncompressedPubkey)
 	if err != nil {
 		return nil, err
@@ -169,7 +169,7 @@ func (wallet *HDWallet) EncryptWithEphemeralKey(body []byte, entropy []byte, rec
 }
 
 // DecryptWithKeyFromDerivationPath decrypts a given payload with the key derived from given derivation path.
-func (wallet *HDWallet) DecryptWithKeyFromDerivationPath(body []byte, path *DerivationPath) ([]byte, error) {
+func (wallet *HDWallet) DecryptWithKeyFromDerivationPath(path *DerivationPath, body []byte) ([]byte, error) {
 	kf := keyFactory{Wallet: wallet}
 
 	pk, err := kf.indexPrivateKey(path)
@@ -185,8 +185,8 @@ func (wallet *HDWallet) DecryptWithKeyFromDerivationPath(body []byte, path *Deri
 	return cryptor.Decrypt(body, ecpk)
 }
 
-// EncryptWithDefaultKey encrypts a payload using signing key (m/42) and recipient's public key.
-func (wallet *HDWallet) EncryptWithDefaultKey(body []byte, recipientUncompressedPubkey string) ([]byte, error) {
+// EncryptMessage encrypts a payload using signing key (m/42) and recipient's public key.
+func (wallet *HDWallet) EncryptMessage(body []byte, recipientUncompressedPubkey string) ([]byte, error) {
 	pubkeyBytes, err := hex.DecodeString(recipientUncompressedPubkey)
 	if err != nil {
 		return nil, err
@@ -205,8 +205,8 @@ func (wallet *HDWallet) EncryptWithDefaultKey(body []byte, recipientUncompressed
 	return cryptor.Encrypt(body, signingKey, publicKey)
 }
 
-// DecryptWithDefaultKey decrypts a payload using signing key (m/42) and included sender public key (expected to be last 65 bytes of payload).
-func (wallet *HDWallet) DecryptWithDefaultKey(body []byte) ([]byte, error) {
+// DecryptMessage decrypts a payload using signing key (m/42) and included sender public key (expected to be last 65 bytes of payload).
+func (wallet *HDWallet) DecryptMessage(body []byte) ([]byte, error) {
 	signingKey, err := wallet.signingPrivateKey()
 	if err != nil {
 		return nil, err

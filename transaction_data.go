@@ -185,21 +185,8 @@ func (td *TransactionData) AddUTXO(utxo *UTXO) {
 	td.availableUtxos = append(td.availableUtxos, utxo)
 }
 
-// UTXOAtIndex returns a utxo at index of private array. This is to compensate for gomobile's inability to support arrays of custom types.
-func (td *TransactionData) UTXOAtIndex(index int) (*UTXO, error) {
-	if index < 0 {
-		return nil, errors.New("index must be greater than 0")
-	}
-
-	if index > len(td.availableUtxos)-1 {
-		return nil, errors.New("index must be within range of utxos")
-	}
-
-	return td.availableUtxos[index], nil
-}
-
-// requiredUTXOAtIndex returns a utxo that has been selected to be included in the outgoing transaction, or error if out of bounds.
-func (td *TransactionData) requiredUTXOAtIndex(index int) (*UTXO, error) {
+// RequiredUTXOAtIndex returns a utxo that has been selected to be included in the outgoing transaction, or error if out of bounds.
+func (td *TransactionData) RequiredUTXOAtIndex(index int) (*UTXO, error) {
 	if index < 0 {
 		return nil, errors.New("index must be greater than 0")
 	}

@@ -20,7 +20,8 @@ func TestBase58CheckEncoding_ValidAddress_ReturnsTrue(t *testing.T) {
 	}
 
 	for _, addr := range addresses {
-		valid := addressHelperTestHelpers().AddressIsBase58CheckEncoded(addr)
+		valid, err := AddressIsBase58CheckEncoded(addr)
+		assert.Nil(t, err)
 		assert.True(t, valid)
 	}
 
@@ -52,7 +53,8 @@ func TestBase58CheckEncoding_InvalidAddresses_ReturnFalse(t *testing.T) {
 	}
 
 	for _, addr := range addresses {
-		valid := addressHelperTestHelpers().AddressIsBase58CheckEncoded(addr)
+		valid, err := AddressIsBase58CheckEncoded(addr)
+		assert.NotNil(t, err)
 		assert.False(t, valid)
 	}
 }
@@ -66,7 +68,8 @@ func TestSegwitAddress_ValidAddresses_ReturnTrue(t *testing.T) {
 	}
 
 	for _, addr := range addresses {
-		valid := addressHelperTestHelpers().AddressIsValidSegwitAddress(addr)
+		valid, err := AddressIsValidSegwitAddress(addr)
+		assert.Nil(t, err)
 		assert.True(t, valid)
 	}
 }
@@ -78,7 +81,8 @@ func TestSegwitAddress_InvalidAddresses_ReturnFalse(t *testing.T) {
 	}
 
 	for _, addr := range addresses {
-		valid := addressHelperTestHelpers().AddressIsValidSegwitAddress(addr)
+		valid, err := AddressIsValidSegwitAddress(addr)
+		assert.NotNil(t, err)
 		assert.False(t, valid)
 	}
 }

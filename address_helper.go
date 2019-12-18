@@ -2,7 +2,9 @@ package cnlib
 
 import (
 	"errors"
+	"strings"
 
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
 	"github.com/btcsuite/btcutil/base58"
 )
@@ -41,33 +43,45 @@ func NewAddressHelper(basecoin *Basecoin) *AddressHelper {
 }
 
 // AddressIsBase58CheckEncoded decodes the address, returns true if address is base58check encoded.
-func (*AddressHelper) AddressIsBase58CheckEncoded(addr string) bool {
+func AddressIsBase58CheckEncoded(addr string) (bool, error) {
 	result, version, err := base58.CheckDecode(addr)
 
 	if err != nil {
-		return false
+		return false, err
 	}
 
 	if len(result) > 0 && version >= 0 {
-		return true
+		return true, nil
 	}
 
-	return false
+	return false, errors.New("address is not base58 encoded")
 }
 
 // AddressIsValidSegwitAddress decodes the address, returns true if is a witness type.
-func (ah *AddressHelper) AddressIsValidSegwitAddress(addr string) bool {
+func AddressIsValidSegwitAddress(addr string) (bool, error) {
+	params := &chaincfg.MainNetParams
+	if strings.HasPrefix(strings.ToLower(addr), "bcrt") {
+		params = &chaincfg.RegressionNetParams
+	}
 
-	address, addrErr := btcutil.DecodeAddress(addr, ah.Basecoin.defaultNetParams())
+	if !strings.HasPrefix(strings.ToLower(addr), "bc") {
+		return false, errors.New("address is not a bech32 encoded segwit address")
+	}
 
-	if addrErr != nil {
-		return false
+	address, err := btcutil.DecodeAddress(addr, params)
+
+	if err != nil {
+		return false, err
 	}
 
 	_, okWpkh := address.(*btcutil.AddressWitnessPubKeyHash)
 	_, okWsh := address.(*btcutil.AddressWitnessScriptHash)
 
-	return okWpkh || okWsh
+	if okWpkh || okWsh {
+		return true, nil
+	}
+
+	return false, errors.New("address is not a bech32 encoded segwit address")
 }
 
 // HRPFromAddress decodes the given address, and if a SegWit address, returns the HRP.

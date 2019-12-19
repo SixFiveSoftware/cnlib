@@ -36,11 +36,10 @@ func TestNewTransactionDataStandard_SingleOutput_SingleInput_SatisfiesAmount(t *
 		address, addressHelper().Basecoin, paymentAmount, feeRate, changePath, 500000, rbf,
 	)
 	data.AddUTXO(utxo)
-	success, err := data.Generate()
+	err = data.Generate()
 
 	// then
 	assert.Nil(t, err)
-	assert.True(t, success)
 	assert.Equal(t, paymentAmount, data.TransactionData.Amount)
 	assert.Equal(t, expectedFeeAmount, data.TransactionData.FeeAmount)
 	assert.Equal(t, 49995020, expectedChangeAmount)
@@ -81,11 +80,10 @@ func TestTransactionDataStandard_SingleOutput_DoubleInput_WithChange(t *testing.
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
-	success, err := data.Generate()
+	err = data.Generate()
 
 	// then
 	assert.Nil(t, err)
-	assert.True(t, success)
 	assert.Equal(t, paymentAmount, data.TransactionData.Amount)
 	assert.Equal(t, expectedFeeAmount, data.TransactionData.FeeAmount)
 	assert.Equal(t, expectedChangeAmount, data.TransactionData.ChangeAmount)
@@ -124,11 +122,10 @@ func TestNewTransactionDataStandard_SingleInput_SingleOutput_NoChange(t *testing
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
-	success, err := data.Generate()
+	err = data.Generate()
 
 	// then
 	assert.Nil(t, err)
-	assert.True(t, success)
 	assert.Equal(t, paymentAmount, data.TransactionData.Amount)
 	assert.Equal(t, expectedFeeAmount, data.TransactionData.FeeAmount)
 	assert.Equal(t, expectedChangeAmount, data.TransactionData.ChangeAmount)
@@ -169,11 +166,10 @@ func TestNewTransactionStandard_SingleOutput_DoubleInput_NoChange(t *testing.T) 
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
-	success, err := data.Generate()
+	err = data.Generate()
 
 	// then
 	assert.Nil(t, err)
-	assert.True(t, success)
 	assert.Equal(t, paymentAmount, data.TransactionData.Amount)
 	assert.Equal(t, expectedFeeAmount, data.TransactionData.FeeAmount)
 	assert.Equal(t, expectedChangeAmount, data.TransactionData.ChangeAmount)
@@ -203,11 +199,10 @@ func TestNewTransactionStandard_SingleOutput_DoubleInput_InsufficientFunds(t *te
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
-	success, err := data.Generate()
+	err := data.Generate()
 
 	// then
 	assert.EqualError(t, errors.New("insufficient funds"), err.Error())
-	assert.False(t, success)
 }
 
 func TestNewTransactionDataStandard_SingleBIP84Output_SingleBIP49Input(t *testing.T) {
@@ -237,11 +232,10 @@ func TestNewTransactionDataStandard_SingleBIP84Output_SingleBIP49Input(t *testin
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
-	success, err := data.Generate()
+	err = data.Generate()
 
 	// then
 	assert.Nil(t, err)
-	assert.True(t, success)
 	assert.Equal(t, 255, totalBytes)
 	assert.Equal(t, paymentAmount, data.TransactionData.Amount)
 	assert.Equal(t, expectedFeeAmount, data.TransactionData.FeeAmount)
@@ -278,11 +272,10 @@ func TestNewTransactionDataStandard_CostOfChangeIsBeneficial(t *testing.T) {
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
-	success1, err := data.Generate()
+	err = data.Generate()
 
 	// then
 	assert.Nil(t, err)
-	assert.True(t, success1)
 	assert.Equal(t, paymentAmount, data.TransactionData.Amount)
 	assert.Equal(t, expectedFeeAmount, data.TransactionData.FeeAmount)
 	assert.Equal(t, 0, data.TransactionData.ChangeAmount)
@@ -299,11 +292,10 @@ func TestNewTransactionDataStandard_CostOfChangeIsBeneficial(t *testing.T) {
 	for _, utxo := range utxos {
 		goodData.AddUTXO(utxo)
 	}
-	success2, err := goodData.Generate()
+	err = goodData.Generate()
 
 	// then again
 	assert.Nil(t, err)
-	assert.True(t, success2)
 	assert.Equal(t, paymentAmount, goodData.TransactionData.Amount)
 	assert.Equal(t, expectedFeeAmount, goodData.TransactionData.FeeAmount)
 	assert.Equal(t, expectedChange, goodData.TransactionData.ChangeAmount)
@@ -335,11 +327,10 @@ func TestNewTransactionDataFlatFee_WithChange(t *testing.T) {
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
-	success, err := data.Generate()
+	err := data.Generate()
 
 	// then
 	assert.Nil(t, err)
-	assert.True(t, success)
 	assert.Equal(t, address, data.TransactionData.PaymentAddress)
 	assert.Equal(t, paymentAmount, data.TransactionData.Amount)
 	assert.Equal(t, flatFeeAmount, data.TransactionData.FeeAmount)
@@ -370,11 +361,10 @@ func TestNewTransactionDataFlatFee_DustyTransaction_NoChange(t *testing.T) {
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
-	success, err := data.Generate()
+	err := data.Generate()
 
 	// then
 	assert.Nil(t, err)
-	assert.True(t, success)
 	assert.Equal(t, address, data.TransactionData.PaymentAddress)
 	assert.Equal(t, paymentAmount, data.TransactionData.Amount)
 	assert.Equal(t, expectedFeeAmount, data.TransactionData.FeeAmount)
@@ -407,11 +397,10 @@ func TestNewTransactionDataSendMax_UsesAllUTXOs_AmountIsTotalMinusFee(t *testing
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
-	success, err := data.Generate()
+	err = data.Generate()
 
 	// then
 	assert.Nil(t, err)
-	assert.True(t, success)
 	assert.Equal(t, address, data.TransactionData.PaymentAddress)
 	assert.Equal(t, expectedAmount, data.TransactionData.Amount)
 	assert.Equal(t, expectedFeeAmount, data.TransactionData.FeeAmount)
@@ -441,11 +430,10 @@ func TestNewTransactionDataSendMax_JustEnoughFunds(t *testing.T) {
 	for _, u := range utxos {
 		data.AddUTXO(u)
 	}
-	success, err := data.Generate()
+	err = data.Generate()
 
 	// then
 	assert.Nil(t, err)
-	assert.True(t, success)
 	assert.Equal(t, address, data.TransactionData.PaymentAddress)
 	assert.Equal(t, expectedAmount, data.TransactionData.Amount)
 	assert.Equal(t, 0, data.TransactionData.Amount)
@@ -470,11 +458,10 @@ func TestNewTransactionDataSendMax_InsufficientFunds(t *testing.T) {
 	for _, u := range utxos {
 		data.AddUTXO(u)
 	}
-	success, err := data.Generate()
+	err := data.Generate()
 
 	// then
 	assert.EqualError(t, errors.New("insufficient funds"), err.Error())
-	assert.False(t, success)
 }
 
 func TestNewTransactionDataSendMax_ToNativeSegwit(t *testing.T) {
@@ -500,11 +487,10 @@ func TestNewTransactionDataSendMax_ToNativeSegwit(t *testing.T) {
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
-	success, err := data.Generate()
+	err = data.Generate()
 
 	// then
 	assert.Nil(t, err)
-	assert.True(t, success)
 	assert.Equal(t, 224, totalBytes)
 	assert.Equal(t, address, data.TransactionData.PaymentAddress)
 	assert.Equal(t, expectedAmount, data.TransactionData.Amount)

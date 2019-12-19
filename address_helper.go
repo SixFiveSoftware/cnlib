@@ -43,45 +43,45 @@ func NewAddressHelper(basecoin *Basecoin) *AddressHelper {
 }
 
 // AddressIsBase58CheckEncoded decodes the address, returns true if address is base58check encoded.
-func AddressIsBase58CheckEncoded(addr string) (bool, error) {
+func AddressIsBase58CheckEncoded(addr string) error {
 	result, version, err := base58.CheckDecode(addr)
 
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	if len(result) > 0 && version >= 0 {
-		return true, nil
+		return nil
 	}
 
-	return false, errors.New("address is not base58 encoded")
+	return errors.New("address is not base58check encoded")
 }
 
 // AddressIsValidSegwitAddress decodes the address, returns true if is a witness type.
-func AddressIsValidSegwitAddress(addr string) (bool, error) {
+func AddressIsValidSegwitAddress(addr string) error {
 	params := &chaincfg.MainNetParams
 	if strings.HasPrefix(strings.ToLower(addr), "bcrt") {
 		params = &chaincfg.RegressionNetParams
 	}
 
 	if !strings.HasPrefix(strings.ToLower(addr), "bc") {
-		return false, errors.New("address is not a bech32 encoded segwit address")
+		return errors.New("address is not a bech32 encoded segwit address")
 	}
 
 	address, err := btcutil.DecodeAddress(addr, params)
 
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	_, okWpkh := address.(*btcutil.AddressWitnessPubKeyHash)
 	_, okWsh := address.(*btcutil.AddressWitnessScriptHash)
 
 	if okWpkh || okWsh {
-		return true, nil
+		return nil
 	}
 
-	return false, errors.New("address is not a bech32 encoded segwit address")
+	return errors.New("address is not a bech32 encoded segwit address")
 }
 
 // HRPFromAddress decodes the given address, and if a SegWit address, returns the HRP.

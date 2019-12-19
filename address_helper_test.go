@@ -1,8 +1,9 @@
 package cnlib
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func addressHelperTestHelpers() *AddressHelper {
@@ -20,9 +21,8 @@ func TestBase58CheckEncoding_ValidAddress_ReturnsTrue(t *testing.T) {
 	}
 
 	for _, addr := range addresses {
-		valid, err := AddressIsBase58CheckEncoded(addr)
+		err := AddressIsBase58CheckEncoded(addr)
 		assert.Nil(t, err)
-		assert.True(t, valid)
 	}
 
 }
@@ -50,12 +50,12 @@ func TestBase58CheckEncoding_InvalidAddresses_ReturnFalse(t *testing.T) {
 		"31415926535ILikePi89793238462643",
 		"foo",
 		"",
+		"com.coinninja.CoinKeeper.beta://google/link/",
 	}
 
 	for _, addr := range addresses {
-		valid, err := AddressIsBase58CheckEncoded(addr)
+		err := AddressIsBase58CheckEncoded(addr)
 		assert.NotNil(t, err)
-		assert.False(t, valid)
 	}
 }
 
@@ -68,9 +68,8 @@ func TestSegwitAddress_ValidAddresses_ReturnTrue(t *testing.T) {
 	}
 
 	for _, addr := range addresses {
-		valid, err := AddressIsValidSegwitAddress(addr)
+		err := AddressIsValidSegwitAddress(addr)
 		assert.Nil(t, err)
-		assert.True(t, valid)
 	}
 }
 
@@ -78,12 +77,13 @@ func TestSegwitAddress_InvalidAddresses_ReturnFalse(t *testing.T) {
 	addresses := []string{
 		"BC1QW508D6QEJXTDG4Y5R3ZARVAYR0C5XW7KV8F3T4", // p2wsh sipa demo invalid p2wpkh, YR transposed
 		"3Cd4xEu2VvM352BVgd9cb1Ct5vxz318tVT",
+		"com.coinninja.CoinKeeper.beta://google/link/",
+		"",
 	}
 
 	for _, addr := range addresses {
-		valid, err := AddressIsValidSegwitAddress(addr)
+		err := AddressIsValidSegwitAddress(addr)
 		assert.NotNil(t, err)
-		assert.False(t, valid)
 	}
 }
 

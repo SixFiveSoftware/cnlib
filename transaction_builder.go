@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"math"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -185,18 +186,27 @@ func (tb transactionBuilder) signInputsForTx(tx *wire.MsgTx, data *TransactionDa
 	}
 
 	// verify
-	for i := range tx.TxIn {
-		flags := txscript.StandardVerifyFlags
-		pkScript := prevPkScripts[i]
-		inputValue := inputValues[i]
-		vm, verErr := txscript.NewEngine(pkScript, tx, i, flags, nil, nil, int64(inputValue))
-		if verErr != nil {
-			return verErr
-		}
-		if vmErr := vm.Execute(); vmErr != nil {
-			return vmErr
-		}
+	err := validateMsgTx(tx, prevPkScripts, inputValues)
+	if err != nil {
+		return err
 	}
 
+	// success
+	return nil
+}
+
+func validateMsgTx(tx *wire.MsgTx, prevScripts [][]byte, inputValues []btcutil.Amount) error {
+	hashCache := txscript.NewTxSigHashes(tx)
+	flags := txscript.StandardVerifyFlags
+	for i, prevScript := range prevScripts {
+		vm, err := txscript.NewEngine(prevScript, tx, i, flags, nil, hashCache, int64(inputValues[i]))
+		if err != nil {
+			return fmt.Errorf("cannot create script engine: %s", err)
+		}
+		err = vm.Execute()
+		if err != nil {
+			return fmt.Errorf("cannot validate transaction: %s", err)
+		}
+	}
 	return nil
 }

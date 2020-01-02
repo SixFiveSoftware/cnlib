@@ -499,3 +499,48 @@ func TestNewTransactionDataSendMax_ToNativeSegwit(t *testing.T) {
 	assert.False(t, data.TransactionData.shouldAddChangeToTransaction())
 	assert.Equal(t, expectedRBFOption.Value, data.TransactionData.RBFOption.Value)
 }
+
+func TestNewTransactionDataStandard_TwoSegwitInputs_TwoSegwitOutputs(t *testing.T) {
+	ah := addressHelperTestHelpers()
+	address := "bc1q2myn4sqfwcjdgn8xqpeuq77277gj5ngmda5uk8"
+	feeRate := 1
+	path1 := NewDerivationPath(84, 0, 0, 0, 15)
+	path2 := NewDerivationPath(84, 0, 0, 1, 19)
+	changePath := NewDerivationPath(84, 0, 0, 1, 20)
+	utxo1 := NewUTXO("ca470899cad4aa48487e5cabb6abd387b0ff7a4ef380d3544a6a738f3c101e37", 0, 13770, path1, nil, true)
+	utxo2 := NewUTXO("16ce8aaf23d15f3440e4369600a3004e47ca0940d4756eb45a655c538dcaaa4a", 1, 197171, path2, nil, true)
+	utxos := []*UTXO{utxo1, utxo2}
+	inputAmount := utxo1.Amount + utxo2.Amount
+	paymentAmount := 200000
+	totalBytes, err := ah.totalBytes(utxos, address, true)
+	assert.Nil(t, err)
+	assert.Equal(t, 209, totalBytes)
+
+	expectedFeeAmount := feeRate * totalBytes // 209
+	expectedChangeAmount := 10732             //196791
+	expectedAmount := inputAmount - expectedFeeAmount - expectedChangeAmount
+	expectedRBFOption := NewRBFOption(AllowedToBeRBF)
+
+	// when
+	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 610518, expectedRBFOption)
+	data.AddUTXO(utxo1)
+	data.AddUTXO(utxo2)
+	err = data.Generate()
+
+	// then
+	assert.Nil(t, err)
+	assert.Equal(t, address, data.TransactionData.PaymentAddress)
+	assert.Equal(t, expectedAmount, data.TransactionData.Amount)
+	assert.Equal(t, expectedFeeAmount, data.TransactionData.FeeAmount)
+	assert.Equal(t, expectedChangeAmount, data.TransactionData.ChangeAmount)
+	assert.True(t, data.TransactionData.shouldAddChangeToTransaction())
+	assert.Equal(t, expectedRBFOption.Value, data.TransactionData.RBFOption.Value)
+
+	wallet := NewHDWalletFromWords(w, ah.Basecoin)
+	metadata, err := wallet.BuildTransactionMetadata(data.TransactionData)
+	assert.Nil(t, err)
+	expectedTxid := "4683df1447daec29bfab1514803304b722f4890cbdbaaec0f9cdfd7bc74681ca"
+	expectedEncodedTx := "01000000000102371e103c8f736a4a54d380f34e7affb087d3abb6ab5c7e4848aad4ca990847ca0000000000ffffffff4aaaca8d535c655ab46e75d44009ca474e00a3009636e440345fd123af8ace160100000000ffffffff02400d03000000000016001456c93ac0097624d44ce60073c07bcaf7912a4d1bec290000000000001600145b8585924dc44505ed40d8a127e792fa4e68cbfd02483045022100d05e99f619084e76edcd04595af4e0a31bb05efa9d9cab831578d63e8a388442022044e43fb1b4df85e97fe2cfe7d9fb7bc922af6e0516fbfa0d51ca5686db01b5a9012102b05e67ab098575526f23a7c4f3b69449125604c34a9b34909def7432a792fbf60248304502210088213160aa8b43fdee2fbcc8da497fdca8e4adc5f9028b01cf59f019af502c3c02202bbe894e35391befc91ae4fefb5afa63e01fb02ab326670e56864ea20facd3dc012103020d7c261fb5c6103a8f8f4c73b3fbed228c981869e68b6e9c6f6973b0550659d6500900"
+	assert.Equal(t, expectedTxid, metadata.Txid)
+	assert.Equal(t, expectedEncodedTx, metadata.EncodedTx)
+}

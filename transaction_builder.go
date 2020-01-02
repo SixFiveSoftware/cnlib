@@ -117,17 +117,17 @@ func (tb transactionBuilder) buildTxFromData(data *TransactionData) (*Transactio
 		tx.AddTxIn(txIn)
 	}
 
-	// sign inputs
-	err = tb.signInputsForTx(tx, data)
-	if err != nil {
-		return nil, err
-	}
-
 	// set locktime
 	if data.Locktime < 0 || uint32(data.Locktime) > math.MaxUint32 {
 		return nil, errors.New("Locktime out of bounds")
 	}
 	tx.LockTime = uint32(data.Locktime)
+
+	// sign inputs
+	err = tb.signInputsForTx(tx, data)
+	if err != nil {
+		return nil, err
+	}
 
 	// encode and return
 	txid := tx.TxHash().String()

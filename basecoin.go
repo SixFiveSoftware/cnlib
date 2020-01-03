@@ -44,11 +44,10 @@ func (bc *Basecoin) GetBech32HRP() (string, error) {
 		return "", errors.New("no basecoin provided")
 	}
 
-	basecoin := *bc
-	if basecoin.Purpose != 84 {
+	if bc.Purpose != 84 {
 		return "", errors.New("basecoin purpose is not a segwit purpose")
 	}
-	if basecoin.Coin == 0 {
+	if bc.Coin == 0 {
 		return "bc", nil
 	}
 	return "bcrt", nil

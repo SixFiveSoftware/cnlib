@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"errors"
 
-	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil/hdkeychain"
 )
@@ -40,14 +39,6 @@ func (kf keyFactory) indexPrivateKey(path *DerivationPath) (*hdkeychain.Extended
 		return nil, err
 	}
 	return indexKey, nil
-}
-
-func (kf keyFactory) indexPublicKey(path *DerivationPath) (*btcec.PublicKey, error) {
-	pk, err := kf.indexPrivateKey(path)
-	if err != nil {
-		return nil, err
-	}
-	return pk.ECPubKey()
 }
 
 func (kf keyFactory) signingMasterKey() (*hdkeychain.ExtendedKey, error) {

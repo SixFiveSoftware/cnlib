@@ -164,6 +164,9 @@ func (wallet *HDWallet) EncryptWithEphemeralKey(entropy []byte, body []byte, rec
 
 	w := NewHDWalletFromWords(m, wallet.Basecoin)
 	privateKey, err := w.masterPrivateKey.ECPrivKey()
+	if err != nil {
+		return nil, err
+	}
 
 	return cryptor.Encrypt(body, privateKey, publicKey)
 }

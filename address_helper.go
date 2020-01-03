@@ -10,12 +10,6 @@ import (
 )
 
 const (
-	checksumSize      = 4
-	p2wpkhProgramSize = 20
-	p2wshProgramSize  = 32
-)
-
-const (
 	bip49purpose = 49
 	bip84purpose = 84
 )
@@ -44,13 +38,13 @@ func NewAddressHelper(basecoin *Basecoin) *AddressHelper {
 
 // AddressIsBase58CheckEncoded decodes the address, returns true if address is base58check encoded.
 func AddressIsBase58CheckEncoded(addr string) error {
-	result, version, err := base58.CheckDecode(addr)
+	result, _, err := base58.CheckDecode(addr)
 
 	if err != nil {
 		return err
 	}
 
-	if len(result) > 0 && version >= 0 {
+	if len(result) > 0 {
 		return nil
 	}
 

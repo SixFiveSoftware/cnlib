@@ -55,10 +55,7 @@ func (bc *Basecoin) GetBech32HRP() (string, error) {
 }
 
 func (bc *Basecoin) isTestNet() bool {
-	if bc.Coin == 0 {
-		return false
-	}
-	return true
+	return bc.Coin != 0
 }
 
 func (bc *Basecoin) defaultNetParams() *chaincfg.Params {

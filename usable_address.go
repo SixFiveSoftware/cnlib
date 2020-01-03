@@ -119,8 +119,3 @@ func (ua *UsableAddress) buildSegwitAddress(path *DerivationPath) (string, error
 	keyHash := btcutil.Hash160(pubkeyBytes)
 	return bip84AddressFromPubkeyHash(keyHash, ua.Wallet.Basecoin)
 }
-
-func (ua *UsableAddress) buildCompressedPublicKey() []byte {
-	ecPub := ua.derivedPrivateKey.PubKey()
-	return ecPub.SerializeCompressed()
-}

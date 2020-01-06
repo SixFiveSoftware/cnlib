@@ -24,10 +24,23 @@ golangci-lint:
 .build: &build
   allow_failure: false
   script:
-    - gomobile bind -target ios -v -prefix CNB -o lib/Cnlib.framework .
-    - zip -r lib/cnlib-ios-$LIBRARY_TAG.zip lib/Golib.framework
+    - export GOPATH=$PWD/gopath
+    - echo $GOPATH
+    - export GO111MODULE=off
+    - mkdir -p gopath/src/git.coinninja.net/engineering
+    - ln -s $PWD gopath/src/git.coinninja.net/engineering/cnlib
+    - cd gopath/src/git.coinninja.net/engineering/cnlib
+    - go get golang.org/x/mobile/bind
+    - go get -v
+    - gomobile bind -target ios -v -prefix Cnb -o lib/Cnlib.framework .
+    - zip -r lib/cnlib-ios-$LIBRARY_TAG.zip lib/Cnlib.framework
     - gomobile bind -target android -v -o lib/cnlib-$LIBRARY_TAG.aar .
     - zip -r lib/cnlib-android-$LIBRARY_TAG.zip lib/cnlib-$LIBRARY_TAG-sources.jar lib/cnlib-$LIBRARY_TAG.aar
+  after_script:
+    - cd $GOPATH/..
+    - echo $GOPATH
+    - chmod -R u+w gopath
+    - rm -Rf gopath
 
 build:branch:
   stage: build

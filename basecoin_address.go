@@ -25,17 +25,6 @@ const (
 	baseSize              = 11
 )
 
-// AddressHelper is a struct with helper functions to provide info about addresses.
-type AddressHelper struct {
-	Basecoin *Basecoin
-}
-
-// NewAddressHelper returns a ref to a new AddressHelper object, given a *Basecoin.
-func NewAddressHelper(basecoin *Basecoin) *AddressHelper {
-	ah := AddressHelper{Basecoin: basecoin}
-	return &ah
-}
-
 // AddressIsBase58CheckEncoded decodes the address, returns true if address is base58check encoded.
 func AddressIsBase58CheckEncoded(addr string) error {
 	result, _, err := base58.CheckDecode(addr)
@@ -79,8 +68,8 @@ func AddressIsValidSegwitAddress(addr string) error {
 }
 
 // HRPFromAddress decodes the given address, and if a SegWit address, returns the HRP.
-func (ah *AddressHelper) HRPFromAddress(addr string) (string, error) {
-	address, addrErr := btcutil.DecodeAddress(addr, ah.Basecoin.defaultNetParams())
+func (bc *BaseCoin) HRPFromAddress(addr string) (string, error) {
+	address, addrErr := btcutil.DecodeAddress(addr, bc.defaultNetParams())
 
 	if addrErr != nil {
 		return "", errors.New("failed to decode address")
@@ -99,12 +88,10 @@ func (ah *AddressHelper) HRPFromAddress(addr string) (string, error) {
 	return "", errors.New("invalid segwit address")
 }
 
-/// Unexposed methods
-
-func (ah *AddressHelper) bytesPerInput(utxo *UTXO) int {
+func (bc *BaseCoin) bytesPerInput(utxo *UTXO) int {
 	purpose := bip49purpose
 	if utxo == nil {
-		if ah.Basecoin.Purpose == bip84purpose {
+		if bc.Purpose == bip84purpose {
 			purpose = bip84purpose
 		}
 	}
@@ -119,26 +106,26 @@ func (ah *AddressHelper) bytesPerInput(utxo *UTXO) int {
 	return p2wpkhSegwitInputSize
 }
 
-func (ah *AddressHelper) bytesPerChangeOuptut() int {
-	if ah.Basecoin.Purpose == bip84purpose {
+func (bc *BaseCoin) bytesPerChangeOuptut() int {
+	if bc.Purpose == bip84purpose {
 		return p2wpkhOutputSize
 	}
 	return p2shOutputSize
 }
 
 // totalBytes computes number of bytes a tx will be, given number of inputs, destination address, and if includes change or not.
-func (ah *AddressHelper) totalBytes(utxos []*UTXO, address string, includeChange bool) (int, error) {
+func (bc *BaseCoin) totalBytes(utxos []*UTXO, address string, includeChange bool) (int, error) {
 	total := baseSize
 
 	for _, utxo := range utxos {
-		total += ah.bytesPerInput(utxo)
+		total += bc.bytesPerInput(utxo)
 	}
 
 	if includeChange {
-		total = total + ah.bytesPerChangeOuptut()
+		total = total + bc.bytesPerChangeOuptut()
 	}
 
-	outBytes, err := ah.bytesPerOutputAddress(address)
+	outBytes, err := bc.bytesPerOutputAddress(address)
 	if err != nil {
 		return 0, err
 	}
@@ -147,8 +134,8 @@ func (ah *AddressHelper) totalBytes(utxos []*UTXO, address string, includeChange
 	return total, nil
 }
 
-func (ah *AddressHelper) bytesPerOutputAddress(addr string) (int, error) {
-	dec, decErr := btcutil.DecodeAddress(addr, ah.Basecoin.defaultNetParams())
+func (bc *BaseCoin) bytesPerOutputAddress(addr string) (int, error) {
+	dec, decErr := btcutil.DecodeAddress(addr, bc.defaultNetParams())
 	if decErr != nil {
 		return 0, decErr
 	}

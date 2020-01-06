@@ -6,23 +6,17 @@ import (
 	"testing"
 )
 
-func addressHelper() *AddressHelper {
-	bc := NewBaseCoin(49, 0, 0)
-	ah := NewAddressHelper(bc)
-	return ah
-}
-
 func TestNewTransactionDataStandard_SingleOutput_SingleInput_SatisfiesAmount(t *testing.T) {
 	// given
 	paymentAmount := 50000000 // 0.5 BTC
 	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
 	utxoAmount := 100000000 // 1.0 BTC
-	changePath := NewDerivationPath(84, 0, 0, 1, 0)
-	utxoPath := NewDerivationPath(49, 0, 0, 0, 0)
+	changePath := NewDerivationPath(BaseCoinBip84MainNet, 1, 0)
+	utxoPath := NewDerivationPath(BaseCoinBip49MainNet, 0, 0)
 	utxo := NewUTXO("previous txid", 0, utxoAmount, utxoPath, nil, true)
 	utxos := []*UTXO{utxo}
 	feeRate := 30
-	totalBytes, err := addressHelper().totalBytes(utxos, address, true)
+	totalBytes, err := BaseCoinBip49MainNet.totalBytes(utxos, address, true)
 	assert.Nil(t, err)
 
 	expectedFeeAmount := feeRate * totalBytes // 4,980
@@ -33,7 +27,7 @@ func TestNewTransactionDataStandard_SingleOutput_SingleInput_SatisfiesAmount(t *
 	// when
 	rbf := NewRBFOption(MustBeRBF)
 	data := NewTransactionDataStandard(
-		address, addressHelper().Basecoin, paymentAmount, feeRate, changePath, 500000, rbf,
+		address, BaseCoinBip49MainNet, paymentAmount, feeRate, changePath, 500000, rbf,
 	)
 	data.AddUTXO(utxo)
 	err = data.Generate()
@@ -53,16 +47,15 @@ func TestNewTransactionDataStandard_SingleOutput_SingleInput_SatisfiesAmount(t *
 func TestTransactionDataStandard_SingleOutput_DoubleInput_WithChange(t *testing.T) {
 	// given
 	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
-	ah := addressHelperTestHelpers() // helper uses 84 purpose to ensure correct input size is calculated
-	paymentAmount := 50000000        // 0.5 BTC
-	utxoAmount := 30000000           // 0.3 BTC
-	changePath := NewDerivationPath(84, 0, 0, 1, 0)
-	utxoPath := NewDerivationPath(49, 0, 0, 0, 0)
+	paymentAmount := 50000000 // 0.5 BTC
+	utxoAmount := 30000000    // 0.3 BTC
+	changePath := NewDerivationPath(BaseCoinBip84MainNet, 1, 0)
+	utxoPath := NewDerivationPath(BaseCoinBip49MainNet, 0, 0)
 	utxo1 := NewUTXO("previous txid", 0, utxoAmount, utxoPath, nil, true)
 	utxo2 := NewUTXO("previous txid", 1, utxoAmount, utxoPath, nil, true)
 	utxos := []*UTXO{utxo1, utxo2}
 	feeRate := 30
-	totalBytes, err := ah.totalBytes(utxos, address, true)
+	totalBytes, err := BaseCoinBip84MainNet.totalBytes(utxos, address, true)
 	assert.Nil(t, err)
 
 	expectedFeeAmount := feeRate * totalBytes // 7,680
@@ -76,7 +69,7 @@ func TestTransactionDataStandard_SingleOutput_DoubleInput_WithChange(t *testing.
 	expectedRBFOption := NewRBFOption(AllowedToBeRBF)
 
 	// when
-	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, expectedRBFOption)
+	data := NewTransactionDataStandard(address, BaseCoinBip84MainNet, paymentAmount, feeRate, changePath, 500000, expectedRBFOption)
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
@@ -96,15 +89,14 @@ func TestTransactionDataStandard_SingleOutput_DoubleInput_WithChange(t *testing.
 func TestNewTransactionDataStandard_SingleInput_SingleOutput_NoChange(t *testing.T) {
 	// given
 	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
-	ah := addressHelperTestHelpers() // helper uses 84 purpose to ensure correct input size is calculated
-	paymentAmount := 50000000        // 0.5 BTC
-	utxoAmount := 50004020           // 0.50004020 BTC
-	changePath := NewDerivationPath(84, 0, 0, 1, 0)
-	utxoPath := NewDerivationPath(49, 0, 0, 0, 0)
+	paymentAmount := 50000000 // 0.5 BTC
+	utxoAmount := 50004020    // 0.50004020 BTC
+	changePath := NewDerivationPath(BaseCoinBip84MainNet, 1, 0)
+	utxoPath := NewDerivationPath(BaseCoinBip49MainNet, 0, 0)
 	utxo := NewUTXO("previous txid", 0, utxoAmount, utxoPath, nil, true)
 	utxos := []*UTXO{utxo}
 	feeRate := 30
-	totalBytes, err := ah.totalBytes(utxos, address, false)
+	totalBytes, err := BaseCoinBip84MainNet.totalBytes(utxos, address, false)
 	assert.Nil(t, err)
 
 	expectedFeeAmount := feeRate * totalBytes // 4,020
@@ -118,7 +110,7 @@ func TestNewTransactionDataStandard_SingleInput_SingleOutput_NoChange(t *testing
 	expectedRBFOption := NewRBFOption(AllowedToBeRBF)
 
 	// when
-	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, expectedRBFOption)
+	data := NewTransactionDataStandard(address, BaseCoinBip84MainNet, paymentAmount, feeRate, changePath, 500000, expectedRBFOption)
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
@@ -137,18 +129,17 @@ func TestNewTransactionDataStandard_SingleInput_SingleOutput_NoChange(t *testing
 
 func TestNewTransactionStandard_SingleOutput_DoubleInput_NoChange(t *testing.T) {
 	// given
-	ah := addressHelperTestHelpers()
 	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
 	paymentAmount := 50000000 // 0.50000000 BTC
 	utxoAmount1 := 20001750   // 0.20001750 BTC
 	utxoAmount2 := 30005000   // 0.30005000 BTC
-	changePath := NewDerivationPath(84, 0, 0, 1, 0)
-	utxoPath := NewDerivationPath(49, 0, 0, 0, 0)
+	changePath := NewDerivationPath(BaseCoinBip84MainNet, 1, 0)
+	utxoPath := NewDerivationPath(BaseCoinBip49MainNet, 0, 0)
 	utxo1 := NewUTXO("previous txid", 0, utxoAmount1, utxoPath, nil, true)
 	utxo2 := NewUTXO("previous txid", 1, utxoAmount2, utxoPath, nil, true)
 	utxos := []*UTXO{utxo1, utxo2}
 	feeRate := 30
-	totalBytes, err := ah.totalBytes(utxos, address, false)
+	totalBytes, err := BaseCoinBip84MainNet.totalBytes(utxos, address, false)
 	assert.Nil(t, err)
 
 	expectedFeeAmount := feeRate * totalBytes // 6, 750
@@ -162,7 +153,7 @@ func TestNewTransactionStandard_SingleOutput_DoubleInput_NoChange(t *testing.T) 
 	expectedRBFOption := NewRBFOption(AllowedToBeRBF)
 
 	// when
-	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, expectedRBFOption)
+	data := NewTransactionDataStandard(address, BaseCoinBip84MainNet, paymentAmount, feeRate, changePath, 500000, expectedRBFOption)
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
@@ -182,12 +173,11 @@ func TestNewTransactionStandard_SingleOutput_DoubleInput_NoChange(t *testing.T) 
 func TestNewTransactionStandard_SingleOutput_DoubleInput_InsufficientFunds(t *testing.T) {
 	// given
 	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
-	ah := addressHelperTestHelpers()
 	paymentAmount := 50000000 // 0.50000000 BTC
 	utxoAmount1 := 20000000   // 0.20000000 BTC
 	utxoAmount2 := 10000000   // 0.10000000 BTC
-	changePath := NewDerivationPath(84, 0, 0, 1, 0)
-	utxoPath := NewDerivationPath(49, 0, 0, 0, 0)
+	changePath := NewDerivationPath(BaseCoinBip49MainNet, 1, 0)
+	utxoPath := NewDerivationPath(BaseCoinBip49MainNet, 0, 0)
 	utxo1 := NewUTXO("previous txid", 0, utxoAmount1, utxoPath, nil, true)
 	utxo2 := NewUTXO("previous txid", 1, utxoAmount2, utxoPath, nil, true)
 	utxos := []*UTXO{utxo1, utxo2}
@@ -195,7 +185,7 @@ func TestNewTransactionStandard_SingleOutput_DoubleInput_InsufficientFunds(t *te
 	rbf := NewRBFOption(AllowedToBeRBF)
 
 	// when
-	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, rbf)
+	data := NewTransactionDataStandard(address, BaseCoinBip49MainNet, paymentAmount, feeRate, changePath, 500000, rbf)
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
@@ -207,18 +197,17 @@ func TestNewTransactionStandard_SingleOutput_DoubleInput_InsufficientFunds(t *te
 
 func TestNewTransactionDataStandard_SingleBIP84Output_SingleBIP49Input(t *testing.T) {
 	// given
-	ah := addressHelperTestHelpers()
 	address := "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4"
 	paymentAmount := 50000000 // 0.5 BTC
 	utxoAmount1 := 30000000   // 0.3 BTC
 	utxoAmount2 := 30000000   // 0.3 BTC
-	changePath := NewDerivationPath(84, 0, 0, 1, 0)
-	utxoPath := NewDerivationPath(49, 0, 0, 0, 0)
+	changePath := NewDerivationPath(BaseCoinBip84MainNet, 1, 0)
+	utxoPath := NewDerivationPath(BaseCoinBip49MainNet, 0, 0)
 	utxo1 := NewUTXO("previous txid", 0, utxoAmount1, utxoPath, nil, true)
 	utxo2 := NewUTXO("previous txid", 1, utxoAmount2, utxoPath, nil, true)
 	utxos := []*UTXO{utxo1, utxo2}
 	feeRate := 30
-	totalBytes, err := ah.totalBytes(utxos, address, true)
+	totalBytes, err := BaseCoinBip84MainNet.totalBytes(utxos, address, true)
 	assert.Nil(t, err)
 
 	expectedFeeAmount := feeRate * totalBytes // 7,680
@@ -228,7 +217,7 @@ func TestNewTransactionDataStandard_SingleBIP84Output_SingleBIP49Input(t *testin
 	expectedRBFOption := NewRBFOption(AllowedToBeRBF)
 
 	// when
-	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, expectedRBFOption)
+	data := NewTransactionDataStandard(address, BaseCoinBip84MainNet, paymentAmount, feeRate, changePath, 500000, expectedRBFOption)
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
@@ -249,16 +238,15 @@ func TestNewTransactionDataStandard_SingleBIP84Output_SingleBIP49Input(t *testin
 
 func TestNewTransactionDataStandard_CostOfChangeIsBeneficial(t *testing.T) {
 	// given
-	ah := addressHelperTestHelpers()
 	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
-	path1 := NewDerivationPath(49, 0, 0, 1, 3)
+	path1 := NewDerivationPath(BaseCoinBip49MainNet, 1, 3)
 	utxo1 := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 100000, path1, nil, true)
-	path2 := NewDerivationPath(49, 0, 0, 0, 2)
+	path2 := NewDerivationPath(BaseCoinBip49MainNet, 0, 2)
 	utxo2 := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 100000, path2, nil, true)
 	utxos := []*UTXO{utxo1, utxo2}
-	changePath := NewDerivationPath(49, 0, 0, 1, 5)
+	changePath := NewDerivationPath(BaseCoinBip49MainNet, 1, 5)
 	feeRate := 10
-	totalBytes, err := ah.totalBytes(utxos, address, false)
+	totalBytes, err := BaseCoinBip49MainNet.totalBytes(utxos, address, false)
 	assert.Nil(t, err)
 
 	dustyChange := 1100
@@ -268,7 +256,7 @@ func TestNewTransactionDataStandard_CostOfChangeIsBeneficial(t *testing.T) {
 	expectedRBFOption := NewRBFOption(AllowedToBeRBF)
 
 	// when
-	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, expectedRBFOption)
+	data := NewTransactionDataStandard(address, BaseCoinBip84MainNet, paymentAmount, feeRate, changePath, 500000, expectedRBFOption)
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
@@ -288,7 +276,7 @@ func TestNewTransactionDataStandard_CostOfChangeIsBeneficial(t *testing.T) {
 	paymentAmount = 194000
 	expectedFeeAmount = 2560
 	expectedChange := 3440
-	goodData := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 500000, expectedRBFOption)
+	goodData := NewTransactionDataStandard(address, BaseCoinBip84MainNet, paymentAmount, feeRate, changePath, 500000, expectedRBFOption)
 	for _, utxo := range utxos {
 		goodData.AddUTXO(utxo)
 	}
@@ -308,22 +296,21 @@ func TestNewTransactionDataStandard_CostOfChangeIsBeneficial(t *testing.T) {
 func TestNewTransactionDataFlatFee_WithChange(t *testing.T) {
 	// given
 	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
-	ah := addressHelper()
-	path1 := NewDerivationPath(49, 0, 0, 1, 3)
-	path2 := NewDerivationPath(49, 0, 0, 0, 2)
-	path3 := NewDerivationPath(49, 0, 0, 0, 8)
+	path1 := NewDerivationPath(BaseCoinBip49MainNet, 1, 3)
+	path2 := NewDerivationPath(BaseCoinBip49MainNet, 0, 2)
+	path3 := NewDerivationPath(BaseCoinBip49MainNet, 0, 8)
 	utxo1 := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 2221, path1, nil, true)
 	utxo2 := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 15935, path2, nil, true)
 	utxo3 := NewUTXO("3013fcd9ea8fd65a69709f07fed2c1fd765d57664486debcb72ef47f2ea415f6", 0, 15526, path3, nil, true)
 	utxos := []*UTXO{utxo1, utxo2, utxo3}
-	changePath := NewDerivationPath(49, 0, 0, 1, 5)
+	changePath := NewDerivationPath(BaseCoinBip49MainNet, 1, 5)
 	paymentAmount := 20000
 	flatFeeAmount := 10000
 	expectedChange := 3682
 	expectedRBFOption := NewRBFOption(MustBeRBF)
 
 	// when
-	data := NewTransactionDataFlatFee(address, ah.Basecoin, paymentAmount, flatFeeAmount, changePath, 500000)
+	data := NewTransactionDataFlatFee(address, BaseCoinBip49MainNet, paymentAmount, flatFeeAmount, changePath, 500000)
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
@@ -343,21 +330,20 @@ func TestNewTransactionDataFlatFee_WithChange(t *testing.T) {
 
 func TestNewTransactionDataFlatFee_DustyTransaction_NoChange(t *testing.T) {
 	// given
-	ah := addressHelper()
 	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
-	path1 := NewDerivationPath(49, 0, 0, 1, 3)
-	path2 := NewDerivationPath(49, 0, 0, 0, 2)
+	path1 := NewDerivationPath(BaseCoinBip49MainNet, 1, 3)
+	path2 := NewDerivationPath(BaseCoinBip49MainNet, 0, 2)
 	utxo1 := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 20000, path1, nil, true)
 	utxo2 := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 10100, path2, nil, true)
 	utxos := []*UTXO{utxo1, utxo2}
-	changePath := NewDerivationPath(49, 0, 0, 1, 5)
+	changePath := NewDerivationPath(BaseCoinBip49MainNet, 1, 5)
 	paymentAmount := 20000
 	expectedFeeAmount := 10000
 	expectedChange := 0
 	expectedRBFOption := NewRBFOption(MustBeRBF)
 
 	// when
-	data := NewTransactionDataFlatFee(address, ah.Basecoin, paymentAmount, expectedFeeAmount, changePath, 500000)
+	data := NewTransactionDataFlatFee(address, BaseCoinBip49MainNet, paymentAmount, expectedFeeAmount, changePath, 500000)
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
@@ -376,16 +362,15 @@ func TestNewTransactionDataFlatFee_DustyTransaction_NoChange(t *testing.T) {
 
 func TestNewTransactionDataSendMax_UsesAllUTXOs_AmountIsTotalMinusFee(t *testing.T) {
 	// given
-	ah := addressHelper()
 	feeRate := 5
 	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
-	path1 := NewDerivationPath(49, 0, 0, 1, 3)
-	path2 := NewDerivationPath(49, 0, 0, 0, 2)
+	path1 := NewDerivationPath(BaseCoinBip49MainNet, 1, 3)
+	path2 := NewDerivationPath(BaseCoinBip49MainNet, 0, 2)
 	utxo1 := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 20000, path1, nil, true)
 	utxo2 := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 10000, path2, nil, true)
 	utxos := []*UTXO{utxo1, utxo2}
 	inputAmount := utxo1.Amount + utxo2.Amount
-	totalBytes, err := ah.totalBytes(utxos, address, false)
+	totalBytes, err := BaseCoinBip49MainNet.totalBytes(utxos, address, false)
 	assert.Nil(t, err)
 
 	expectedFeeAmount := feeRate * totalBytes // 1,125
@@ -393,7 +378,7 @@ func TestNewTransactionDataSendMax_UsesAllUTXOs_AmountIsTotalMinusFee(t *testing
 	expectedRBFOption := NewRBFOption(MustNotBeRBF)
 
 	// when
-	data := NewTransactionDataSendingMax(address, ah.Basecoin, feeRate, 500000)
+	data := NewTransactionDataSendingMax(address, BaseCoinBip49MainNet, feeRate, 500000)
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
@@ -411,14 +396,13 @@ func TestNewTransactionDataSendMax_UsesAllUTXOs_AmountIsTotalMinusFee(t *testing
 
 func TestNewTransactionDataSendMax_JustEnoughFunds(t *testing.T) {
 	// given
-	ah := addressHelper()
 	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
 	feeRate := 5
-	path1 := NewDerivationPath(49, 0, 0, 1, 3)
+	path1 := NewDerivationPath(BaseCoinBip49MainNet, 1, 3)
 	utxo := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 670, path1, nil, true)
 	utxos := []*UTXO{utxo}
 	inputAmount := utxo.Amount
-	totalBytes, err := ah.totalBytes(utxos, address, false)
+	totalBytes, err := BaseCoinBip49MainNet.totalBytes(utxos, address, false)
 	assert.Nil(t, err)
 
 	expectedFeeAmount := feeRate * totalBytes         // 670
@@ -426,7 +410,7 @@ func TestNewTransactionDataSendMax_JustEnoughFunds(t *testing.T) {
 	expectedRBFOption := NewRBFOption(MustNotBeRBF)
 
 	// when
-	data := NewTransactionDataSendingMax(address, ah.Basecoin, feeRate, 500000)
+	data := NewTransactionDataSendingMax(address, BaseCoinBip49MainNet, feeRate, 500000)
 	for _, u := range utxos {
 		data.AddUTXO(u)
 	}
@@ -446,15 +430,14 @@ func TestNewTransactionDataSendMax_JustEnoughFunds(t *testing.T) {
 
 func TestNewTransactionDataSendMax_InsufficientFunds(t *testing.T) {
 	// given
-	ah := addressHelper()
 	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
 	feeRate := 5
-	path1 := NewDerivationPath(39, 0, 0, 1, 3)
+	path1 := NewDerivationPath(BaseCoinBip49MainNet, 1, 3)
 	utxo := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 100, path1, nil, true)
 	utxos := []*UTXO{utxo}
 
 	// when
-	data := NewTransactionDataSendingMax(address, ah.Basecoin, feeRate, 500000)
+	data := NewTransactionDataSendingMax(address, BaseCoinBip49MainNet, feeRate, 500000)
 	for _, u := range utxos {
 		data.AddUTXO(u)
 	}
@@ -466,16 +449,15 @@ func TestNewTransactionDataSendMax_InsufficientFunds(t *testing.T) {
 
 func TestNewTransactionDataSendMax_ToNativeSegwit(t *testing.T) {
 	// given
-	ah := addressHelper()
 	address := "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4"
 	feeRate := 5
-	path1 := NewDerivationPath(49, 0, 0, 1, 3)
-	path2 := NewDerivationPath(49, 0, 0, 0, 2)
+	path1 := NewDerivationPath(BaseCoinBip49MainNet, 1, 3)
+	path2 := NewDerivationPath(BaseCoinBip49MainNet, 0, 2)
 	utxo1 := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 20000, path1, nil, true)
 	utxo2 := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 10000, path2, nil, true)
 	utxos := []*UTXO{utxo1, utxo2}
 	inputAmount := utxo1.Amount + utxo2.Amount
-	totalBytes, err := ah.totalBytes(utxos, address, false) // 224
+	totalBytes, err := BaseCoinBip49MainNet.totalBytes(utxos, address, false) // 224
 	assert.Nil(t, err)
 
 	expectedFeeAmount := feeRate * totalBytes // 1,120
@@ -483,7 +465,7 @@ func TestNewTransactionDataSendMax_ToNativeSegwit(t *testing.T) {
 	expectedRBFOption := NewRBFOption(MustNotBeRBF)
 
 	// when
-	data := NewTransactionDataSendingMax(address, ah.Basecoin, feeRate, 500000)
+	data := NewTransactionDataSendingMax(address, BaseCoinBip49MainNet, feeRate, 500000)
 	for _, utxo := range utxos {
 		data.AddUTXO(utxo)
 	}
@@ -501,18 +483,17 @@ func TestNewTransactionDataSendMax_ToNativeSegwit(t *testing.T) {
 }
 
 func TestNewTransactionDataStandard_TwoSegwitInputs_TwoSegwitOutputs(t *testing.T) {
-	ah := addressHelperTestHelpers()
 	address := "bc1q2myn4sqfwcjdgn8xqpeuq77277gj5ngmda5uk8"
 	feeRate := 1
-	path1 := NewDerivationPath(84, 0, 0, 0, 15)
-	path2 := NewDerivationPath(84, 0, 0, 1, 19)
-	changePath := NewDerivationPath(84, 0, 0, 1, 20)
+	path1 := NewDerivationPath(BaseCoinBip84MainNet, 0, 15)
+	path2 := NewDerivationPath(BaseCoinBip84MainNet, 1, 19)
+	changePath := NewDerivationPath(BaseCoinBip84MainNet, 1, 20)
 	utxo1 := NewUTXO("ca470899cad4aa48487e5cabb6abd387b0ff7a4ef380d3544a6a738f3c101e37", 0, 13770, path1, nil, true)
 	utxo2 := NewUTXO("16ce8aaf23d15f3440e4369600a3004e47ca0940d4756eb45a655c538dcaaa4a", 1, 197171, path2, nil, true)
 	utxos := []*UTXO{utxo1, utxo2}
 	inputAmount := utxo1.Amount + utxo2.Amount
 	paymentAmount := 200000
-	totalBytes, err := ah.totalBytes(utxos, address, true)
+	totalBytes, err := BaseCoinBip84MainNet.totalBytes(utxos, address, true)
 	assert.Nil(t, err)
 	assert.Equal(t, 209, totalBytes)
 
@@ -522,7 +503,7 @@ func TestNewTransactionDataStandard_TwoSegwitInputs_TwoSegwitOutputs(t *testing.
 	expectedRBFOption := NewRBFOption(AllowedToBeRBF)
 
 	// when
-	data := NewTransactionDataStandard(address, ah.Basecoin, paymentAmount, feeRate, changePath, 610518, expectedRBFOption)
+	data := NewTransactionDataStandard(address, BaseCoinBip84MainNet, paymentAmount, feeRate, changePath, 610518, expectedRBFOption)
 	data.AddUTXO(utxo1)
 	data.AddUTXO(utxo2)
 	err = data.Generate()
@@ -536,7 +517,7 @@ func TestNewTransactionDataStandard_TwoSegwitInputs_TwoSegwitOutputs(t *testing.
 	assert.True(t, data.TransactionData.shouldAddChangeToTransaction())
 	assert.Equal(t, expectedRBFOption.Value, data.TransactionData.RBFOption.Value)
 
-	wallet := NewHDWalletFromWords(w, ah.Basecoin)
+	wallet := NewHDWalletFromWords(w, BaseCoinBip84MainNet)
 	metadata, err := wallet.BuildTransactionMetadata(data.TransactionData)
 	assert.Nil(t, err)
 	expectedTxid := "4683df1447daec29bfab1514803304b722f4890cbdbaaec0f9cdfd7bc74681ca"

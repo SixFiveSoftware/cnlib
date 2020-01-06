@@ -7,8 +7,7 @@ import (
 )
 
 func TestSignData(t *testing.T) {
-	bc := NewBaseCoin(84, 0, 0)
-	wallet := NewHDWalletFromWords(w, bc)
+	wallet := NewHDWalletFromWords(w, BaseCoinBip84MainNet)
 	message := []byte("Hello World")
 
 	signature, err := wallet.SignData(message)
@@ -21,8 +20,7 @@ func TestSignData(t *testing.T) {
 }
 
 func TestSignatureSigningData(t *testing.T) {
-	bc := NewBaseCoin(84, 0, 0)
-	wallet := NewHDWalletFromWords(w, bc)
+	wallet := NewHDWalletFromWords(w, BaseCoinBip84MainNet)
 	message := []byte("Hello World")
 
 	str, err := wallet.SignatureSigningData(message)

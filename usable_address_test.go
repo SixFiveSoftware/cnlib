@@ -6,9 +6,8 @@ import (
 )
 
 func TestMetaAddress_Receive_Segwit_Address(t *testing.T) {
-	path := NewDerivationPath(84, 0, 0, 0, 0)
-	coin := NewBaseCoin(84, 0, 0)
-	wallet := NewHDWalletFromWords(w, coin)
+	path := NewDerivationPath(BaseCoinBip84MainNet, 0, 0)
+	wallet := NewHDWalletFromWords(w, BaseCoinBip84MainNet)
 
 	usableAddress, err := NewUsableAddressWithDerivationPath(wallet, path)
 	assert.Nil(t, err)
@@ -25,9 +24,8 @@ func TestMetaAddress_Receive_Segwit_Address(t *testing.T) {
 }
 
 func TestMetaAddress_Change_Segwit_Address(t *testing.T) {
-	path := NewDerivationPath(84, 0, 0, 1, 0)
-	coin := NewBaseCoin(84, 0, 0)
-	wallet := NewHDWalletFromWords(w, coin)
+	path := NewDerivationPath(BaseCoinBip84MainNet, 1, 0)
+	wallet := NewHDWalletFromWords(w, BaseCoinBip84MainNet)
 	usableAddress, err := NewUsableAddressWithDerivationPath(wallet, path)
 	assert.Nil(t, err)
 
@@ -43,14 +41,12 @@ func TestMetaAddress_Change_Segwit_Address(t *testing.T) {
 }
 
 func TestMetaAddress_RegTestAddresses(t *testing.T) {
-	bc := NewBaseCoin(84, 1, 0)
-
-	rpath0 := NewDerivationPath(84, 1, 0, 0, 0)
-	rpath1 := NewDerivationPath(84, 1, 0, 0, 1)
-	rpath2 := NewDerivationPath(84, 1, 0, 0, 2)
-	cpath0 := NewDerivationPath(84, 1, 0, 1, 0)
-	cpath1 := NewDerivationPath(84, 1, 0, 1, 1)
-	cpath2 := NewDerivationPath(84, 1, 0, 1, 2)
+	rpath0 := NewDerivationPath(BaseCoinBip84TestNet, 0, 0)
+	rpath1 := NewDerivationPath(BaseCoinBip84TestNet, 0, 1)
+	rpath2 := NewDerivationPath(BaseCoinBip84TestNet, 0, 2)
+	cpath0 := NewDerivationPath(BaseCoinBip84TestNet, 1, 0)
+	cpath1 := NewDerivationPath(BaseCoinBip84TestNet, 1, 1)
+	cpath2 := NewDerivationPath(BaseCoinBip84TestNet, 1, 2)
 
 	rexp0 := "bcrt1q6rz28mcfaxtmd6v789l9rrlrusdprr9pz3cppk"
 	rexp1 := "bcrt1qd7spv5q28348xl4myc8zmh983w5jx32cs707jh"
@@ -59,7 +55,7 @@ func TestMetaAddress_RegTestAddresses(t *testing.T) {
 	cexp1 := "bcrt1qkwgskuzmmwwvqajnyr7yp9hgvh5y45kg984qvy"
 	cexp2 := "bcrt1q2vma00td2g9llw8hwa8ny3r774rtt7ae3q2e44"
 
-	wallet := NewHDWalletFromWords(w, bc)
+	wallet := NewHDWalletFromWords(w, BaseCoinBip84TestNet)
 
 	rua0, err := NewUsableAddressWithDerivationPath(wallet, rpath0)
 	assert.Nil(t, err)
@@ -96,9 +92,8 @@ func TestMetaAddress_RegTestAddresses(t *testing.T) {
 }
 
 func TestMetaAddress_Receive_LegacySegwit_Address(t *testing.T) {
-	path := NewDerivationPath(49, 0, 0, 0, 0)
-	coin := NewBaseCoin(49, 0, 0)
-	wallet := NewHDWalletFromWords(w, coin)
+	path := NewDerivationPath(BaseCoinBip49MainNet, 0, 0)
+	wallet := NewHDWalletFromWords(w, BaseCoinBip49MainNet)
 
 	usableAddress, err := NewUsableAddressWithDerivationPath(wallet, path)
 	assert.Nil(t, err)
@@ -115,9 +110,8 @@ func TestMetaAddress_Receive_LegacySegwit_Address(t *testing.T) {
 }
 
 func TestMetaAddress_Change_LegacySegwit_Address(t *testing.T) {
-	path := NewDerivationPath(49, 0, 0, 1, 0)
-	coin := NewBaseCoin(49, 0, 0)
-	wallet := NewHDWalletFromWords(w, coin)
+	path := NewDerivationPath(BaseCoinBip49MainNet, 1, 0)
+	wallet := NewHDWalletFromWords(w, BaseCoinBip49MainNet)
 
 	usableAddress, err := NewUsableAddressWithDerivationPath(wallet, path)
 	assert.Nil(t, err)

@@ -38,7 +38,7 @@ func (s cnSecretsSource) GetScript(addr btcutil.Address) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	addrHash, err := btcutil.NewAddressScriptHash(scriptSig, s.wallet.Basecoin.defaultNetParams())
+	addrHash, err := btcutil.NewAddressScriptHash(scriptSig, s.wallet.BaseCoin.defaultNetParams())
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (s cnSecretsSource) GetScript(addr btcutil.Address) ([]byte, error) {
 }
 
 func (s cnSecretsSource) ChainParams() *chaincfg.Params {
-	return s.wallet.Basecoin.defaultNetParams()
+	return s.wallet.BaseCoin.defaultNetParams()
 }
 
 func (tb transactionBuilder) buildTxFromData(data *TransactionData) (*TransactionMetadata, error) {
@@ -98,7 +98,7 @@ func (tb transactionBuilder) buildTxFromData(data *TransactionData) (*Transactio
 		}
 
 		// prev tx outpoint
-		if utxo.Index < 0 || utxo.Index > int(math.MaxUint32) {
+		if utxo.Index < 0 || utxo.Index > int(math.MaxInt32) {
 			return nil, errors.New("previous utxo index out of bounds")
 		}
 		newHash, newHashErr := chainhash.NewHashFromStr(utxo.Txid)
@@ -118,7 +118,7 @@ func (tb transactionBuilder) buildTxFromData(data *TransactionData) (*Transactio
 	}
 
 	// set locktime
-	if data.Locktime < 0 || data.Locktime > int(math.MaxUint32) {
+	if data.Locktime < 0 || data.Locktime > int(math.MaxInt32) {
 		return nil, errors.New("Locktime out of bounds")
 	}
 	tx.LockTime = uint32(data.Locktime)
@@ -170,7 +170,7 @@ func (tb transactionBuilder) signInputsForTx(tx *wire.MsgTx, data *TransactionDa
 			return errors.New("no source address available to sign input")
 		}
 
-		sourceAddress, err := btcutil.DecodeAddress(address, tb.wallet.Basecoin.defaultNetParams())
+		sourceAddress, err := btcutil.DecodeAddress(address, tb.wallet.BaseCoin.defaultNetParams())
 		if err != nil {
 			return err
 		}

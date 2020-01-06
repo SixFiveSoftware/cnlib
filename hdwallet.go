@@ -19,7 +19,7 @@ import (
 
 // HDWallet represents the user's current wallet.
 type HDWallet struct {
-	Basecoin         *Basecoin
+	BaseCoin         *BaseCoin
 	WalletWords      string // space-separated string of user's recovery words
 	masterPrivateKey *hdkeychain.ExtendedKey
 }
@@ -50,13 +50,13 @@ func NewWordListFromEntropy(entropy []byte) (string, error) {
 	return words, nil
 }
 
-// NewHDWalletFromWords returns a pointer to an HDWallet, containing the Basecoin, words, and unexported master private key.
-func NewHDWalletFromWords(wordString string, basecoin *Basecoin) *HDWallet {
+// NewHDWalletFromWords returns a pointer to an HDWallet, containing the BaseCoin, words, and unexported master private key.
+func NewHDWalletFromWords(wordString string, basecoin *BaseCoin) *HDWallet {
 	masterKey, err := masterPrivateKey(wordString, basecoin)
 	if err != nil {
 		return nil
 	}
-	wallet := HDWallet{Basecoin: basecoin, WalletWords: wordString, masterPrivateKey: masterKey}
+	wallet := HDWallet{BaseCoin: basecoin, WalletWords: wordString, masterPrivateKey: masterKey}
 	return &wallet
 }
 
@@ -97,19 +97,19 @@ func (wallet *HDWallet) CoinNinjaVerificationKeyHexString() (string, error) {
 	return hex.EncodeToString(key), nil
 }
 
-// ReceiveAddressForIndex returns a receive MetaAddress derived from the current wallet, Basecoin, and index.
+// ReceiveAddressForIndex returns a receive MetaAddress derived from the current wallet, BaseCoin, and index.
 func (wallet *HDWallet) ReceiveAddressForIndex(index int) (*MetaAddress, error) {
 	return wallet.metaAddress(0, index)
 }
 
-// ChangeAddressForIndex returns a change MetaAddress derived from the current wallet, Basecoin, and index.
+// ChangeAddressForIndex returns a change MetaAddress derived from the current wallet, BaseCoin, and index.
 func (wallet *HDWallet) ChangeAddressForIndex(index int) (*MetaAddress, error) {
 	return wallet.metaAddress(1, index)
 }
 
-// UpdateCoin updates the pointer stored to a new instance of Basecoin. Fetched MetaAddresses will reflect updated coin.
-func (wallet *HDWallet) UpdateCoin(c *Basecoin) {
-	wallet.Basecoin = c
+// UpdateCoin updates the pointer stored to a new instance of BaseCoin. Fetched MetaAddresses will reflect updated coin.
+func (wallet *HDWallet) UpdateCoin(c *BaseCoin) {
+	wallet.BaseCoin = c
 }
 
 // CheckForAddress scans the wallet for a given address up to a given index on both receive/change chains.
@@ -162,7 +162,7 @@ func (wallet *HDWallet) EncryptWithEphemeralKey(entropy []byte, body []byte, rec
 		return nil, err
 	}
 
-	w := NewHDWalletFromWords(m, wallet.Basecoin)
+	w := NewHDWalletFromWords(m, wallet.BaseCoin)
 	privateKey, err := w.masterPrivateKey.ECPrivKey()
 	if err != nil {
 		return nil, err
@@ -227,19 +227,18 @@ func (wallet *HDWallet) ImportPrivateKey(encodedKey string) (*ImportedPrivateKey
 
 	serializedPubkey := wif.SerializePubKey()
 	hash160 := btcutil.Hash160(serializedPubkey)
-	basecoin := NewBaseCoin(84, 0, 0)
 
 	// legacy
 	legacy := base58.CheckEncode(hash160, 0)
 
 	// legacy segwit
-	ls, err := bip49AddressFromPubkeyHash(hash160, basecoin)
+	ls, err := bip49AddressFromPubkeyHash(hash160, wallet.BaseCoin)
 	if err != nil {
 		return nil, err
 	}
 
 	// native segwit
-	ns, err := bip84AddressFromPubkeyHash(hash160, basecoin)
+	ns, err := bip84AddressFromPubkeyHash(hash160, wallet.BaseCoin)
 	if err != nil {
 		return nil, err
 	}
@@ -263,8 +262,7 @@ func (wallet *HDWallet) metaAddress(change int, index int) (*MetaAddress, error)
 		return nil, errors.New("index cannot be negative")
 	}
 
-	c := wallet.Basecoin
-	path := NewDerivationPath(c.Purpose, c.Coin, c.Account, change, index)
+	path := NewDerivationPath(wallet.BaseCoin, change, index)
 
 	ua, err := NewUsableAddressWithDerivationPath(wallet, path)
 	if err != nil {
@@ -278,7 +276,7 @@ func hardened(i int) uint32 {
 	return hdkeychain.HardenedKeyStart + uint32(i)
 }
 
-func masterPrivateKey(wordString string, basecoin *Basecoin) (*hdkeychain.ExtendedKey, error) {
+func masterPrivateKey(wordString string, basecoin *BaseCoin) (*hdkeychain.ExtendedKey, error) {
 	seed := bip39.NewSeed(wordString, "")
 	defaultNet := basecoin.defaultNetParams()
 	masterKey, err := hdkeychain.NewMaster(seed, defaultNet)

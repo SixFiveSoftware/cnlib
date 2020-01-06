@@ -22,9 +22,7 @@ type UsableAddress struct {
 
 // NewUsableAddressWithDerivationPath accepts a wallet and derivation path, and returns a pointer to a UsableAddress.
 func NewUsableAddressWithDerivationPath(wallet *HDWallet, derivationPath *DerivationPath) (*UsableAddress, error) {
-	kf := keyFactory{Wallet: wallet}
-
-	indexKey, err := kf.indexPrivateKey(derivationPath)
+	indexKey, err := wallet.IndexPrivateKey(derivationPath)
 	if err != nil {
 		return nil, err
 	}

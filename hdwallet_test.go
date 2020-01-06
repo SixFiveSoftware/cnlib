@@ -6,7 +6,9 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/btcsuite/btcutil"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -291,4 +293,21 @@ func TestImportPrivateKeyNativeSegwit(t *testing.T) {
 		}
 	}
 	assert.Truef(t, found, "Expected segwit address %v, from %v", expectedAddress, imported.PossibleAddresses)
+}
+
+func TestLightningInvoiceDecode(t *testing.T) {
+	invoice := "lnbc2500u1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdq5xysxxatsyp3k7enxv4jsxqzpuaztrnwngzn3kdzw5hydlzf03qdgm2hdq27cqv3agm2awhz5se903vruatfhq77w3ls4evs3ch9zw97j25emudupq63nyw24cg27h2rspfj9srp"
+
+	expectedAmount := btcutil.Amount(250000)
+	expectedTimestamp := time.Unix(1496314658, 0)
+	expectedDescription := "1 cup coffee"
+	expectedDestination := "03e7156ae33b0a208d0744199163177e909e80176e55d97a2f221ede0f934dd9ad"
+
+	wallet := NewHDWalletFromWords(w, BaseCoinBip84MainNet)
+	di, err := wallet.DecodeLightningInvoice(invoice)
+	assert.Nil(t, err)
+	assert.Equal(t, expectedTimestamp, di.Timestamp)
+	assert.Equal(t, expectedAmount, di.MilliSat.ToSatoshis())
+	assert.Equal(t, expectedDescription, *di.Description)
+	assert.Equal(t, expectedDestination, hex.EncodeToString(di.Destination.SerializeCompressed()))
 }

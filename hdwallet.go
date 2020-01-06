@@ -13,6 +13,8 @@ import (
 	"git.coinninja.net/engineering/cryptor"
 	"github.com/tyler-smith/go-bip39"
 	"github.com/tyler-smith/go-bip39/wordlists"
+
+	"github.com/lightningnetwork/lnd/zpay32"
 )
 
 /// Type Declarations
@@ -211,6 +213,11 @@ func (wallet *HDWallet) ImportPrivateKey(encodedKey string) (*ImportedPrivateKey
 func (wallet *HDWallet) BuildTransactionMetadata(data *TransactionData) (*TransactionMetadata, error) {
 	builder := transactionBuilder{wallet: wallet}
 	return builder.buildTxFromData(data)
+}
+
+// DecodeLightningInvoice returns a reference to an invoice.Invoice object if valid, or error if invalid.
+func (wallet *HDWallet) DecodeLightningInvoice(invoice string) (*zpay32.Invoice, error) {
+	return zpay32.Decode(invoice, wallet.BaseCoin.defaultNetParams())
 }
 
 /// Unexported functions

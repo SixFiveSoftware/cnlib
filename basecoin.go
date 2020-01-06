@@ -1,45 +1,47 @@
 package cnlib
 
-import "github.com/btcsuite/btcd/chaincfg"
+import (
+	"errors"
 
-import "errors"
+	"github.com/btcsuite/btcd/chaincfg"
+)
 
-/// Type Declaration
+var (
+	BaseCoinBip49MainNet = &BaseCoin{Purpose: 49, Coin: 0, Account: 0}
+	BaseCoinBip49TestNet = &BaseCoin{Purpose: 49, Coin: 1, Account: 0}
+	BaseCoinBip84MainNet = &BaseCoin{Purpose: 84, Coin: 0, Account: 0}
+	BaseCoinBip84TestNet = &BaseCoin{Purpose: 84, Coin: 1, Account: 0}
+)
 
-// Basecoin is used to provide information about the current user's wallet.
-type Basecoin struct {
+// BaseCoin is used to provide information about the current user's wallet.
+type BaseCoin struct {
 	Purpose int
 	Coin    int
 	Account int
 }
 
-/// Constructors
-
 // NewBaseCoin instantiates a new object and sets values
-func NewBaseCoin(purpose int, coin int, account int) *Basecoin {
-	bc := Basecoin{Purpose: purpose, Coin: coin, Account: account}
-	return &bc
+func NewBaseCoin(purpose int, coin int, account int) *BaseCoin {
+	return &BaseCoin{Purpose: purpose, Coin: coin, Account: account}
 }
 
-/// Receiver methods
-
 // UpdatePurpose updates the purpose value on the BaseCoin receiver.
-func (bc *Basecoin) UpdatePurpose(purpose int) {
+func (bc *BaseCoin) UpdatePurpose(purpose int) {
 	bc.Purpose = purpose
 }
 
 // UpdateCoin updates the coin value on the BaseCoin receiver.
-func (bc *Basecoin) UpdateCoin(coin int) {
+func (bc *BaseCoin) UpdateCoin(coin int) {
 	bc.Coin = coin
 }
 
-// UpdateAccount updates the account value on the BaseCoin receiver.
-func (bc *Basecoin) UpdateAccount(account int) {
+// UpdateAccount updates the coin account on the BaseCoin receiver.
+func (bc *BaseCoin) UpdateAccount(account int) {
 	bc.Account = account
 }
 
 // GetBech32HRP returns a Bech32 HRP string derived from Purpose and Coin
-func (bc *Basecoin) GetBech32HRP() (string, error) {
+func (bc *BaseCoin) GetBech32HRP() (string, error) {
 	if bc == nil {
 		return "", errors.New("no basecoin provided")
 	}
@@ -53,11 +55,11 @@ func (bc *Basecoin) GetBech32HRP() (string, error) {
 	return "bcrt", nil
 }
 
-func (bc *Basecoin) isTestNet() bool {
+func (bc *BaseCoin) isTestNet() bool {
 	return bc.Coin != 0
 }
 
-func (bc *Basecoin) defaultNetParams() *chaincfg.Params {
+func (bc *BaseCoin) defaultNetParams() *chaincfg.Params {
 	if bc.isTestNet() {
 		return &chaincfg.RegressionNetParams
 	}

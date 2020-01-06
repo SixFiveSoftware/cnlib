@@ -6,12 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func addressHelperTestHelpers() *AddressHelper {
-	bc := NewBaseCoin(84, 0, 0)
-	ah := NewAddressHelper(bc)
-	return ah
-}
-
 func TestBase58CheckEncoding_ValidAddress_ReturnsTrue(t *testing.T) {
 	addresses := []string{
 		"12vRFewBpbdiS5HXDDLEfVFtJnpA2x8NV8",
@@ -91,59 +85,52 @@ func TestSegwitAddressHRP(t *testing.T) {
 	bcAddr := "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu"
 	rtAddr := "bcrt1q6rz28mcfaxtmd6v789l9rrlrusdprr9pz3cppk"
 	legacyAddr := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
-	helper := addressHelperTestHelpers()
 
-	bcHrp, err := helper.HRPFromAddress(bcAddr)
+	bcHrp, err := BaseCoinBip84MainNet.HRPFromAddress(bcAddr)
 	assert.Nil(t, err)
 	assert.Equal(t, "bc", bcHrp)
 
-	rtHrp, err := helper.HRPFromAddress(rtAddr)
+	rtHrp, err := BaseCoinBip84MainNet.HRPFromAddress(rtAddr)
 	assert.Nil(t, err)
 	assert.Equal(t, "bcrt", rtHrp)
 
-	laHrp, err := helper.HRPFromAddress(legacyAddr)
+	laHrp, err := BaseCoinBip84MainNet.HRPFromAddress(legacyAddr)
 	assert.NotNil(t, err)
 	assert.Equal(t, "", laHrp)
 }
 
 func TestBytesPerInputBIP84Input(t *testing.T) {
-	path := NewDerivationPath(84, 0, 0, 0, 0)
+	path := NewDerivationPath(BaseCoinBip84MainNet, 0, 0)
 	utxo := NewUTXO("previous txid", 0, 1, path, nil, true)
-	bpi := addressHelperTestHelpers().bytesPerInput(utxo)
+	bpi := BaseCoinBip84MainNet.bytesPerInput(utxo)
 	assert.Equal(t, p2wpkhSegwitInputSize, bpi)
 }
 
 func TestBytesPerInputBIP49Input(t *testing.T) {
-	bc := NewBaseCoin(49, 0, 0)
-	ah := NewAddressHelper(bc)
-	path := NewDerivationPath(49, 0, 0, 0, 0)
+	path := NewDerivationPath(BaseCoinBip49MainNet, 0, 0)
 	utxo := NewUTXO("previous txid", 0, 1, path, nil, true)
-	bpi := ah.bytesPerInput(utxo)
+	bpi := BaseCoinBip84MainNet.bytesPerInput(utxo)
 	assert.Equal(t, p2shSegwitInputSize, bpi)
 }
 
 func TestBytesPerChangeOuptutBIP84(t *testing.T) {
-	bpco := addressHelperTestHelpers().bytesPerChangeOuptut()
+	bpco := BaseCoinBip84MainNet.bytesPerChangeOuptut()
 	assert.Equal(t, p2wpkhOutputSize, bpco)
 }
 
 func TestBytesPerChangeOuptutBIP49(t *testing.T) {
-	bc := NewBaseCoin(49, 0, 0)
-	ah := NewAddressHelper(bc)
-	bpco := ah.bytesPerChangeOuptut()
+	bpco := BaseCoinBip49MainNet.bytesPerChangeOuptut()
 	assert.Equal(t, p2shOutputSize, bpco)
 }
 
 func TestTotalBytes_SingleBIP49Input_TwoBIP49Outputs(t *testing.T) {
 	address := "35dKN7xvHH3xnBWUrWzJtkjfrAFXk6hyH8"
-	bc := NewBaseCoin(49, 0, 0)
 	expectedBytes := 166
-	ah := NewAddressHelper(bc)
-	path := NewDerivationPath(49, 0, 0, 0, 0)
+	path := NewDerivationPath(BaseCoinBip49MainNet, 0, 0)
 	utxo := NewUTXO("previous txid", 0, 1, path, nil, true)
 	utxos := []*UTXO{utxo}
 
-	bytes, err := ah.totalBytes(utxos, address, true)
+	bytes, err := BaseCoinBip49MainNet.totalBytes(utxos, address, true)
 	assert.Nil(t, err)
 	assert.Equal(t, expectedBytes, bytes)
 }
@@ -151,25 +138,23 @@ func TestTotalBytes_SingleBIP49Input_TwoBIP49Outputs(t *testing.T) {
 func TestTotalBytes_SingleBIP84Input_TwoBIP84Outputs(t *testing.T) {
 	address := "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4"
 	expectedBytes := 141
-	path := NewDerivationPath(84, 0, 0, 0, 0)
+	path := NewDerivationPath(BaseCoinBip84MainNet, 0, 0)
 	utxo := NewUTXO("previous txid", 0, 1, path, nil, true)
 	utxos := []*UTXO{utxo}
 
-	bytes, err := addressHelperTestHelpers().totalBytes(utxos, address, true)
+	bytes, err := BaseCoinBip84MainNet.totalBytes(utxos, address, true)
 	assert.Nil(t, err)
 	assert.Equal(t, expectedBytes, bytes)
 }
 
 func TestTotalBytes_SingleBIP49Input_LegacyOutput_BIP49Change(t *testing.T) {
 	address := "1LqBGSKuX5yYUonjxT5qGfpUsXKYYWeabA"
-	bc := NewBaseCoin(49, 0, 0)
 	expectedBytes := 168
-	ah := NewAddressHelper(bc)
-	path := NewDerivationPath(49, 0, 0, 0, 0)
+	path := NewDerivationPath(BaseCoinBip49MainNet, 0, 0)
 	utxo := NewUTXO("previous txid", 0, 1, path, nil, true)
 	utxos := []*UTXO{utxo}
 
-	bytes, err := ah.totalBytes(utxos, address, true)
+	bytes, err := BaseCoinBip49MainNet.totalBytes(utxos, address, true)
 	assert.Nil(t, err)
 	assert.Equal(t, expectedBytes, bytes)
 }

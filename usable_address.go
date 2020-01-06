@@ -47,7 +47,7 @@ func NewUsableAddressWithImportedPrivateKey(wallet *HDWallet, importedPrivateKey
 
 /// Receiver methods
 
-// MetaAddress returns a meta address with a given path based on wallet's Basecoin, and uncompressed pubkey if a receive address. UsableAddress's DerivationPath must not be nil.
+// MetaAddress returns a meta address with a given path based on wallet's BaseCoin, and uncompressed pubkey if a receive address. UsableAddress's DerivationPath must not be nil.
 func (ua *UsableAddress) MetaAddress() (*MetaAddress, error) {
 	addr, err := ua.generateAddress()
 
@@ -72,7 +72,7 @@ func (ua *UsableAddress) MetaAddress() (*MetaAddress, error) {
 }
 
 // BIP49AddressFromPubkeyHash returns a P2SH-P2WPKH address from a pubkey's Hash160.
-func bip49AddressFromPubkeyHash(hash []byte, basecoin *Basecoin) (string, error) {
+func bip49AddressFromPubkeyHash(hash []byte, basecoin *BaseCoin) (string, error) {
 	scriptSig, err := txscript.NewScriptBuilder().AddOp(txscript.OP_0).AddData(hash).Script()
 	if err != nil {
 		return "", err
@@ -85,7 +85,7 @@ func bip49AddressFromPubkeyHash(hash []byte, basecoin *Basecoin) (string, error)
 }
 
 // BIP84AddressFromPubkeyHash returns a native P2WPKH address from a pubkey's Hash160.
-func bip84AddressFromPubkeyHash(hash []byte, basecoin *Basecoin) (string, error) {
+func bip84AddressFromPubkeyHash(hash []byte, basecoin *BaseCoin) (string, error) {
 	addrHash, err := btcutil.NewAddressWitnessPubKeyHash(hash, basecoin.defaultNetParams())
 	if err != nil {
 		return "", err
@@ -110,12 +110,12 @@ func (ua *UsableAddress) buildBIP49Address(path *DerivationPath) (string, error)
 	ecPub := ua.derivedPrivateKey.PubKey()
 	pubkeyBytes := ecPub.SerializeCompressed()
 	keyHash := btcutil.Hash160(pubkeyBytes)
-	return bip49AddressFromPubkeyHash(keyHash, ua.Wallet.Basecoin)
+	return bip49AddressFromPubkeyHash(keyHash, ua.Wallet.BaseCoin)
 }
 
 func (ua *UsableAddress) buildSegwitAddress(path *DerivationPath) (string, error) {
 	ecPub := ua.derivedPrivateKey.PubKey()
 	pubkeyBytes := ecPub.SerializeCompressed()
 	keyHash := btcutil.Hash160(pubkeyBytes)
-	return bip84AddressFromPubkeyHash(keyHash, ua.Wallet.Basecoin)
+	return bip84AddressFromPubkeyHash(keyHash, ua.Wallet.BaseCoin)
 }

@@ -4,16 +4,15 @@ import "testing"
 import "github.com/stretchr/testify/assert"
 
 func TestTransactionBuilderBuildsTxCorrect(t *testing.T) {
-	basecoin := NewBaseCoin(49, 0, 0)
-	inputPath := NewDerivationPath(49, 0, 0, 1, 53)
+	inputPath := NewDerivationPath(BaseCoinBip49MainNet, 1, 53)
 	utxo := NewUTXO("1a08dafe993fdc17fdc661988c88f97a9974013291e759b9b5766b8e97c78f87", 1, 2788424, inputPath, nil, true)
 	amount := 13584
 	feeAmount := 3000
 	changeAmount := 2771840
-	changePath := NewDerivationPath(49, 0, 0, 1, 56)
+	changePath := NewDerivationPath(BaseCoinBip49MainNet, 1, 56)
 	toAddress := "3BgxxADLtnoKu9oytQiiVzYUqvo8weCVy9"
 
-	data := NewTransactionDataFlatFee(toAddress, basecoin, amount, feeAmount, changePath, 539943)
+	data := NewTransactionDataFlatFee(toAddress, BaseCoinBip49MainNet, amount, feeAmount, changePath, 539943)
 	data.AddUTXO(utxo)
 	err := data.Generate()
 
@@ -23,7 +22,7 @@ func TestTransactionBuilderBuildsTxCorrect(t *testing.T) {
 	expectedTxid := "20d9d7eae4283573e042de272c0fc6af7df5a1100c4871127fa07c9022da1945"
 	expectedChangeAddress := "3NBJnvo9U5YbJnr1pALFqQEur1wXWJrjoM"
 
-	wallet := NewHDWalletFromWords(w, basecoin)
+	wallet := NewHDWalletFromWords(w, BaseCoinBip49MainNet)
 
 	meta, err := wallet.BuildTransactionMetadata(data.TransactionData)
 
@@ -39,18 +38,17 @@ func TestTransactionBuilderBuildsTxCorrect(t *testing.T) {
 }
 
 func TestTransactionBuilder_TwoInputs_BuildsTransaction(t *testing.T) {
-	basecoin := NewBaseCoin(49, 0, 0)
-	path1 := NewDerivationPath(49, 0, 0, 1, 56)
-	path2 := NewDerivationPath(49, 0, 0, 1, 57)
+	path1 := NewDerivationPath(BaseCoinBip49MainNet, 1, 56)
+	path2 := NewDerivationPath(BaseCoinBip49MainNet, 1, 57)
 	utxo1 := NewUTXO("24cc9150963a2369d7f413af8b18c3d0243b438ba742d6d083ec8ed492d312f9", 1, 2769977, path1, nil, true)
 	utxo2 := NewUTXO("ed611c20fc9088aa5ec1c86de88dd017965358c150c58f71eda721cdb2ac0a48", 1, 314605, path2, nil, true)
 	amount := 3000000
 	feeAmount := 4000
 	changeAmount := 80582
-	changePath := NewDerivationPath(49, 0, 0, 1, 58)
+	changePath := NewDerivationPath(BaseCoinBip49MainNet, 1, 58)
 	toAddress := "3CkiUcj5vU4TGZJeDcrmYGWH8GYJ5vKcQq"
 
-	data := NewTransactionDataFlatFee(toAddress, basecoin, amount, feeAmount, changePath, 540220)
+	data := NewTransactionDataFlatFee(toAddress, BaseCoinBip49MainNet, amount, feeAmount, changePath, 540220)
 	data.AddUTXO(utxo1)
 	data.AddUTXO(utxo2)
 	err := data.Generate()
@@ -61,7 +59,7 @@ func TestTransactionBuilder_TwoInputs_BuildsTransaction(t *testing.T) {
 	expectedTxid := "f94e7111736dd2a5fd1c5bbcced153f90d17ee1b032f166dda785354f4063651"
 	expectedChangeAddress := "3GhXz1NGhwQusEiBYKKhTqQYE6MKt2utDN"
 
-	wallet := NewHDWalletFromWords(w, basecoin)
+	wallet := NewHDWalletFromWords(w, BaseCoinBip49MainNet)
 
 	meta, err := wallet.BuildTransactionMetadata(data.TransactionData)
 
@@ -77,16 +75,15 @@ func TestTransactionBuilder_TwoInputs_BuildsTransaction(t *testing.T) {
 }
 
 func TestTransactionBuilder_BuildsNativeSegwitTransaction(t *testing.T) {
-	basecoin := NewBaseCoin(84, 0, 0)
-	path := NewDerivationPath(84, 0, 0, 0, 1)
+	path := NewDerivationPath(BaseCoinBip84MainNet, 0, 1)
 	utxo := NewUTXO("a89a9bed1f2daca01a0dca58f7fd0f2f0bf114d762b38e65845c5d1489339a69", 0, 96537, path, nil, true)
 	amount := 9755
 	feeAmount := 846
 	changeAmount := 85936
-	changePath := NewDerivationPath(84, 0, 0, 1, 1)
+	changePath := NewDerivationPath(BaseCoinBip49MainNet, 1, 1)
 	toAddress := "bc1qjv79zewlvyyyd5y0qfk3svexzrqnammllj7mw6"
 
-	data := NewTransactionDataFlatFee(toAddress, basecoin, amount, feeAmount, changePath, 590582)
+	data := NewTransactionDataFlatFee(toAddress, BaseCoinBip49MainNet, amount, feeAmount, changePath, 590582)
 	data.AddUTXO(utxo)
 	err := data.Generate()
 
@@ -96,7 +93,7 @@ func TestTransactionBuilder_BuildsNativeSegwitTransaction(t *testing.T) {
 	expectedTxid := "fe7f9a6de3203eb300cc66159e762251d675b5555dbd215c3574e75a762ca402"
 	expectedChangeAddress := "bc1qggnasd834t54yulsep6fta8lpjekv4zj6gv5rf"
 
-	wallet := NewHDWalletFromWords(w, basecoin)
+	wallet := NewHDWalletFromWords(w, BaseCoinBip84MainNet)
 
 	meta, err := wallet.BuildTransactionMetadata(data.TransactionData)
 
@@ -112,15 +109,14 @@ func TestTransactionBuilder_BuildsNativeSegwitTransaction(t *testing.T) {
 }
 
 func TestTransactionBuilder_BuildP2KH_NoChange(t *testing.T) {
-	basecoin := NewBaseCoin(49, 0, 0)
-	path := NewDerivationPath(49, 0, 0, 1, 7)
+	path := NewDerivationPath(BaseCoinBip49MainNet, 1, 7)
 	utxo := NewUTXO("f14914f76ad26e0c1aa5a68c82b021b854c93850fde12f8e3188c14be6dc384e", 1, 33255, path, nil, true)
 	amount := 23147
 	feeAmount := 10108
-	changePath := NewDerivationPath(49, 0, 0, 1, 2)
+	changePath := NewDerivationPath(BaseCoinBip49MainNet, 1, 2)
 	toAddress := "1HT6WtD5CAToc8wZdacCgY4XjJR4jV5Q5d"
 
-	data := NewTransactionDataFlatFee(toAddress, basecoin, amount, feeAmount, changePath, 500000)
+	data := NewTransactionDataFlatFee(toAddress, BaseCoinBip49MainNet, amount, feeAmount, changePath, 500000)
 	data.AddUTXO(utxo)
 	err := data.Generate()
 
@@ -129,7 +125,7 @@ func TestTransactionBuilder_BuildP2KH_NoChange(t *testing.T) {
 	expectedEncodedTx := "010000000001014e38dce64bc188318e2fe1fd5038c954b821b0828ca6a51a0c6ed26af71449f10100000017160014b4381165b195b3286079d46eb2dc8058e6f02241fdffffff016b5a0000000000001976a914b4716e71b900b957e49f749c8432b910417788e888ac0247304402204147d25961e7ea6f88df58878aa38167fe6f8ae04c3625485dc594ff716f18a002200c08aabefae62d59568155cfb7ca8df1a4d54c01e5abd767d59e7b982663db23012103a45ef894ab9e6f2e55683561181be9e69b20207af746d60b95fab33476dc932420a10700"
 	expectedTxid := "86a9dc5bef7933df26d2b081376084e456a5bd3c2f2df28e758ff062b05a8c17"
 
-	wallet := NewHDWalletFromWords(w, basecoin)
+	wallet := NewHDWalletFromWords(w, BaseCoinBip49MainNet)
 
 	meta, err := wallet.BuildTransactionMetadata(data.TransactionData)
 
@@ -142,16 +138,15 @@ func TestTransactionBuilder_BuildP2KH_NoChange(t *testing.T) {
 }
 
 func TestTransationBuilder_BuildSingleUTXO(t *testing.T) {
-	basecoin := NewBaseCoin(49, 0, 0)
-	path := NewDerivationPath(49, 0, 0, 0, 0)
+	path := NewDerivationPath(BaseCoinBip49MainNet, 0, 0)
 	utxo := NewUTXO("3480e31ea00efeb570472983ff914694f62804e768a6c6b4d1b6cd70a1cd3efa", 1, 449893, path, nil, true)
 	amount := 218384
 	feeAmount := 668
 	changeAmount := 230841
-	changePath := NewDerivationPath(49, 0, 0, 1, 0)
+	changePath := NewDerivationPath(BaseCoinBip49MainNet, 1, 0)
 	toAddress := "3ERQiyXSeUYmxxqKyg8XwqGo4W7utgDrTR"
 
-	data := NewTransactionDataFlatFee(toAddress, basecoin, amount, feeAmount, changePath, 500000)
+	data := NewTransactionDataFlatFee(toAddress, BaseCoinBip49MainNet, amount, feeAmount, changePath, 500000)
 	data.AddUTXO(utxo)
 	err := data.Generate()
 
@@ -161,7 +156,7 @@ func TestTransationBuilder_BuildSingleUTXO(t *testing.T) {
 	expectedTxid := "221ced4e8784290dea336afa1b0a06fa868812e51abbdca3126ce8d99335a6e2"
 	expectedChangeAddress := "34K56kSjgUCUSD8GTtuF7c9Zzwokbs6uZ7"
 
-	wallet := NewHDWalletFromWords(w, basecoin)
+	wallet := NewHDWalletFromWords(w, BaseCoinBip49MainNet)
 	meta, err := wallet.BuildTransactionMetadata(data.TransactionData)
 
 	assert.Nil(t, err)
@@ -174,16 +169,15 @@ func TestTransationBuilder_BuildSingleUTXO(t *testing.T) {
 }
 
 func TestTransactionBuilder_TestNet(t *testing.T) {
-	basecoin := NewBaseCoin(49, 1, 0)
-	path := NewDerivationPath(49, 1, 0, 0, 0)
+	path := NewDerivationPath(BaseCoinBip49TestNet, 0, 0)
 	utxo := NewUTXO("1cfd000efbe248c48b499b0a5d76ea7687ee76cad8481f71277ee283df32af26", 0, 1250000000, path, nil, true)
 	amount := 9523810
 	feeAmount := 830
 	changeAmount := 1240475360
-	changePath := NewDerivationPath(49, 1, 0, 1, 0)
+	changePath := NewDerivationPath(BaseCoinBip49MainNet, 1, 0)
 	toAddress := "2N8o4Mu5PRAR27TC2eai62CRXarTbQmjyCx"
 
-	data := NewTransactionDataFlatFee(toAddress, basecoin, amount, feeAmount, changePath, 644)
+	data := NewTransactionDataFlatFee(toAddress, BaseCoinBip49TestNet, amount, feeAmount, changePath, 644)
 	data.AddUTXO(utxo)
 	err := data.Generate()
 
@@ -193,7 +187,7 @@ func TestTransactionBuilder_TestNet(t *testing.T) {
 	expectedTxid := "5eb44c7faaa9c17c886588a1e20461d60fbfe1e504e7bac5af3469fdd9039837"
 	expectedChangeAddress := "2MvdUi5o3f2tnEFh9yGvta6FzptTZtkPJC8"
 
-	wallet := NewHDWalletFromWords(w, basecoin)
+	wallet := NewHDWalletFromWords(w, BaseCoinBip49TestNet)
 	meta, err := wallet.BuildTransactionMetadata(data.TransactionData)
 
 	assert.Nil(t, err)
@@ -207,16 +201,15 @@ func TestTransactionBuilder_TestNet(t *testing.T) {
 }
 
 func TestTransactionBuilder_SendToNativeSegwit_BuildsProperly(t *testing.T) {
-	basecoin := NewBaseCoin(49, 0, 0)
-	path := NewDerivationPath(49, 0, 0, 0, 80)
+	path := NewDerivationPath(BaseCoinBip49MainNet, 0, 80)
 	utxo := NewUTXO("94b5bcfbd52a405b291d906e636c8e133407e68a75b0a1ccc492e131ff5d8f90", 0, 10261, path, nil, true)
 	amount := 5000
 	feeAmount := 1000
 	changeAmount := 4261
-	changePath := NewDerivationPath(49, 0, 0, 1, 102)
+	changePath := NewDerivationPath(BaseCoinBip49MainNet, 1, 102)
 	toAddress := "bc1ql2sdag2nm9csz4wmlj735jxw88ym3yukyzmrpj"
 
-	data := NewTransactionDataFlatFee(toAddress, basecoin, amount, feeAmount, changePath, 500000)
+	data := NewTransactionDataFlatFee(toAddress, BaseCoinBip49MainNet, amount, feeAmount, changePath, 500000)
 	data.AddUTXO(utxo)
 	err := data.Generate()
 
@@ -226,7 +219,7 @@ func TestTransactionBuilder_SendToNativeSegwit_BuildsProperly(t *testing.T) {
 	expectedTxid := "1f1ffca0eda219b09116743d2c9b9dcf8eefd10d240bdc4e66678d72a6e4614d"
 	expectedChangeAddress := "3HEEdyeVwoGZf86jq8ovUhw9FiXkwCdY79"
 
-	wallet := NewHDWalletFromWords(w, basecoin)
+	wallet := NewHDWalletFromWords(w, BaseCoinBip49MainNet)
 	meta, err := wallet.BuildTransactionMetadata(data.TransactionData)
 
 	assert.Nil(t, err)

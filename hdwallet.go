@@ -60,34 +60,6 @@ func NewHDWalletFromWords(wordString string, basecoin *BaseCoin) *HDWallet {
 	return &wallet
 }
 
-/// Receiver functions
-
-// SigningKey returns the private key at the m/42 path.
-func (wallet *HDWallet) SigningKey() ([]byte, error) {
-	ec, err := wallet.signingPrivateKey()
-	if err != nil {
-		return nil, err
-	}
-	return ec.Serialize(), nil
-}
-
-// SigningPublicKey returns the public key at the m/42 path.
-func (wallet *HDWallet) SigningPublicKey() ([]byte, error) {
-	kf := keyFactory{Wallet: wallet}
-
-	smk, err := kf.signingMasterKey()
-	if err != nil {
-		return nil, err
-	}
-
-	ec, err := smk.ECPubKey()
-	if err != nil {
-		return nil, err
-	}
-
-	return ec.SerializeCompressed(), nil
-}
-
 // CoinNinjaVerificationKeyHexString returns the hex-encoded string of the signing pubkey byte slice.
 func (wallet *HDWallet) CoinNinjaVerificationKeyHexString() (string, error) {
 	key, err := wallet.SigningPublicKey()
@@ -133,18 +105,6 @@ func (wallet *HDWallet) CheckForAddress(a string, upTo int) (*MetaAddress, error
 	return nil, errors.New("address not found")
 }
 
-// SignData signs a given message and returns the signature in bytes.
-func (wallet *HDWallet) SignData(message []byte) ([]byte, error) {
-	kf := keyFactory{Wallet: wallet}
-	return kf.signData(message)
-}
-
-// SignatureSigningData signs a given message and returns the signature in hex-encoded string format.
-func (wallet *HDWallet) SignatureSigningData(message []byte) (string, error) {
-	kf := keyFactory{Wallet: wallet}
-	return kf.signatureSigningData(message)
-}
-
 // EncryptWithEphemeralKey encrypts a given body (byte slice) using ECDH symmetric key encryption by creating an ephemeral keypair from entropy and given uncompressed public key.
 func (wallet *HDWallet) EncryptWithEphemeralKey(entropy []byte, body []byte, recipientUncompressedPubkey string) ([]byte, error) {
 	pubkeyBytes, err := hex.DecodeString(recipientUncompressedPubkey)
@@ -173,9 +133,7 @@ func (wallet *HDWallet) EncryptWithEphemeralKey(entropy []byte, body []byte, rec
 
 // DecryptWithKeyFromDerivationPath decrypts a given payload with the key derived from given derivation path.
 func (wallet *HDWallet) DecryptWithKeyFromDerivationPath(path *DerivationPath, body []byte) ([]byte, error) {
-	kf := keyFactory{Wallet: wallet}
-
-	pk, err := kf.indexPrivateKey(path)
+	pk, err := wallet.IndexPrivateKey(path)
 	if err != nil {
 		return nil, err
 	}
@@ -200,7 +158,7 @@ func (wallet *HDWallet) EncryptMessage(body []byte, recipientUncompressedPubkey 
 		return nil, err
 	}
 
-	signingKey, err := wallet.signingPrivateKey()
+	signingKey, err := wallet.SigningPrivateKey()
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +168,7 @@ func (wallet *HDWallet) EncryptMessage(body []byte, recipientUncompressedPubkey 
 
 // DecryptMessage decrypts a payload using signing key (m/42) and included sender public key (expected to be last 65 bytes of payload).
 func (wallet *HDWallet) DecryptMessage(body []byte) ([]byte, error) {
-	signingKey, err := wallet.signingPrivateKey()
+	signingKey, err := wallet.SigningPrivateKey()
 	if err != nil {
 		return nil, err
 	}
@@ -284,20 +242,4 @@ func masterPrivateKey(wordString string, basecoin *BaseCoin) (*hdkeychain.Extend
 		return nil, err
 	}
 	return masterKey, nil
-}
-
-func (wallet *HDWallet) signingPrivateKey() (*btcec.PrivateKey, error) {
-	kf := keyFactory{Wallet: wallet}
-
-	smk, err := kf.signingMasterKey()
-	if err != nil {
-		return nil, err
-	}
-
-	ec, err := smk.ECPrivKey()
-	if err != nil {
-		return nil, err
-	}
-
-	return ec, nil
 }

@@ -11,8 +11,8 @@ import (
 
 /// Type Definition
 
-// UsableAddress is a wrapper struct that can provide a usable output address.
-type UsableAddress struct {
+// usableAddress is a wrapper struct that can provide a usable output address.
+type usableAddress struct {
 	Wallet            *HDWallet
 	DerivationPath    *DerivationPath
 	derivedPrivateKey *btcec.PrivateKey // derived from master along a derivation path, or specific pk from sweep.
@@ -20,8 +20,8 @@ type UsableAddress struct {
 
 /// Constructors
 
-// NewUsableAddressWithDerivationPath accepts a wallet and derivation path, and returns a pointer to a UsableAddress.
-func NewUsableAddressWithDerivationPath(wallet *HDWallet, derivationPath *DerivationPath) (*UsableAddress, error) {
+// newUsableAddressWithDerivationPath accepts a wallet and derivation path, and returns a pointer to a UsableAddress.
+func newUsableAddressWithDerivationPath(wallet *HDWallet, derivationPath *DerivationPath) (*usableAddress, error) {
 	indexKey, err := wallet.IndexPrivateKey(derivationPath)
 	if err != nil {
 		return nil, err
@@ -32,21 +32,21 @@ func NewUsableAddressWithDerivationPath(wallet *HDWallet, derivationPath *Deriva
 		return nil, err
 	}
 
-	ua := UsableAddress{Wallet: wallet, DerivationPath: derivationPath, derivedPrivateKey: ecPriv}
+	ua := usableAddress{Wallet: wallet, DerivationPath: derivationPath, derivedPrivateKey: ecPriv}
 	return &ua, nil
 }
 
-// NewUsableAddressWithImportedPrivateKey accepts a wallet and imported private key, and returns a pointer to a UsableAddress.
-func NewUsableAddressWithImportedPrivateKey(wallet *HDWallet, importedPrivateKey *ImportedPrivateKey) *UsableAddress {
+// newUsableAddressWithImportedPrivateKey accepts a wallet and imported private key, and returns a pointer to a UsableAddress.
+func newUsableAddressWithImportedPrivateKey(wallet *HDWallet, importedPrivateKey *ImportedPrivateKey) *usableAddress {
 	ecPriv := importedPrivateKey.wif.PrivKey
-	ua := UsableAddress{Wallet: wallet, DerivationPath: nil, derivedPrivateKey: ecPriv}
+	ua := usableAddress{Wallet: wallet, DerivationPath: nil, derivedPrivateKey: ecPriv}
 	return &ua
 }
 
 /// Receiver methods
 
-// MetaAddress returns a meta address with a given path based on wallet's BaseCoin, and uncompressed pubkey if a receive address. UsableAddress's DerivationPath must not be nil.
-func (ua *UsableAddress) MetaAddress() (*MetaAddress, error) {
+// MetaAddress returns a meta address with a given path based on wallet's BaseCoin, and uncompressed pubkey if a receive address. usableAddress's DerivationPath must not be nil.
+func (ua *usableAddress) MetaAddress() (*MetaAddress, error) {
 	addr, err := ua.generateAddress()
 
 	if err != nil {
@@ -93,7 +93,7 @@ func bip84AddressFromPubkeyHash(hash []byte, basecoin *BaseCoin) (string, error)
 
 /// Unexposed methods
 
-func (ua *UsableAddress) generateAddress() (string, error) {
+func (ua *usableAddress) generateAddress() (string, error) {
 	purpose := ua.DerivationPath.Purpose
 
 	if purpose == bip84purpose {
@@ -104,14 +104,14 @@ func (ua *UsableAddress) generateAddress() (string, error) {
 	return "", errors.New("Unrecognized Address Purpose")
 }
 
-func (ua *UsableAddress) buildBIP49Address(path *DerivationPath) (string, error) {
+func (ua *usableAddress) buildBIP49Address(path *DerivationPath) (string, error) {
 	ecPub := ua.derivedPrivateKey.PubKey()
 	pubkeyBytes := ecPub.SerializeCompressed()
 	keyHash := btcutil.Hash160(pubkeyBytes)
 	return bip49AddressFromPubkeyHash(keyHash, ua.Wallet.BaseCoin)
 }
 
-func (ua *UsableAddress) buildSegwitAddress(path *DerivationPath) (string, error) {
+func (ua *usableAddress) buildSegwitAddress(path *DerivationPath) (string, error) {
 	ecPub := ua.derivedPrivateKey.PubKey()
 	pubkeyBytes := ecPub.SerializeCompressed()
 	keyHash := btcutil.Hash160(pubkeyBytes)

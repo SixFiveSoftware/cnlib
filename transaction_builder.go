@@ -22,7 +22,7 @@ type transactionBuilder struct {
 
 type cnSecretsSource struct {
 	wallet          *HDWallet
-	usableAddresses map[string]*UsableAddress
+	usableAddresses map[string]*usableAddress
 }
 
 func (s cnSecretsSource) GetKey(addr btcutil.Address) (*btcec.PrivateKey, bool, error) {
@@ -145,14 +145,14 @@ func (tb transactionBuilder) buildTxFromData(data *TransactionData) (*Transactio
 func (tb transactionBuilder) signInputsForTx(tx *wire.MsgTx, data *TransactionData) error {
 	prevPkScripts := make([][]byte, data.UtxoCount())
 	inputValues := make([]btcutil.Amount, data.UtxoCount())
-	secretsSource := cnSecretsSource{wallet: tb.wallet, usableAddresses: make(map[string]*UsableAddress)}
+	secretsSource := cnSecretsSource{wallet: tb.wallet, usableAddresses: make(map[string]*usableAddress)}
 
 	for i := range tx.TxIn {
 		utxo, _ := data.RequiredUTXOAtIndex(i)
 
 		var address string
 		if utxo.Path != nil {
-			signer, err := NewUsableAddressWithDerivationPath(tb.wallet, utxo.Path)
+			signer, err := newUsableAddressWithDerivationPath(tb.wallet, utxo.Path)
 			if err != nil {
 				return err
 			}
@@ -163,7 +163,7 @@ func (tb transactionBuilder) signInputsForTx(tx *wire.MsgTx, data *TransactionDa
 			address = meta.Address
 			secretsSource.usableAddresses[address] = signer
 		} else if utxo.ImportedPrivateKey != nil && utxo.ImportedPrivateKey.SelectedAddress != "" {
-			signer := NewUsableAddressWithImportedPrivateKey(tb.wallet, utxo.ImportedPrivateKey)
+			signer := newUsableAddressWithImportedPrivateKey(tb.wallet, utxo.ImportedPrivateKey)
 			address = utxo.ImportedPrivateKey.SelectedAddress
 			secretsSource.usableAddresses[address] = signer
 		} else {

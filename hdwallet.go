@@ -229,7 +229,7 @@ func (wallet *HDWallet) metaAddress(change int, index int) (*MetaAddress, error)
 
 	path := NewDerivationPath(wallet.BaseCoin, change, index)
 
-	ua, err := NewUsableAddressWithDerivationPath(wallet, path)
+	ua, err := newUsableAddressWithDerivationPath(wallet, path)
 	if err != nil {
 		return nil, err
 	}

@@ -75,7 +75,7 @@ func (wallet *HDWallet) SigningKey() ([]byte, error) {
 
 // SigningPublicKey returns the public key at the m/42 path.
 func (wallet *HDWallet) SigningPublicKey() ([]byte, error) {
-	kf := keyFactory{Wallet: wallet}
+	kf := keyFactory{masterPrivateKey: wallet.masterPrivateKey}
 
 	smk, err := kf.signingMasterKey()
 	if err != nil {
@@ -137,13 +137,13 @@ func (wallet *HDWallet) CheckForAddress(a string, upTo int) (*MetaAddress, error
 
 // SignData signs a given message and returns the signature in bytes.
 func (wallet *HDWallet) SignData(message []byte) ([]byte, error) {
-	kf := keyFactory{Wallet: wallet}
+	kf := keyFactory{masterPrivateKey: wallet.masterPrivateKey}
 	return kf.signData(message)
 }
 
 // SignatureSigningData signs a given message and returns the signature in hex-encoded string format.
 func (wallet *HDWallet) SignatureSigningData(message []byte) (string, error) {
-	kf := keyFactory{Wallet: wallet}
+	kf := keyFactory{masterPrivateKey: wallet.masterPrivateKey}
 	return kf.signatureSigningData(message)
 }
 
@@ -175,7 +175,7 @@ func (wallet *HDWallet) EncryptWithEphemeralKey(entropy []byte, body []byte, rec
 
 // DecryptWithKeyFromDerivationPath decrypts a given payload with the key derived from given derivation path.
 func (wallet *HDWallet) DecryptWithKeyFromDerivationPath(path *DerivationPath, body []byte) ([]byte, error) {
-	kf := keyFactory{Wallet: wallet}
+	kf := keyFactory{masterPrivateKey: wallet.masterPrivateKey}
 
 	pk, err := kf.indexPrivateKey(path)
 	if err != nil {
@@ -305,7 +305,7 @@ func masterPrivateKey(wordString string, basecoin *BaseCoin) (*hdkeychain.Extend
 }
 
 func (wallet *HDWallet) signingPrivateKey() (*btcec.PrivateKey, error) {
-	kf := keyFactory{Wallet: wallet}
+	kf := keyFactory{masterPrivateKey: wallet.masterPrivateKey}
 
 	smk, err := kf.signingMasterKey()
 	if err != nil {

@@ -12,13 +12,13 @@ import (
 
 // KeyFactory is a struct holding a ref to an HDWallet, with receiver methods to obtain keys relative to the wallet.
 type keyFactory struct {
-	Wallet *HDWallet
+	masterPrivateKey *hdkeychain.ExtendedKey
 }
 
 /// Receiver methods
 
 func (kf keyFactory) indexPrivateKey(path *DerivationPath) (*hdkeychain.ExtendedKey, error) {
-	purposeKey, err := kf.Wallet.masterPrivateKey.Child(hardened(path.Purpose))
+	purposeKey, err := kf.masterPrivateKey.Child(hardened(path.Purpose))
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (kf keyFactory) indexPrivateKey(path *DerivationPath) (*hdkeychain.Extended
 }
 
 func (kf keyFactory) signingMasterKey() (*hdkeychain.ExtendedKey, error) {
-	masterKey := kf.Wallet.masterPrivateKey
+	masterKey := kf.masterPrivateKey
 	if masterKey == nil {
 		return nil, errors.New("missing master private key")
 	}

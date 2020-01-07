@@ -258,9 +258,6 @@ func (wallet *HDWallet) BuildTransactionMetadata(data *TransactionData) (*Transa
 }
 
 // DecodeLightningInvoice returns a reference to an invoice.Invoice object if valid, or error if invalid.
-// func (wallet *HDWallet) DecodeLightningInvoice(invoice string) (*zpay32.Invoice, error) {
-// 	return zpay32.Decode(invoice, wallet.BaseCoin.defaultNetParams())
-// }
 func (wallet *HDWallet) DecodeLightningInvoice(invoice string) (*LightningInvoice, error) {
 	inv, err := zpay32.Decode(invoice, wallet.BaseCoin.defaultNetParams())
 	if err != nil {

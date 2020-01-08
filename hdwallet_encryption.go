@@ -51,7 +51,10 @@ func decrypt(data []byte, privateKey *btcec.PrivateKey) ([]byte, error) {
 	hmacKey := keyData[32:]
 
 	testHmac := hmac.New(sha256.New, hmacKey)
-	testHmac.Write(msg)
+	_, err = testHmac.Write(msg)
+	if err != nil {
+		return nil, errors.New("failed to write testHmac")
+	}
 	testHmacVal := testHmac.Sum(nil)
 
 	// its important to use hmac.Equal to not leak time
@@ -118,7 +121,10 @@ func encrypt(data []byte, privateKey *btcec.PrivateKey, publicKey *btcec.PublicK
 	msg = append(msg, cipherText...)
 
 	hmacSrc := hmac.New(sha256.New, hmacKey)
-	hmacSrc.Write(msg)
+	_, err = hmacSrc.Write(msg)
+	if err != nil {
+		return nil, errors.New("failed to write hmacSrc")
+	}
 	hmacVal := hmacSrc.Sum(nil)
 
 	msg = append(msg, hmacVal...)

@@ -10,7 +10,6 @@ import (
 	"github.com/btcsuite/btcutil/base58"
 	"github.com/btcsuite/btcutil/hdkeychain"
 
-	"git.coinninja.net/engineering/cryptor"
 	"github.com/tyler-smith/go-bip39"
 	"github.com/tyler-smith/go-bip39/wordlists"
 
@@ -170,7 +169,7 @@ func (wallet *HDWallet) EncryptWithEphemeralKey(entropy []byte, body []byte, rec
 		return nil, err
 	}
 
-	return cryptor.Encrypt(body, privateKey, publicKey)
+	return encrypt(body, privateKey, publicKey)
 }
 
 // DecryptWithKeyFromDerivationPath decrypts a given payload with the key derived from given derivation path.
@@ -187,7 +186,7 @@ func (wallet *HDWallet) DecryptWithKeyFromDerivationPath(path *DerivationPath, b
 		return nil, err
 	}
 
-	return cryptor.Decrypt(body, ecpk)
+	return decrypt(body, ecpk)
 }
 
 // EncryptMessage encrypts a payload using signing key (m/42) and recipient's public key.
@@ -207,7 +206,7 @@ func (wallet *HDWallet) EncryptMessage(body []byte, recipientUncompressedPubkey 
 		return nil, err
 	}
 
-	return cryptor.Encrypt(body, signingKey, publicKey)
+	return encrypt(body, signingKey, publicKey)
 }
 
 // DecryptMessage decrypts a payload using signing key (m/42) and included sender public key (expected to be last 65 bytes of payload).
@@ -217,7 +216,7 @@ func (wallet *HDWallet) DecryptMessage(body []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	return cryptor.Decrypt(body, signingKey)
+	return decrypt(body, signingKey)
 }
 
 // ImportPrivateKey accepts an encoded private key from a paper wallet/QR code, decodes it, and returns a ref to an ImportedPrivateKey struct, or error if failed.

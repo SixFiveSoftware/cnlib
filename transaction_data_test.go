@@ -293,6 +293,37 @@ func TestNewTransactionDataStandard_CostOfChangeIsBeneficial(t *testing.T) {
 	assert.Equal(t, expectedRBFOption.Value, goodData.TransactionData.RBFOption.Value)
 }
 
+func TestSendingDust_StandardTransaction_ReturnsError(t *testing.T) {
+	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
+	path := NewDerivationPath(BaseCoinBip49MainNet, 0, 2)
+	utxo := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 15935, path, nil, true)
+	paymentAmount := 540
+	feeRate := 1
+	expectedRBFOption := NewRBFOption(AllowedToBeRBF)
+
+	data := NewTransactionDataStandard(address, BaseCoinBip49MainNet, paymentAmount, feeRate, nil, 500000, expectedRBFOption)
+	data.AddUTXO(utxo)
+	err := data.Generate()
+
+	assert.EqualError(t, errors.New("transaction too small"), err.Error())
+	assert.Nil(t, data.TransactionData)
+}
+
+func TestSendingDust_FlatFeeTransaction_ReturnsError(t *testing.T) {
+	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
+	path := NewDerivationPath(BaseCoinBip49MainNet, 0, 2)
+	utxo := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 15935, path, nil, true)
+	paymentAmount := 540
+	flatFee := 1000
+
+	data := NewTransactionDataFlatFee(address, BaseCoinBip49MainNet, paymentAmount, flatFee, nil, 500000)
+	data.AddUTXO(utxo)
+	err := data.Generate()
+
+	assert.EqualError(t, errors.New("transaction too small"), err.Error())
+	assert.Nil(t, data.TransactionData)
+}
+
 func TestNewTransactionDataFlatFee_WithChange(t *testing.T) {
 	// given
 	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
@@ -394,38 +425,24 @@ func TestNewTransactionDataSendMax_UsesAllUTXOs_AmountIsTotalMinusFee(t *testing
 	assert.Equal(t, expectedRBFOption.Value, data.TransactionData.RBFOption.Value)
 }
 
-func TestNewTransactionDataSendMax_JustEnoughFunds(t *testing.T) {
+func TestNewTransactionDataSendMax_FundsEqualingFee_ReturnsError(t *testing.T) {
 	// given
 	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
 	feeRate := 5
 	path1 := NewDerivationPath(BaseCoinBip49MainNet, 1, 3)
 	utxo := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 670, path1, nil, true)
 	utxos := []*UTXO{utxo}
-	inputAmount := utxo.Amount
-	totalBytes, err := BaseCoinBip49MainNet.totalBytes(utxos, address, false)
-	assert.Nil(t, err)
-
-	expectedFeeAmount := feeRate * totalBytes         // 670
-	expectedAmount := inputAmount - expectedFeeAmount // 0
-	expectedRBFOption := NewRBFOption(MustNotBeRBF)
 
 	// when
 	data := NewTransactionDataSendingMax(address, BaseCoinBip49MainNet, feeRate, 500000)
 	for _, u := range utxos {
 		data.AddUTXO(u)
 	}
-	err = data.Generate()
+	err := data.Generate()
 
 	// then
-	assert.Nil(t, err)
-	assert.Equal(t, address, data.TransactionData.PaymentAddress)
-	assert.Equal(t, expectedAmount, data.TransactionData.Amount)
-	assert.Equal(t, 0, data.TransactionData.Amount)
-	assert.Equal(t, expectedFeeAmount, data.TransactionData.FeeAmount)
-	assert.Equal(t, 670, data.TransactionData.FeeAmount)
-	assert.Equal(t, 0, data.TransactionData.ChangeAmount)
-	assert.False(t, data.TransactionData.shouldAddChangeToTransaction())
-	assert.Equal(t, expectedRBFOption.Value, data.TransactionData.RBFOption.Value)
+	assert.EqualError(t, errors.New("transaction too small"), err.Error())
+	assert.Nil(t, data.TransactionData)
 }
 
 func TestNewTransactionDataSendMax_InsufficientFunds(t *testing.T) {

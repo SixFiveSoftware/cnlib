@@ -216,6 +216,12 @@ func (t *TransactionDataSendMax) AddUTXO(utxo *UTXO) {
 // Generate is called after all available utxo's have been added, to configure the transaction data. Builds a standard transaction with a fee rate.
 func (t *TransactionDataStandard) Generate() error {
 
+	err := t.TransactionData.validate()
+	if err != nil {
+		t.TransactionData = nil
+		return err
+	}
+
 	totalFromUTXOs := 0
 	totalSendingValue := 0
 	currentFee := 0
@@ -278,6 +284,13 @@ func (t *TransactionDataStandard) Generate() error {
 
 // Generate is called after all available utxo's have been added, to configure the transaction data. Builds a standard transaction with a flat fee.
 func (t *TransactionDataFlatFee) Generate() error {
+
+	err := t.TransactionData.validate()
+	if err != nil {
+		t.TransactionData = nil
+		return err
+	}
+
 	totalFromUTXOs := 0
 	tempUTXOs := make([]*UTXO, 0)
 
@@ -328,6 +341,12 @@ func (t *TransactionDataSendMax) Generate() error {
 	t.TransactionData.FeeAmount = feeAmount
 	t.TransactionData.requiredUtxos = tempUTXOs
 
+	err = t.TransactionData.validate()
+	if err != nil {
+		t.TransactionData = nil
+		return err
+	}
+
 	return nil
 }
 
@@ -360,4 +379,11 @@ func (td *TransactionData) getSuggestedSequence() uint32 {
 		return wire.MaxTxInSequenceNum
 	}
 	return wire.MaxTxInSequenceNum
+}
+
+func (td *TransactionData) validate() error {
+	if td.Amount < 546 {
+		return errors.New("transaction too small")
+	}
+	return nil
 }

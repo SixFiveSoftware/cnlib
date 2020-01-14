@@ -15,9 +15,10 @@ type PreviousOutputInfo struct {
 	SelectedAddress string
 	Txid            string
 	Index           int
+	Amount          int
 }
 
 // NewPreviousOutputInfo exposes an initializer to the client to provide previous output info to ImportedPrivateKey.
-func NewPreviousOutputInfo(selectedAddress string, txid string, index int) *PreviousOutputInfo {
-	return &PreviousOutputInfo{SelectedAddress: selectedAddress, Txid: txid, Index: index}
+func NewPreviousOutputInfo(selectedAddress string, txid string, index int, amount int) *PreviousOutputInfo {
+	return &PreviousOutputInfo{SelectedAddress: selectedAddress, Txid: txid, Index: index, Amount: amount}
 }

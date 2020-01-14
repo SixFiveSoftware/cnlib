@@ -238,7 +238,7 @@ func (wallet *HDWallet) ImportPrivateKey(encodedKey string) (*ImportedPrivateKey
 
 	addrs := []string{legacy, ls, ns}
 	joined := strings.Join(addrs, " ")
-	info := NewPreviousOutputInfo("", "", 0)
+	info := NewPreviousOutputInfo("", "", 0, 0)
 	retval := ImportedPrivateKey{wif: wif, PossibleAddresses: joined, PrivateKeyAsWIF: wif.String(), PreviousOutputInfo: info}
 	return &retval, nil
 }

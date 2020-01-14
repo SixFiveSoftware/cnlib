@@ -417,7 +417,7 @@ func TestNewTransactionDataSendMax_JustEnoughFunds(t *testing.T) {
 	err = data.Generate()
 
 	// then
-	assert.Nil(t, err)
+	assert.EqualError(t, errors.New("transaction too small"), err.Error())
 	assert.Equal(t, address, data.TransactionData.PaymentAddress)
 	assert.Equal(t, expectedAmount, data.TransactionData.Amount)
 	assert.Equal(t, 0, data.TransactionData.Amount)

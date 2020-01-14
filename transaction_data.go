@@ -218,6 +218,7 @@ func (t *TransactionDataStandard) Generate() error {
 
 	err := t.TransactionData.validate()
 	if err != nil {
+		t.TransactionData = nil
 		return err
 	}
 
@@ -286,6 +287,7 @@ func (t *TransactionDataFlatFee) Generate() error {
 
 	err := t.TransactionData.validate()
 	if err != nil {
+		t.TransactionData = nil
 		return err
 	}
 
@@ -341,6 +343,7 @@ func (t *TransactionDataSendMax) Generate() error {
 
 	err = t.TransactionData.validate()
 	if err != nil {
+		t.TransactionData = nil
 		return err
 	}
 

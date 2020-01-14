@@ -25,14 +25,6 @@ type HDWallet struct {
 	masterPrivateKey *hdkeychain.ExtendedKey
 }
 
-// ImportedPrivateKey encapsulates the possible receive addresses to check for funds. When found, set that address to `SelectedAddress`.
-type ImportedPrivateKey struct {
-	wif               *btcutil.WIF
-	PossibleAddresses string // space-separated list of addresses
-	PrivateKeyAsWIF   string
-	SelectedAddress   string
-}
-
 // GetFullBIP39WordListString returns all 2,048 BIP39 mnemonic words as a space-separated string.
 func GetFullBIP39WordListString() string {
 	return strings.Join(wordlists.English, " ")
@@ -246,7 +238,8 @@ func (wallet *HDWallet) ImportPrivateKey(encodedKey string) (*ImportedPrivateKey
 
 	addrs := []string{legacy, ls, ns}
 	joined := strings.Join(addrs, " ")
-	retval := ImportedPrivateKey{wif: wif, PossibleAddresses: joined, PrivateKeyAsWIF: wif.String(), SelectedAddress: ""}
+	info := NewPreviousOutputInfo("", "", 0)
+	retval := ImportedPrivateKey{wif: wif, PossibleAddresses: joined, PrivateKeyAsWIF: wif.String(), PreviousOutputInfo: info}
 	return &retval, nil
 }
 

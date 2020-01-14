@@ -293,7 +293,7 @@ func TestImportPrivateKeyNativeSegwit(t *testing.T) {
 	assert.Truef(t, found, "Expected segwit address %v, from %v", expectedAddress, imported.PossibleAddresses)
 }
 
-func TestLightningInvoiceDecode(t *testing.T) {
+func TestDecodeLightningInvoice_WithMemo_WithSats(t *testing.T) {
 	invoice := "lnbc2500u1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdq5xysxxatsyp3k7enxv4jsxqzpuaztrnwngzn3kdzw5hydlzf03qdgm2hdq27cqv3agm2awhz5se903vruatfhq77w3ls4evs3ch9zw97j25emudupq63nyw24cg27h2rspfj9srp"
 
 	expectedAmount := 250000
@@ -304,4 +304,43 @@ func TestLightningInvoiceDecode(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, expectedAmount, di.NumSatoshis)
 	assert.Equal(t, expectedDescription, di.Description)
+}
+
+func TestDecodeLightningInvoice_NoMemo_NoSats(t *testing.T) {
+	invoice := "lnbc1p0puj0spp5scnsdawzvccv3mct6x0egfwy28xdu04qt5pmat4z3g52als7kwwqdqqcqzpgxqy9gcqcx7z7vqj4n2yx8wjkyeljjja0xdp2n66f7s4h736mckcpudde0nkjzn03k2qre0lwt3vqt6pj57pkwqkz8elekkp3xhmqjzqkxdgvvcq2gv79f"
+
+	wallet := NewHDWalletFromWords(w, BaseCoinBip84MainNet)
+	di, err := wallet.DecodeLightningInvoice(invoice)
+	assert.Nil(t, err)
+	assert.Equal(t, 0, di.NumSatoshis)
+	assert.Equal(t, "", di.Description)
+}
+
+func TestDecodeLightningInvoice_NoMemo_WithSats(t *testing.T) {
+	invoice := "lnbc5u1p0puntgpp583kp34svkjgjzh3r6plgj37ukqzy3m5kjnv8uxrdwd3j5mdtrrmsdqqcqzpgxqy9gcqdqhl9439lxp5fzjgfhj0thnd87s6r5crjqm0qtsdla27hql05x7hpf8s055n5rv9c4dv7488xflg49gj65r9kvgxyhdsqm8d5h634sgpevp8er"
+
+	wallet := NewHDWalletFromWords(w, BaseCoinBip84MainNet)
+	di, err := wallet.DecodeLightningInvoice(invoice)
+	assert.Nil(t, err)
+	assert.Equal(t, 500, di.NumSatoshis)
+	assert.Equal(t, "", di.Description)
+}
+
+func TestDecodeLightningInvoice_WithMemo_NoSats(t *testing.T) {
+	invoice := "lnbc1p0punsepp5ae28vtazjqdzqln9whtv3hn55q59eys75rzlv4f7muty8958dwrqdq0fpjhjgreyaskcmqcqzpgxqy9gcq234shpy9k2kflhmdmah3xn6m7s0avk840hzxkfydaurrugxyl78pa80x5x8emncje7ftjsh09q2t7443wdxn07h9gnep3uzdppw5xpgp83xq7q"
+
+	wallet := NewHDWalletFromWords(w, BaseCoinBip84MainNet)
+	di, err := wallet.DecodeLightningInvoice(invoice)
+	assert.Nil(t, err)
+	assert.Equal(t, 0, di.NumSatoshis)
+	assert.Equal(t, "Hey y'all", di.Description)
+}
+
+func TestDecodeLightningInvoice_Malformed(t *testing.T) {
+	invoice := "lnbc1p0punsepp5ae28vtazjqdzhtv3hn55q59eys75rzlv4f7muty8958dwrqdq0fpjhjgreyaskcmqcqzpgxqy9gcq234shpy9k2kflhmdmah3xn6m7s0avk840hzxkfydaurrugxyl78pa80x5x8emncje7ftjsh09q2t7443wdxn07h9gnep3uzdppw5xpgp83xq7q"
+
+	wallet := NewHDWalletFromWords(w, BaseCoinBip84MainNet)
+	di, err := wallet.DecodeLightningInvoice(invoice)
+	assert.Contains(t, err.Error(), "checksum failed")
+	assert.Nil(t, di)
 }

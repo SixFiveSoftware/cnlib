@@ -259,8 +259,13 @@ func (wallet *HDWallet) DecodeLightningInvoice(invoice string) (*LightningInvoic
 	if inv.Description != nil {
 		memo = *inv.Description
 	}
+
+	sats := 0
+	if inv.MilliSat != nil {
+		sats = int(inv.MilliSat.ToSatoshis())
+	}
 	return &LightningInvoice{
-		NumSatoshis: int(inv.MilliSat.ToSatoshis()),
+		NumSatoshis: sats,
 		Description: memo,
 	}, nil
 }

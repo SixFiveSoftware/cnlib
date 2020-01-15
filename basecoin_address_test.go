@@ -3,6 +3,7 @@ package cnlib
 import (
 	"testing"
 
+	"github.com/btcsuite/btcutil"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -111,6 +112,19 @@ func TestBytesPerInputBIP49Input(t *testing.T) {
 	utxo := NewUTXO("previous txid", 0, 1, path, nil, true)
 	bpi := BaseCoinBip84MainNet.bytesPerInput(utxo)
 	assert.Equal(t, p2shSegwitInputSize, bpi)
+}
+
+func TestBytesPerInputP2PKHInput(t *testing.T) {
+	pkString := "L27eMNMFMLhsvEvkRYCtzJxVVZfcN1Dzeomcjut5XRtvZ8gcBncm"
+	address := "1B3kirKp5kmVnHJv6YyqaK8gbYkNCVo9WN"
+	wif, err := btcutil.DecodeWIF(pkString)
+	assert.Nil(t, err)
+
+	info := NewPreviousOutputInfo(address, "txid string", 0, 11413)
+	key := ImportedPrivateKey{wif: wif, PossibleAddresses: address, PrivateKeyAsWIF: pkString, PreviousOutputInfo: info}
+	utxo := NewUTXO(info.Txid, info.Index, info.Amount, nil, &key, true)
+	bpi := BaseCoinBip84MainNet.bytesPerInput(utxo)
+	assert.Equal(t, p2pkhInputSize, bpi)
 }
 
 func TestBytesPerChangeOuptutBIP84(t *testing.T) {

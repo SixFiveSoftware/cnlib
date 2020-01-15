@@ -20,6 +20,7 @@ const (
 	p2shOutputSize        = 32
 	p2wpkhOutputSize      = 31
 	p2DefaultOutputSize   = 32
+	p2pkhInputSize        = 107
 	p2shSegwitInputSize   = 91
 	p2wpkhSegwitInputSize = 68
 	baseSize              = 11
@@ -89,20 +90,37 @@ func (bc *BaseCoin) HRPFromAddress(addr string) (string, error) {
 }
 
 func (bc *BaseCoin) bytesPerInput(utxo *UTXO) int {
-	purpose := bip49purpose
 	if utxo == nil {
 		if bc.Purpose == bip84purpose {
-			purpose = bip84purpose
+			return p2wpkhSegwitInputSize
+		}
+		return p2shSegwitInputSize
+	}
+
+	if utxo.ImportedPrivateKey != nil {
+		addr, err := btcutil.DecodeAddress(utxo.ImportedPrivateKey.SelectedAddress, bc.defaultNetParams())
+		if err != nil {
+			return p2shSegwitInputSize
+		}
+		switch addr.(type) {
+		case *btcutil.AddressPubKeyHash:
+			return p2pkhInputSize
+		case *btcutil.AddressScriptHash:
+			return p2shSegwitInputSize
+		case *btcutil.AddressWitnessPubKeyHash:
+			return p2wpkhSegwitInputSize
+		case *btcutil.AddressWitnessScriptHash:
+			return p2wpkhSegwitInputSize
 		}
 	}
 
-	if utxo.Path.Purpose == bip84purpose {
-		purpose = bip84purpose
-	}
-
-	if purpose == bip49purpose {
+	if utxo.Path != nil {
+		if utxo.Path.Purpose == bip84purpose {
+			return p2wpkhSegwitInputSize
+		}
 		return p2shSegwitInputSize
 	}
+
 	return p2wpkhSegwitInputSize
 }
 

@@ -143,7 +143,12 @@ func (bc *BaseCoin) totalBytes(utxos []*UTXO, address string, includeChange bool
 		total = total + bc.bytesPerChangeOuptut()
 	}
 
-	outBytes, err := bc.bytesPerOutputAddress(address)
+	addressForSizeEstimation := address
+	if address == PlaceholderDestination {
+		addressForSizeEstimation = "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu"
+	}
+
+	outBytes, err := bc.bytesPerOutputAddress(addressForSizeEstimation)
 	if err != nil {
 		return 0, err
 	}

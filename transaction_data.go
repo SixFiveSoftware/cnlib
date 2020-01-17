@@ -13,6 +13,9 @@ const (
 	AllowedToBeRBF int = 2
 )
 
+// PlaceholderDestination is a constant which can be used to indicate a destination is not yet selected, but tx size needs to be estimated.
+const PlaceholderDestination = "---placeholder---"
+
 const dustThreshold = 1000
 
 // RBFOption is a struct wrapping an int for RBF preferred value. Value should be `MustBeRBF` (0), `MustNotBeRBF` (1), or `AllowedToBeRBF` (2).

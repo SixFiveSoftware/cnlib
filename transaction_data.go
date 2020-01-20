@@ -390,7 +390,7 @@ func (td *TransactionData) getSuggestedSequence() uint32 {
 }
 
 func (td *TransactionData) validate() error {
-	if td.Amount < 546 {
+	if td.Amount < 1000 {
 		return errors.New("transaction too small")
 	}
 	return nil

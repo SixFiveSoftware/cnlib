@@ -232,7 +232,12 @@ func (t *TransactionDataStandard) Generate() error {
 
 	for i := 0; i < len(t.TransactionData.availableUtxos); i++ {
 		utxo := t.TransactionData.availableUtxos[i]
-		feePerInput := t.TransactionData.feeRate * t.TransactionData.basecoin.bytesPerInput(utxo)
+		bytes, err := t.TransactionData.basecoin.bytesPerInput(utxo)
+		if err != nil {
+			t.TransactionData = nil
+			return err
+		}
+		feePerInput := t.TransactionData.feeRate * bytes
 		totalSendingValue = t.TransactionData.Amount + currentFee
 
 		if totalSendingValue > totalFromUTXOs {

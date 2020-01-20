@@ -103,14 +103,16 @@ func TestSegwitAddressHRP(t *testing.T) {
 func TestBytesPerInputBIP84Input(t *testing.T) {
 	path := NewDerivationPath(BaseCoinBip84MainNet, 0, 0)
 	utxo := NewUTXO("previous txid", 0, 1, path, nil, true)
-	bpi := BaseCoinBip84MainNet.bytesPerInput(utxo)
+	bpi, err := BaseCoinBip84MainNet.bytesPerInput(utxo)
+	assert.Nil(t, err)
 	assert.Equal(t, p2wpkhSegwitInputSize, bpi)
 }
 
 func TestBytesPerInputBIP49Input(t *testing.T) {
 	path := NewDerivationPath(BaseCoinBip49MainNet, 0, 0)
 	utxo := NewUTXO("previous txid", 0, 1, path, nil, true)
-	bpi := BaseCoinBip84MainNet.bytesPerInput(utxo)
+	bpi, err := BaseCoinBip84MainNet.bytesPerInput(utxo)
+	assert.Nil(t, err)
 	assert.Equal(t, p2shSegwitInputSize, bpi)
 }
 
@@ -123,7 +125,8 @@ func TestBytesPerInputP2PKHInput(t *testing.T) {
 	info := NewPreviousOutputInfo(address, "txid string", 0, 11413)
 	key := ImportedPrivateKey{wif: wif, PossibleAddresses: address, PrivateKeyAsWIF: pkString, PreviousOutputInfo: info}
 	utxo := NewUTXO(info.Txid, info.Index, info.Amount, nil, &key, true)
-	bpi := BaseCoinBip84MainNet.bytesPerInput(utxo)
+	bpi, err := BaseCoinBip84MainNet.bytesPerInput(utxo)
+	assert.Nil(t, err)
 	assert.Equal(t, p2pkhInputSize, bpi)
 }
 

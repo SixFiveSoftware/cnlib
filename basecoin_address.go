@@ -89,39 +89,39 @@ func (bc *BaseCoin) HRPFromAddress(addr string) (string, error) {
 	return "", errors.New("invalid segwit address")
 }
 
-func (bc *BaseCoin) bytesPerInput(utxo *UTXO) int {
+func (bc *BaseCoin) bytesPerInput(utxo *UTXO) (int, error) {
 	if utxo == nil {
 		if bc.Purpose == bip84purpose {
-			return p2wpkhSegwitInputSize
+			return p2wpkhSegwitInputSize, nil
 		}
-		return p2shSegwitInputSize
+		return p2shSegwitInputSize, nil
 	}
 
 	if utxo.ImportedPrivateKey != nil {
 		addr, err := btcutil.DecodeAddress(utxo.ImportedPrivateKey.SelectedAddress, bc.defaultNetParams())
 		if err != nil {
-			return p2shSegwitInputSize
+			return 0, err
 		}
 		switch addr.(type) {
 		case *btcutil.AddressPubKeyHash:
-			return p2pkhInputSize
+			return p2pkhInputSize, nil
 		case *btcutil.AddressScriptHash:
-			return p2shSegwitInputSize
+			return p2shSegwitInputSize, nil
 		case *btcutil.AddressWitnessPubKeyHash:
-			return p2wpkhSegwitInputSize
+			return p2wpkhSegwitInputSize, nil
 		case *btcutil.AddressWitnessScriptHash:
-			return p2wpkhSegwitInputSize
+			return p2wpkhSegwitInputSize, nil
 		}
 	}
 
 	if utxo.Path != nil {
 		if utxo.Path.Purpose == bip84purpose {
-			return p2wpkhSegwitInputSize
+			return p2wpkhSegwitInputSize, nil
 		}
-		return p2shSegwitInputSize
+		return p2shSegwitInputSize, nil
 	}
 
-	return p2wpkhSegwitInputSize
+	return 0, errors.New("invalid destination address")
 }
 
 func (bc *BaseCoin) bytesPerChangeOuptut() int {
@@ -136,7 +136,11 @@ func (bc *BaseCoin) totalBytes(utxos []*UTXO, address string, includeChange bool
 	total := baseSize
 
 	for _, utxo := range utxos {
-		total += bc.bytesPerInput(utxo)
+		bytes, err := bc.bytesPerInput(utxo)
+		if err != nil {
+			return 0, err
+		}
+		total += bytes
 	}
 
 	if includeChange {

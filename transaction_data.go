@@ -316,6 +316,10 @@ func (t *TransactionDataFlatFee) Generate() error {
 				t.TransactionData.ChangeAmount = 0
 			}
 		}
+
+		if totalFromUTXOs >= (t.TransactionData.FeeAmount + t.TransactionData.Amount) {
+			break
+		}
 	}
 
 	if totalFromUTXOs < (t.TransactionData.FeeAmount + t.TransactionData.Amount) {

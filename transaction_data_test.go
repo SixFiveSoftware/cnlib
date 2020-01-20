@@ -359,6 +359,42 @@ func TestNewTransactionDataFlatFee_WithChange(t *testing.T) {
 	assert.Equal(t, expectedRBFOption.Value, data.TransactionData.RBFOption.Value)
 }
 
+func TestNewTransactionDataFlatFee_WithChange_OnlySelectsOneUTXO(t *testing.T) {
+	// given
+	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
+	path1 := NewDerivationPath(BaseCoinBip49MainNet, 1, 3)
+	path2 := NewDerivationPath(BaseCoinBip49MainNet, 0, 2)
+	path3 := NewDerivationPath(BaseCoinBip49MainNet, 0, 8)
+	utxo1 := NewUTXO("909ac6e0a31c68fe345cc72d568bbab75afb5229b648753c486518f11c0d0009", 1, 2221, path1, nil, true)
+	utxo2 := NewUTXO("419a7a7d27e0c4341ca868d0b9744ae7babb18fd691e39be608b556961c00ade", 0, 15935, path2, nil, true)
+	utxo3 := NewUTXO("3013fcd9ea8fd65a69709f07fed2c1fd765d57664486debcb72ef47f2ea415f6", 0, 15526, path3, nil, true)
+	utxos := []*UTXO{utxo1, utxo2, utxo3}
+	changePath := NewDerivationPath(BaseCoinBip49MainNet, 1, 5)
+	paymentAmount := 1001
+	flatFeeAmount := 200
+	expectedChange := 1020
+	expectedRBFOption := NewRBFOption(MustBeRBF)
+	expectedNumberOfUTXOs := 1
+
+	// when
+	data := NewTransactionDataFlatFee(address, BaseCoinBip49MainNet, paymentAmount, flatFeeAmount, changePath, 500000)
+	for _, utxo := range utxos {
+		data.AddUTXO(utxo)
+	}
+	err := data.Generate()
+
+	// then
+	assert.Nil(t, err)
+	assert.Equal(t, address, data.TransactionData.PaymentAddress)
+	assert.Equal(t, paymentAmount, data.TransactionData.Amount)
+	assert.Equal(t, flatFeeAmount, data.TransactionData.FeeAmount)
+	assert.Equal(t, expectedChange, data.TransactionData.ChangeAmount)
+	assert.Equal(t, expectedNumberOfUTXOs, data.TransactionData.UtxoCount())
+	assert.Equal(t, 500000, data.TransactionData.Locktime)
+	assert.True(t, data.TransactionData.shouldAddChangeToTransaction())
+	assert.Equal(t, expectedRBFOption.Value, data.TransactionData.RBFOption.Value)
+}
+
 func TestNewTransactionDataFlatFee_DustyTransaction_NoChange(t *testing.T) {
 	// given
 	address := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"

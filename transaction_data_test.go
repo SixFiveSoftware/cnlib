@@ -2,6 +2,7 @@ package cnlib
 
 import (
 	"errors"
+	"github.com/btcsuite/btcutil"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -577,4 +578,30 @@ func TestNewTransactionDataStandard_TwoSegwitInputs_TwoSegwitOutputs(t *testing.
 	expectedEncodedTx := "01000000000102371e103c8f736a4a54d380f34e7affb087d3abb6ab5c7e4848aad4ca990847ca0000000000ffffffff4aaaca8d535c655ab46e75d44009ca474e00a3009636e440345fd123af8ace160100000000ffffffff02400d03000000000016001456c93ac0097624d44ce60073c07bcaf7912a4d1bec290000000000001600145b8585924dc44505ed40d8a127e792fa4e68cbfd02483045022100d05e99f619084e76edcd04595af4e0a31bb05efa9d9cab831578d63e8a388442022044e43fb1b4df85e97fe2cfe7d9fb7bc922af6e0516fbfa0d51ca5686db01b5a9012102b05e67ab098575526f23a7c4f3b69449125604c34a9b34909def7432a792fbf60248304502210088213160aa8b43fdee2fbcc8da497fdca8e4adc5f9028b01cf59f019af502c3c02202bbe894e35391befc91ae4fefb5afa63e01fb02ab326670e56864ea20facd3dc012103020d7c261fb5c6103a8f8f4c73b3fbed228c981869e68b6e9c6f6973b0550659d6500900"
 	assert.Equal(t, expectedTxid, metadata.Txid)
 	assert.Equal(t, expectedEncodedTx, metadata.EncodedTx)
+}
+
+func TestSweepingPrivatekey_P2PKH_BuildsProperly(t *testing.T) {
+	// given
+	address := "bc1q2myn4sqfwcjdgn8xqpeuq77277gj5ngmda5uk8"
+	feeRate := 1
+	pkString := "KyaYoQQpB7Aka6DBm2NJZty3utnZQijtrNrvGDqC7uVBwNzWDuAi"
+	pkAddress := "1158uLtMaZ3wHkzsXPH62Zi3PfX6oopy7z"
+	wif, err := btcutil.DecodeWIF(pkString)
+	assert.Nil(t, err)
+	amount := 5782
+	expectedFeeAmount := 189
+	expectedAmount := amount - expectedFeeAmount
+	info := NewPreviousOutputInfo(pkAddress, "txid string", 0, amount)
+	imported := ImportedPrivateKey{wif: wif, PossibleAddresses: pkAddress, PrivateKeyAsWIF: pkString, PreviousOutputInfo: info}
+	utxo := NewUTXO(info.Txid, info.Index, info.Amount, nil, &imported, true)
+
+	// when
+	data := NewTransactionDataSendingMax(address, BaseCoinBip84MainNet, feeRate, 614024)
+	data.AddUTXO(utxo)
+	err = data.Generate()
+
+	// then
+	assert.Nil(t, err)
+	assert.Equal(t, expectedFeeAmount, data.TransactionData.FeeAmount)
+	assert.Equal(t, expectedAmount, data.TransactionData.Amount)
 }

@@ -130,6 +130,20 @@ func TestBytesPerInputP2PKHInput(t *testing.T) {
 	assert.Equal(t, p2pkhInputSize, bpi)
 }
 
+func TestBytesPerInputP2PKHInput_Copy(t *testing.T) {
+	pkString := "KyaYoQQpB7Aka6DBm2NJZty3utnZQijtrNrvGDqC7uVBwNzWDuAi"
+	address := "1158uLtMaZ3wHkzsXPH62Zi3PfX6oopy7z"
+	wif, err := btcutil.DecodeWIF(pkString)
+	assert.Nil(t, err)
+
+	info := NewPreviousOutputInfo(address, "txid string", 0, 5782)
+	key := ImportedPrivateKey{wif: wif, PossibleAddresses: address, PrivateKeyAsWIF: pkString, PreviousOutputInfo: info}
+	utxo := NewUTXO(info.Txid, info.Index, info.Amount, nil, &key, true)
+	bpi, err := BaseCoinBip84MainNet.bytesPerInput(utxo)
+	assert.Nil(t, err)
+	assert.Equal(t, p2pkhInputSize, bpi)
+}
+
 func TestBytesPerChangeOuptutBIP84(t *testing.T) {
 	bpco := BaseCoinBip84MainNet.bytesPerChangeOuptut()
 	assert.Equal(t, p2wpkhOutputSize, bpco)

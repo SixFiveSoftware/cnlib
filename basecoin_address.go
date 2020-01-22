@@ -20,7 +20,7 @@ const (
 	p2shOutputSize        = 32
 	p2wpkhOutputSize      = 31
 	p2DefaultOutputSize   = 32
-	p2pkhInputSize        = 107
+	p2pkhInputSize        = 147
 	p2shSegwitInputSize   = 91
 	p2wpkhSegwitInputSize = 68
 	baseSize              = 11

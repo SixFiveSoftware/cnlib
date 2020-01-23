@@ -4,4 +4,5 @@ package cnlib
 type LightningInvoice struct {
 	NumSatoshis int
 	Description string
+	IsExpired   bool
 }

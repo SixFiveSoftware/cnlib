@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil"
@@ -264,9 +265,18 @@ func (wallet *HDWallet) DecodeLightningInvoice(invoice string) (*LightningInvoic
 	if inv.MilliSat != nil {
 		sats = int(inv.MilliSat.ToSatoshis())
 	}
+
+	isExpired := false
+	timestampPlusExpiry := inv.Timestamp.Add(inv.Expiry()).Unix()
+	expiresAt := time.Unix(timestampPlusExpiry, 0)
+	if time.Now().UTC().After(expiresAt) {
+		isExpired = true
+	}
+
 	return &LightningInvoice{
 		NumSatoshis: sats,
 		Description: memo,
+		IsExpired:   isExpired,
 	}, nil
 }
 

@@ -304,6 +304,17 @@ func TestDecodeLightningInvoice_WithMemo_WithSats(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, expectedAmount, di.NumSatoshis)
 	assert.Equal(t, expectedDescription, di.Description)
+	assert.True(t, di.IsExpired)
+}
+
+func TestDecodeLightningInvoice_Expired(t *testing.T) {
+	invoiceString := "lnbc10u1p0znnwnpp590yg0vlxfd5lsdvn4m3fxzr939nk7ewzsz43fenc3j97exnrurrsdq8w3jhxaqcqzpgxqzfvydc7jvtacl4c7z4jygdhq76whzhve6q6qqdmecahw7nsx0rw0gas3g9ufcej55thffjawjxuga62nphexptuh92fwrumy3z7xng3zwsplmgqah"
+
+	wallet := NewHDWalletFromWords(w, BaseCoinBip84MainNet)
+	invoice, err := wallet.DecodeLightningInvoice(invoiceString)
+
+	assert.Nil(t, err)
+	assert.True(t, invoice.IsExpired)
 }
 
 func TestDecodeLightningInvoice_NoMemo_NoSats(t *testing.T) {

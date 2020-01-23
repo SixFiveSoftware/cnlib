@@ -315,6 +315,7 @@ func TestDecodeLightningInvoice_Expired(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.True(t, invoice.IsExpired)
+	assert.Equal(t, int64(1579798271), invoice.ExpiresAt)
 }
 
 func TestDecodeLightningInvoice_NoMemo_NoSats(t *testing.T) {

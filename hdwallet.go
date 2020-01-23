@@ -277,6 +277,7 @@ func (wallet *HDWallet) DecodeLightningInvoice(invoice string) (*LightningInvoic
 		NumSatoshis: sats,
 		Description: memo,
 		IsExpired:   isExpired,
+		ExpiresAt:   timestampPlusExpiry,
 	}, nil
 }
 

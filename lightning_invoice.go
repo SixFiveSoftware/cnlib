@@ -5,4 +5,5 @@ type LightningInvoice struct {
 	NumSatoshis int
 	Description string
 	IsExpired   bool
+	ExpiresAt   int64 // seconds since unix epoch
 }

@@ -6,6 +6,10 @@ stages:
   - lint
   - build
 
+# Login for git
+before_script:
+  - echo -e "machine git.coinninja.net\nlogin gitlab-ci-token\npassword ${CI_JOB_TOKEN}" > $HOME/.netrc
+
 test:
   stage: test
   script:
@@ -19,13 +23,23 @@ golangci-lint:
 
 .build: &build
   allow_failure: false
-  before_script:
-    - echo -e "machine git.coinninja.net\nlogin gitlab-ci-token\npassword ${CI_JOB_TOKEN}" > $HOME/.netrc
   script:
-    - gomobile bind -target ios -v -o lib/cnlib-$LIBRARY_TAG.framework .
-    - zip -r lib/cnlib-ios-$LIBRARY_TAG.zip lib/cnlib-$LIBRARY_TAG.framework
+    - export GOPATH=$PWD/gopath
+    - export GO111MODULE=off
+    - mkdir -p gopath/src/git.coinninja.net/engineering
+    - ln -s $PWD gopath/src/git.coinninja.net/engineering/cnlib
+    - cd gopath/src/git.coinninja.net/engineering/cnlib
+    - go get golang.org/x/mobile/cmd/gomobile
+    - go get golang.org/x/mobile/bind
+    - go get -v
+    - gomobile bind -target ios -v -prefix Cnb -o lib/Cnlib.framework .
+    - zip -r lib/cnlib-ios-$LIBRARY_TAG.zip lib/Cnlib.framework
     - gomobile bind -target android -v -o lib/cnlib-$LIBRARY_TAG.aar .
     - zip -r lib/cnlib-android-$LIBRARY_TAG.zip lib/cnlib-$LIBRARY_TAG-sources.jar lib/cnlib-$LIBRARY_TAG.aar
+  after_script:
+    - echo "Cleaning up gopath in $PWD"
+    - chmod -R u+w gopath
+    - rm -Rf gopath
 
 build:branch:
   stage: build

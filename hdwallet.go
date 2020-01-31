@@ -244,8 +244,8 @@ func (wallet *HDWallet) ImportPrivateKey(encodedKey string) (*ImportedPrivateKey
 	return &retval, nil
 }
 
-// ExtendedMasterPublicKey returns the stringified base58 encoded master extended public key.
-func (wallet *HDWallet) ExtendedMasterPublicKey() (string, error) {
+// AccountExtendedMasterPublicKey returns the stringified base58 encoded master extended public key.
+func (wallet *HDWallet) AccountExtendedMasterPublicKey() (string, error) {
 	kf := keyFactory{masterPrivateKey: wallet.masterPrivateKey}
 	return kf.accountExtendedPublicKey(wallet.BaseCoin)
 }

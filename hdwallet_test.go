@@ -357,15 +357,6 @@ func TestDecodeLightningInvoice_Malformed(t *testing.T) {
 	assert.Nil(t, di)
 }
 
-func TestExtendedAccountPublicKey_BIP84(t *testing.T) {
-	bc := NewBaseCoin(84, 0, 0)
-	wallet := NewHDWalletFromWords(w, bc)
-	actualKey, err := wallet.AccountExtendedMasterPublicKey()
-	assert.Nil(t, err)
-	expectedKey := "zpub6rFR7y4Q2AijBEqTUquhVz398htDFrtymD9xYYfG1m4wAcvPhXNfE3EfH1r1ADqtfSdVCToUG868RvUUkgDKf31mGDtKsAYz2oz2AGutZYs"
-	assert.Equal(t, expectedKey, actualKey)
-}
-
 func TestExtendedAccountPublicKey_BIP44(t *testing.T) {
 	bc := NewBaseCoin(44, 0, 0)
 	wallet := NewHDWalletFromWords(w, bc)
@@ -381,5 +372,41 @@ func TestExtendedAccountPublicKey_BIP49(t *testing.T) {
 	actualKey, err := wallet.AccountExtendedMasterPublicKey()
 	assert.Nil(t, err)
 	expectedKey := "ypub6Ww3ibxVfGzLrAH1PNcjyAWenMTbbAosGNB6VvmSEgytSER9azLDWCxoJwW7Ke7icmizBMXrzBx9979FfaHxHcrArf3zbeJJJUZPf663zsP"
+	assert.Equal(t, expectedKey, actualKey)
+}
+
+func TestExtendedAccountPublicKey_BIP84(t *testing.T) {
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	actualKey, err := wallet.AccountExtendedMasterPublicKey()
+	assert.Nil(t, err)
+	expectedKey := "zpub6rFR7y4Q2AijBEqTUquhVz398htDFrtymD9xYYfG1m4wAcvPhXNfE3EfH1r1ADqtfSdVCToUG868RvUUkgDKf31mGDtKsAYz2oz2AGutZYs"
+	assert.Equal(t, expectedKey, actualKey)
+}
+
+func TestExtendedAccountPublicKey_BIP44_Testnet(t *testing.T) {
+	bc := NewBaseCoin(44, 1, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	actualKey, err := wallet.AccountExtendedMasterPublicKey()
+	assert.Nil(t, err)
+	expectedKey := "tpubDC5FSnBiZDMmhiuCmWAYsLwgLYrrT9rAqvTySfuCCrgsWz8wxMXUS9Tb9iVMvcRbvFcAHGkMD5Kx8koh4GquNGNTfohfk7pgjhaPCdXpoba"
+	assert.Equal(t, expectedKey, actualKey)
+}
+
+func TestExtendedAccountPublicKey_BIP49_Testnet(t *testing.T) {
+	bc := NewBaseCoin(49, 1, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	actualKey, err := wallet.AccountExtendedMasterPublicKey()
+	assert.Nil(t, err)
+	expectedKey := "upub5EFU65HtV5TeiSHmZZm7FUffBGy8UKeqp7vw43jYbvZPpoVsgU93oac7Wk3u6moKegAEWtGNF8DehrnHtv21XXEMYRUocHqguyjknFHYfgY"
+	assert.Equal(t, expectedKey, actualKey)
+}
+
+func TestExtendedAccountPublicKey_BIP84_Testnet(t *testing.T) {
+	bc := NewBaseCoin(84, 1, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	actualKey, err := wallet.AccountExtendedMasterPublicKey()
+	assert.Nil(t, err)
+	expectedKey := "vpub5Y6cjg78GGuNLsaPhmYsiw4gYX3HoQiRBiSwDaBXKUafCt9bNwWQiitDk5VZ5BVxYnQdwoTyXSs2JHRPAgjAvtbBrf8ZhDYe2jWAqvZVnsc"
 	assert.Equal(t, expectedKey, actualKey)
 }

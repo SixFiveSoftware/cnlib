@@ -61,44 +61,6 @@ func (kf keyFactory) accountExtendedPublicKey(bc *BaseCoin) (string, error) {
 	return extendedPublicKey.String(), nil
 }
 
-// Neuter returns a new extended public key from this extended private key.  The
-// same extended key will be returned unaltered if it is already an extended
-// public key.
-//
-// As the name implies, an extended public key does not have access to the
-// private key, so it is not capable of signing transactions or deriving
-// child extended private keys.  However, it is capable of deriving further
-// child extended public keys.
-// func (k *hdkeychain.ExtendedKey) Neuter(bc *BaseCoin) (*hdkeychain.ExtendedKey, error) {
-// 	// Already an extended public key.
-// 	if !k.IsPrivate() {
-// 		return k, nil
-// 	}
-
-// 	// Get the associated public extended key version bytes.
-// 	// version, err := chaincfg.HDPrivateKeyToPublicKeyID(k.version)
-// 	// if err != nil {
-// 	// 	return nil, err
-// 	// }
-// 	version, err := bc.extendedPubKeyVersionPrefix()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	pubkey, err := k.ECPubKey()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	// Convert it to an extended public key.  The key for the new extended
-// 	// key will simply be the pubkey of the current extended private key.
-// 	//
-// 	// This is the function N((k,c)) -> (K, c) from [BIP32].
-// 	// return NewExtendedKey(version, k.pubKeyBytes(), k.chainCode, k.parentFP,
-// 	// 	k.depth, k.childNum, false), nil
-// 	return hdkeychain.NewExtendedKey(version, pubkey.SerializeCompressed(), )
-// }
-
 func (kf keyFactory) signingMasterKey() (*hdkeychain.ExtendedKey, error) {
 	masterKey := kf.masterPrivateKey
 	if masterKey == nil {

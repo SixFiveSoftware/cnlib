@@ -114,6 +114,52 @@ func (bc *BaseCoin) defaultNetParams() *chaincfg.Params {
 	return bc.params
 }
 
+// extendedKeyPrefixPairs returns bitcoin-only prefixes for private/public extended keys.
+// Supports BIP32 paths: m/44'/0', m/44'/1', m/49'/0', m/49'/1', m/84'/0', m/84'/1'.
 func (bc *BaseCoin) extendedKeyPrefixPairs() ([]byte, []byte, error) {
-	return nil, nil, nil
+	purpose := bc.Purpose
+	coin := bc.Coin
+
+	if bc.isHardened() {
+		purpose -= hardenedOffset
+		coin -= hardenedOffset
+	}
+
+	if purpose == bip44purpose {
+		if coin == mainnet {
+			// 0x0488ade4, 0x0488b21e
+			return []byte{0x04, 0x88, 0xad, 0xe4}, []byte{0x04, 0x88, 0xb2, 0x1e}, nil
+		}
+		if coin == testnet {
+			// 0x04358394, 0x043587cf
+			return []byte{0x04, 0x35, 0x83, 0x94}, []byte{0x04, 0x35, 0x87, 0xcf}, nil
+		}
+		return nil, nil, ErrInvalidCoinValue
+	}
+
+	if purpose == bip49purpose {
+		if coin == mainnet {
+			// 0x049d7878, 0x049d7cb2
+			return []byte{0x04, 0x9d, 0x78, 0x78}, []byte{0x04, 0x9d, 0x7c, 0xb2}, nil
+		}
+		if coin == testnet {
+			// 0x044a4e28, 0x044a5262
+			return []byte{0x04, 0x4a, 0x4e, 0x28}, []byte{0x04, 0x4a, 0x52, 0x62}, nil
+		}
+		return nil, nil, ErrInvalidCoinValue
+	}
+
+	if purpose == bip84purpose {
+		if coin == mainnet {
+			// 0x04b2430c, 0x04b24746
+			return []byte{0x04, 0xb2, 0x43, 0x0c}, []byte{0x04, 0xb2, 0x47, 0x46}, nil
+		}
+		if coin == testnet {
+			// 0x045f18bc, 0x045f1cf6
+			return []byte{0x04, 0x5f, 0x18, 0xbc}, []byte{0x04, 0x5f, 0x1c, 0xf6}, nil
+		}
+		return nil, nil, ErrInvalidCoinValue
+	}
+
+	return nil, nil, ErrInvalidPurposeValue
 }

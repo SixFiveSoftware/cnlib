@@ -356,3 +356,18 @@ func TestDecodeLightningInvoice_Malformed(t *testing.T) {
 	assert.Contains(t, err.Error(), "checksum failed")
 	assert.Nil(t, di)
 }
+
+func TestExtendedMasterPublicKey_BIP84(t *testing.T) {
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	// expectedZpub := "zpub6u4KbU8TSgNuZSxzv7HaGq5Tk361gMHdZxnM4UYuwzg5CMLcNytzhobitV4Zq6vWtWHpG9QijsigkxAzXvQWyLRfLq1L7VxPP1tky1hPfD4"
+	// expectedXpub := "xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8"
+	actualKey, err := wallet.ExtendedMasterPublicKey()
+	assert.Nil(t, err)
+	// expectedXpub := "xpub661MyMwAqRbcF6GygV6Q6XAg8dqhPvDuhYHGniequi6HMbYhNNH5XC13Np3qRANHVD2mmnNGtMGBfDT69s2ovpHLr7q8syoAuyWqtRGEsYQ"
+	// assert.Equal(t, expectedXpub, actualKey)
+
+	// expectedElectrum44Key := "xpub6BosfCnifzxcFwrSzQiqu2DBVTshkCXacvNsWGYJVVhhawA7d4R5WSWGFNbi8Aw6ZRc1brxMyWMzG3DSSSSoekkudhUd9yLb6qx39T9nMdj"
+	expectedElectrum84AccountKey := "zpub6rFR7y4Q2AijBEqTUquhVz398htDFrtymD9xYYfG1m4wAcvPhXNfE3EfH1r1ADqtfSdVCToUG868RvUUkgDKf31mGDtKsAYz2oz2AGutZYs"
+	assert.Equal(t, expectedElectrum84AccountKey, actualKey)
+}

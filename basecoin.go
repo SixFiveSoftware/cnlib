@@ -14,8 +14,6 @@ var (
 )
 
 const (
-	hardenedOffset = 0x80000000
-
 	mainnet = 0
 	testnet = 1
 )

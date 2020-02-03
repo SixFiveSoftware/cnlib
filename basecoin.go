@@ -16,6 +16,13 @@ var (
 const (
 	mainnet = 0
 	testnet = 1
+
+	xpub = "xpub"
+	ypub = "ypub"
+	zpub = "zpub"
+	tpub = "tpub"
+	upub = "upub"
+	vpub = "vpub"
 )
 
 var (
@@ -77,28 +84,28 @@ func (bc *BaseCoin) isTestNet() bool {
 func (bc *BaseCoin) defaultExtendedPubkeyType() (string, error) {
 	if bc.Purpose == bip44purpose {
 		if bc.Coin == mainnet {
-			return "xpub", nil
+			return xpub, nil
 		}
 		if bc.Coin == testnet {
-			return "tpub", nil
+			return tpub, nil
 		}
 		return "", ErrInvalidCoinValue
 	}
 	if bc.Purpose == bip49purpose {
 		if bc.Coin == mainnet {
-			return "ypub", nil
+			return ypub, nil
 		}
 		if bc.Coin == testnet {
-			return "upub", nil
+			return upub, nil
 		}
 		return "", ErrInvalidCoinValue
 	}
 	if bc.Purpose == bip84purpose {
 		if bc.Coin == mainnet {
-			return "zpub", nil
+			return zpub, nil
 		}
 		if bc.Coin == testnet {
-			return "vpub", nil
+			return vpub, nil
 		}
 		return "", ErrInvalidCoinValue
 	}

@@ -21,11 +21,11 @@ const (
 var (
 	// ErrInvalidPurposeValue describes an error in which the caller
 	// passed an invalid purpose value.
-	ErrInvalidPurposeValue = errors.New("invalid purpose value")
+	ErrInvalidPurposeValue = errors.New("invalid basecoin purpose value")
 
 	// ErrInvalidCoinValue describes an error in which the caller
 	// passed an invalid coin value.
-	ErrInvalidCoinValue = errors.New("invalid coin value")
+	ErrInvalidCoinValue = errors.New("invalid basecoin coin value")
 )
 
 // BaseCoin is used to provide information about the current user's wallet.

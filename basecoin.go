@@ -13,6 +13,28 @@ var (
 	BaseCoinBip84TestNet = &BaseCoin{Purpose: 84, Coin: 1, Account: 0}
 )
 
+const (
+	mainnet = 0
+	testnet = 1
+
+	xpub = "xpub"
+	ypub = "ypub"
+	zpub = "zpub"
+	tpub = "tpub"
+	upub = "upub"
+	vpub = "vpub"
+)
+
+var (
+	// ErrInvalidPurposeValue describes an error in which the caller
+	// passed an invalid purpose value.
+	ErrInvalidPurposeValue = errors.New("invalid basecoin purpose value")
+
+	// ErrInvalidCoinValue describes an error in which the caller
+	// passed an invalid coin value.
+	ErrInvalidCoinValue = errors.New("invalid basecoin coin value")
+)
+
 // BaseCoin is used to provide information about the current user's wallet.
 type BaseCoin struct {
 	Purpose int
@@ -59,6 +81,36 @@ func (bc *BaseCoin) isTestNet() bool {
 	return bc.Coin != 0
 }
 
+func (bc *BaseCoin) defaultExtendedPubkeyType() (string, error) {
+	if bc.Purpose == bip44purpose {
+		if bc.Coin == mainnet {
+			return xpub, nil
+		}
+		if bc.Coin == testnet {
+			return tpub, nil
+		}
+		return "", ErrInvalidCoinValue
+	}
+	if bc.Purpose == bip49purpose {
+		if bc.Coin == mainnet {
+			return ypub, nil
+		}
+		if bc.Coin == testnet {
+			return upub, nil
+		}
+		return "", ErrInvalidCoinValue
+	}
+	if bc.Purpose == bip84purpose {
+		if bc.Coin == mainnet {
+			return zpub, nil
+		}
+		if bc.Coin == testnet {
+			return vpub, nil
+		}
+		return "", ErrInvalidCoinValue
+	}
+	return "", ErrInvalidPurposeValue
+}
 func (bc *BaseCoin) defaultNetParams() *chaincfg.Params {
 	if bc.isTestNet() {
 		return &chaincfg.RegressionNetParams

@@ -244,6 +244,12 @@ func (wallet *HDWallet) ImportPrivateKey(encodedKey string) (*ImportedPrivateKey
 	return &retval, nil
 }
 
+// AccountExtendedMasterPublicKey returns the stringified base58 encoded master extended public key.
+func (wallet *HDWallet) AccountExtendedMasterPublicKey() (string, error) {
+	kf := keyFactory{masterPrivateKey: wallet.masterPrivateKey}
+	return kf.accountExtendedPublicKey(wallet.BaseCoin)
+}
+
 // BuildTransactionMetadata will generate the tx metadata needed for client to consume.
 func (wallet *HDWallet) BuildTransactionMetadata(data *TransactionData) (*TransactionMetadata, error) {
 	builder := transactionBuilder{wallet: wallet}

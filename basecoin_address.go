@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	bip44purpose = 44
 	bip49purpose = 49
 	bip84purpose = 84
 )

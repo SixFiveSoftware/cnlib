@@ -410,3 +410,23 @@ func TestExtendedAccountPublicKey_BIP84_Testnet(t *testing.T) {
 	expectedKey := "vpub5Y6cjg78GGuNLsaPhmYsiw4gYX3HoQiRBiSwDaBXKUafCt9bNwWQiitDk5VZ5BVxYnQdwoTyXSs2JHRPAgjAvtbBrf8ZhDYe2jWAqvZVnsc"
 	assert.Equal(t, expectedKey, actualKey)
 }
+
+func TestCompressedPubKeyAtPath_Receive(t *testing.T) {
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	path := NewDerivationPath(bc, 0, 0)
+	bytes, err := wallet.CompressedPubKeyForPath(path)
+	assert.Nil(t, err)
+	byteString := hex.EncodeToString(bytes)
+	assert.Equal(t, "0330d54fd0dd420a6e5f8d3624f5f3482cae350f79d5f0753bf5beef9c2d91af3c", byteString)
+}
+
+func TestCompressedPubKeyAtPath_Change(t *testing.T) {
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	path := NewDerivationPath(bc, 1, 0)
+	bytes, err := wallet.CompressedPubKeyForPath(path)
+	assert.Nil(t, err)
+	byteString := hex.EncodeToString(bytes)
+	assert.Equal(t, "03025324888e429ab8e3dbaf1f7802648b9cd01e9b418485c5fa4c1b9b5700e1a6", byteString)
+}

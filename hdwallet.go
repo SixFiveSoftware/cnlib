@@ -287,6 +287,24 @@ func (wallet *HDWallet) DecodeLightningInvoice(invoice string) (*LightningInvoic
 	}, nil
 }
 
+// CompressedPubKeyForPath returns a compressed public key byte slice for a given derivation path in a wallet.
+func (wallet *HDWallet) CompressedPubKeyForPath(path *DerivationPath) ([]byte, error) {
+	if path == nil {
+		return nil, errors.New("derivation path cannot be nil")
+	}
+
+	keyFactory := keyFactory{masterPrivateKey: wallet.masterPrivateKey}
+	privKey, err := keyFactory.indexPrivateKey(path)
+	if err != nil {
+		return nil, err
+	}
+	pubKey, err := privKey.ECPubKey()
+	if err != nil {
+		return nil, err
+	}
+	return pubKey.SerializeCompressed(), nil
+}
+
 /// Unexported functions
 
 func (wallet *HDWallet) metaAddress(change int, index int) (*MetaAddress, error) {

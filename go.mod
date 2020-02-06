@@ -3,7 +3,6 @@ module git.coinninja.net/engineering/cnlib
 go 1.13
 
 require (
-	git.coinninja.net/engineering/cryptor v1.0.4
 	github.com/FactomProject/basen v0.0.0-20150613233007-fe3947df716e // indirect
 	github.com/FactomProject/btcutilecc v0.0.0-20130527213604-d3a63a5752ec // indirect
 	github.com/btcsuite/btcd v0.20.1-beta

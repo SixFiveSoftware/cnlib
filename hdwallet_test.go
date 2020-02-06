@@ -430,3 +430,23 @@ func TestCompressedPubKeyAtPath_Change(t *testing.T) {
 	byteString := hex.EncodeToString(bytes)
 	assert.Equal(t, "03025324888e429ab8e3dbaf1f7802648b9cd01e9b418485c5fa4c1b9b5700e1a6", byteString)
 }
+
+func TestUncompressedPubKeyAtPath_Receive(t *testing.T) {
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	path := NewDerivationPath(bc, 0, 0)
+	bytes, err := wallet.UncompressedPubKeyForPath(path)
+	assert.Nil(t, err)
+	byteString := hex.EncodeToString(bytes)
+	assert.Equal(t, "0430d54fd0dd420a6e5f8d3624f5f3482cae350f79d5f0753bf5beef9c2d91af3c04717159ce0828a7f686c2c7510b7aa7d4c685ebc2051642ccbebc7099e2f679", byteString)
+}
+
+func TestUncompressedPubKeyAtPath_Change(t *testing.T) {
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	path := NewDerivationPath(bc, 1, 0)
+	bytes, err := wallet.UncompressedPubKeyForPath(path)
+	assert.Nil(t, err)
+	byteString := hex.EncodeToString(bytes)
+	assert.Equal(t, "04025324888e429ab8e3dbaf1f7802648b9cd01e9b418485c5fa4c1b9b5700e1a64181f3bdfdbcb59e063badaba3919b897158dcb26b48ad46bc57955c5e61d2d5", byteString)
+}

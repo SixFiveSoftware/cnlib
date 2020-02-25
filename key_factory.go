@@ -51,25 +51,26 @@ func (kf keyFactory) indexPrivateKey(path *DerivationPath) (*hdkeychain.Extended
 	return indexKey, nil
 }
 
-func (kf keyFactory) accountExtendedPublicKey(bc *BaseCoin) (string, error) {
+// accountExtendedPublicKey returns the extended public key and its stringified version.
+func (kf keyFactory) accountExtendedPublicKey(bc *BaseCoin) (*hdkeychain.ExtendedKey, string, error) {
 	// derive account child
 	purposeKey, err := kf.masterPrivateKey.Child(hardened(bc.Purpose))
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
 	coinKey, err := purposeKey.Child(hardened(bc.Coin))
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
 	accountKey, err := coinKey.Child(hardened(bc.Account))
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
 
 	// get extended pubkey
 	extendedPublicKey, err := accountKey.Neuter()
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
 
 	// base58check encode extended pubkey
@@ -78,18 +79,18 @@ func (kf keyFactory) accountExtendedPublicKey(bc *BaseCoin) (string, error) {
 	// get appropriate prefix
 	idType, err := bc.defaultExtendedPubkeyType()
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
 	newPrefix := pubkeyIDs[idType]
 
 	// decode
 	decoded, version, err := base58.CheckDecode(neutered)
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
 
 	if version != newPrefix[0] {
-		return "", errors.New("version mismatch when decoding account pubkey")
+		return nil, "", errors.New("version mismatch when decoding account pubkey")
 	}
 
 	// swap bytes. `version` has first byte, and needs to match first byte of prefix.
@@ -101,7 +102,7 @@ func (kf keyFactory) accountExtendedPublicKey(bc *BaseCoin) (string, error) {
 	// re-encode
 	encoded := base58.CheckEncode(temp, version)
 
-	return encoded, nil
+	return extendedPublicKey, encoded, nil
 }
 
 func (kf keyFactory) signingMasterKey() (*hdkeychain.ExtendedKey, error) {

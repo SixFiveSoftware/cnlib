@@ -1,9 +1,12 @@
 package cnlib
 
 import (
+	"bytes"
+	"encoding/binary"
 	"errors"
 
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcutil/base58"
 )
 
 var (
@@ -45,6 +48,45 @@ type BaseCoin struct {
 // NewBaseCoin instantiates a new object and sets values
 func NewBaseCoin(purpose int, coin int, account int) *BaseCoin {
 	return &BaseCoin{Purpose: purpose, Coin: coin, Account: account}
+}
+
+// NewBaseCoinFromAccountPubKey returns a new BaseCoin pointer based on prefix, or error if unrecognized.
+func NewBaseCoinFromAccountPubKey(key string) (*BaseCoin, error) {
+	// prefix := key[:4]
+	var bc *BaseCoin
+
+	dec, _, err := base58.CheckDecode(key)
+	if err != nil {
+		return nil, err
+	}
+
+	decoded := []byte{0x04}
+	decoded = append(decoded, dec...)
+
+	acctBytes := decoded[9:13]                                   // bytes 9 through 12 are the 4 bytes of the account "child number", but first byte 0x04 is dropped in CheckDecode
+	acctIndex := binary.BigEndian.Uint32(acctBytes) & 0x0FFFFFFF // if hardened, remove hardened offset
+	acct := int(acctIndex)
+
+	prefix := decoded[:4]
+	if bytes.Equal(prefix, pubkeyIDs[xpub]) {
+		bc = &BaseCoin{Purpose: bip44purpose, Coin: mainnet, Account: acct}
+	} else if bytes.Equal(prefix, pubkeyIDs[ypub]) {
+		bc = &BaseCoin{Purpose: bip49purpose, Coin: mainnet, Account: acct}
+	} else if bytes.Equal(prefix, pubkeyIDs[zpub]) {
+		bc = &BaseCoin{Purpose: bip84purpose, Coin: mainnet, Account: acct}
+	} else if bytes.Equal(prefix, pubkeyIDs[tpub]) {
+		bc = &BaseCoin{Purpose: bip44purpose, Coin: testnet, Account: acct}
+	} else if bytes.Equal(prefix, pubkeyIDs[upub]) {
+		bc = &BaseCoin{Purpose: bip49purpose, Coin: testnet, Account: acct}
+	} else if bytes.Equal(prefix, pubkeyIDs[vpub]) {
+		bc = &BaseCoin{Purpose: bip84purpose, Coin: testnet, Account: acct}
+	}
+
+	if bc != nil {
+		return bc, nil
+	}
+
+	return nil, errors.New("unrecognized account key prefix")
 }
 
 // UpdatePurpose updates the purpose value on the BaseCoin receiver.
@@ -111,6 +153,7 @@ func (bc *BaseCoin) defaultExtendedPubkeyType() (string, error) {
 	}
 	return "", ErrInvalidPurposeValue
 }
+
 func (bc *BaseCoin) defaultNetParams() *chaincfg.Params {
 	if bc.isTestNet() {
 		return &chaincfg.RegressionNetParams

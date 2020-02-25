@@ -24,6 +24,7 @@ type HDWallet struct {
 	BaseCoin         *BaseCoin
 	WalletWords      string // space-separated string of user's recovery words
 	masterPrivateKey *hdkeychain.ExtendedKey
+	accountPublicKey *hdkeychain.ExtendedKey
 }
 
 // GetFullBIP39WordListString returns all 2,048 BIP39 mnemonic words as a space-separated string.
@@ -50,8 +51,28 @@ func NewHDWalletFromWords(wordString string, basecoin *BaseCoin) *HDWallet {
 	if err != nil {
 		return nil
 	}
-	wallet := HDWallet{BaseCoin: basecoin, WalletWords: wordString, masterPrivateKey: masterKey}
+	kf := keyFactory{masterPrivateKey: masterKey}
+	pubkey, _, err := kf.accountExtendedPublicKey(basecoin)
+	if err != nil {
+		return nil
+	}
+	wallet := HDWallet{BaseCoin: basecoin, WalletWords: wordString, masterPrivateKey: masterKey, accountPublicKey: pubkey}
 	return &wallet
+}
+
+// NewHDWalletFromAccountExtendedPublicKey returns a pointer to an HDWallet, containing the BaseCoin, empty word list, nil master private key,
+// and unexported pointer to extended key for account-level extended master private key. Returns error if unable to parse x/y/zpub.
+func NewHDWalletFromAccountExtendedPublicKey(acctPubKeyStr string) (*HDWallet, error) {
+	key, err := hdkeychain.NewKeyFromString(acctPubKeyStr)
+	if err != nil {
+		return nil, err
+	}
+	basecoin, err := NewBaseCoinFromAccountPubKey(acctPubKeyStr)
+	if err != nil {
+		return nil, err
+	}
+	wallet := HDWallet{BaseCoin: basecoin, WalletWords: "", masterPrivateKey: nil, accountPublicKey: key}
+	return &wallet, nil
 }
 
 /// Receiver functions
@@ -247,7 +268,11 @@ func (wallet *HDWallet) ImportPrivateKey(encodedKey string) (*ImportedPrivateKey
 // AccountExtendedMasterPublicKey returns the stringified base58 encoded master extended public key.
 func (wallet *HDWallet) AccountExtendedMasterPublicKey() (string, error) {
 	kf := keyFactory{masterPrivateKey: wallet.masterPrivateKey}
-	return kf.accountExtendedPublicKey(wallet.BaseCoin)
+	_, pubkeyString, err := kf.accountExtendedPublicKey(wallet.BaseCoin)
+	if err != nil {
+		return "", err
+	}
+	return pubkeyString, nil
 }
 
 // BuildTransactionMetadata will generate the tx metadata needed for client to consume.

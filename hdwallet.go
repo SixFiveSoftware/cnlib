@@ -114,7 +114,32 @@ func (wallet *HDWallet) CoinNinjaVerificationKeyHexString() (string, error) {
 
 // ReceiveAddressForIndex returns a receive MetaAddress derived from the current wallet, BaseCoin, and index.
 func (wallet *HDWallet) ReceiveAddressForIndex(index int) (*MetaAddress, error) {
-	return wallet.metaAddress(0, index)
+	if wallet.masterPrivateKey != nil {
+		return wallet.metaAddress(0, index)
+	} else if wallet.accountPublicKey != nil {
+		changeKey, err := wallet.accountPublicKey.Child(0)
+		if err != nil {
+			return nil, errors.New("failed to create external child key")
+		}
+		indexKey, err := changeKey.Child(uint32(index))
+		if err != nil {
+			return nil, errors.New("failed to create index child key")
+		}
+		ecPub, err := indexKey.ECPubKey()
+		if err != nil {
+			return nil, errors.New("failed to create index ec public key")
+		}
+		path := NewDerivationPath(wallet.BaseCoin, 0, index)
+		addr, err := generateAddress(path, ecPub)
+		if err != nil {
+			return nil, errors.New("failed to create index address")
+		}
+		ucpk := hex.EncodeToString(ecPub.SerializeUncompressed())
+		meta := NewMetaAddress(addr, path, ucpk)
+		return meta, nil
+	}
+
+	return nil, errors.New("no valid master private key or account extended public key found")
 }
 
 // ChangeAddressForIndex returns a change MetaAddress derived from the current wallet, BaseCoin, and index.
@@ -350,6 +375,10 @@ func (wallet *HDWallet) publicKey(path *DerivationPath) (*btcec.PublicKey, error
 }
 
 func (wallet *HDWallet) metaAddress(change int, index int) (*MetaAddress, error) {
+	if change < 0 {
+		return nil, errors.New("change index cannot be negative")
+	}
+
 	if index < 0 {
 		return nil, errors.New("index cannot be negative")
 	}

@@ -49,12 +49,6 @@ func newUsableAddressWithImportedPrivateKey(wallet *HDWallet, importedPrivateKey
 
 // MetaAddress returns a meta address with a given path based on wallet's BaseCoin, and uncompressed pubkey if a receive address. usableAddress's DerivationPath must not be nil.
 func (ua *usableAddress) MetaAddress() (*MetaAddress, error) {
-	addr, err := ua.generateAddress()
-
-	if err != nil {
-		return nil, err
-	}
-
 	path := ua.DerivationPath
 	if path == nil {
 		return nil, errors.New("found nil derivation path")
@@ -67,9 +61,16 @@ func (ua *usableAddress) MetaAddress() (*MetaAddress, error) {
 		pubkey = hex.EncodeToString(pubkeyBytes)
 	}
 
+	addr, err := generateAddress(ua.DerivationPath, ecPub)
+	if err != nil {
+		return nil, err
+	}
+
 	ma := MetaAddress{Address: addr, DerivationPath: path, UncompressedPublicKey: pubkey}
 	return &ma, nil
 }
+
+/// Unexposed methods
 
 // BIP49AddressFromPubkeyHash returns a P2SH-P2WPKH address from a pubkey's Hash160.
 func bip49AddressFromPubkeyHash(hash []byte, basecoin *BaseCoin) (string, error) {
@@ -93,29 +94,25 @@ func bip84AddressFromPubkeyHash(hash []byte, basecoin *BaseCoin) (string, error)
 	return addrHash.EncodeAddress(), nil
 }
 
-/// Unexposed methods
-
-func (ua *usableAddress) generateAddress() (string, error) {
-	purpose := ua.DerivationPath.Purpose
+func generateAddress(path *DerivationPath, pubkey *btcec.PublicKey) (string, error) {
+	purpose := path.BaseCoin.Purpose
 
 	if purpose == bip84purpose {
-		return ua.buildSegwitAddress(ua.DerivationPath)
+		return buildSegwitAddress(path, pubkey)
 	} else if purpose == bip49purpose {
-		return ua.buildBIP49Address(ua.DerivationPath)
+		return buildBIP49Address(path, pubkey)
 	}
 	return "", errors.New("Unrecognized Address Purpose")
 }
 
-func (ua *usableAddress) buildBIP49Address(path *DerivationPath) (string, error) {
-	ecPub := ua.derivedPrivateKey.PubKey()
-	pubkeyBytes := ecPub.SerializeCompressed()
+func buildBIP49Address(path *DerivationPath, pubkey *btcec.PublicKey) (string, error) {
+	pubkeyBytes := pubkey.SerializeCompressed()
 	keyHash := btcutil.Hash160(pubkeyBytes)
-	return bip49AddressFromPubkeyHash(keyHash, ua.Wallet.BaseCoin)
+	return bip49AddressFromPubkeyHash(keyHash, path.BaseCoin)
 }
 
-func (ua *usableAddress) buildSegwitAddress(path *DerivationPath) (string, error) {
-	ecPub := ua.derivedPrivateKey.PubKey()
-	pubkeyBytes := ecPub.SerializeCompressed()
+func buildSegwitAddress(path *DerivationPath, pubkey *btcec.PublicKey) (string, error) {
+	pubkeyBytes := pubkey.SerializeCompressed()
 	keyHash := btcutil.Hash160(pubkeyBytes)
-	return bip84AddressFromPubkeyHash(keyHash, ua.Wallet.BaseCoin)
+	return bip84AddressFromPubkeyHash(keyHash, path.BaseCoin)
 }

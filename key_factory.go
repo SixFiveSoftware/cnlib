@@ -11,9 +11,10 @@ import (
 
 /// Type Definition
 
-// KeyFactory is a struct holding a ref to an HDWallet, with receiver methods to obtain keys relative to the wallet.
+// KeyFactory is a struct holding optional refs to masterPrivateKey, and acctExtPubKey, with receiver methods to obtain keys relative to the wallet.
 type keyFactory struct {
 	masterPrivateKey *hdkeychain.ExtendedKey
+	acctExtPubKey    *hdkeychain.ExtendedKey
 }
 
 var pubkeyIDs = map[string][]byte{
@@ -53,28 +54,34 @@ func (kf keyFactory) indexPrivateKey(path *DerivationPath) (*hdkeychain.Extended
 
 // accountExtendedPublicKey returns the extended public key and its stringified version.
 func (kf keyFactory) accountExtendedPublicKey(bc *BaseCoin) (*hdkeychain.ExtendedKey, string, error) {
-	// derive account child
-	purposeKey, err := kf.masterPrivateKey.Child(hardened(bc.Purpose))
-	if err != nil {
-		return nil, "", err
-	}
-	coinKey, err := purposeKey.Child(hardened(bc.Coin))
-	if err != nil {
-		return nil, "", err
-	}
-	accountKey, err := coinKey.Child(hardened(bc.Account))
-	if err != nil {
-		return nil, "", err
-	}
+	var key *hdkeychain.ExtendedKey
 
-	// get extended pubkey
-	extendedPublicKey, err := accountKey.Neuter()
-	if err != nil {
-		return nil, "", err
+	if kf.masterPrivateKey != nil {
+		// derive account child
+		purposeKey, err := kf.masterPrivateKey.Child(hardened(bc.Purpose))
+		if err != nil {
+			return nil, "", err
+		}
+		coinKey, err := purposeKey.Child(hardened(bc.Coin))
+		if err != nil {
+			return nil, "", err
+		}
+		accountKey, err := coinKey.Child(hardened(bc.Account))
+		if err != nil {
+			return nil, "", err
+		}
+
+		// get extended pubkey
+		key, err = accountKey.Neuter()
+		if err != nil {
+			return nil, "", err
+		}
+	} else if kf.acctExtPubKey != nil {
+		key = kf.acctExtPubKey
 	}
 
 	// base58check encode extended pubkey
-	neutered := extendedPublicKey.String()
+	neutered := key.String()
 
 	// get appropriate prefix
 	idType, err := bc.defaultExtendedPubkeyType()
@@ -102,7 +109,7 @@ func (kf keyFactory) accountExtendedPublicKey(bc *BaseCoin) (*hdkeychain.Extende
 	// re-encode
 	encoded := base58.CheckEncode(temp, version)
 
-	return extendedPublicKey, encoded, nil
+	return key, encoded, nil
 }
 
 func (kf keyFactory) signingMasterKey() (*hdkeychain.ExtendedKey, error) {

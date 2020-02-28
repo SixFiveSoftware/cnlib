@@ -144,7 +144,32 @@ func (wallet *HDWallet) ReceiveAddressForIndex(index int) (*MetaAddress, error) 
 
 // ChangeAddressForIndex returns a change MetaAddress derived from the current wallet, BaseCoin, and index.
 func (wallet *HDWallet) ChangeAddressForIndex(index int) (*MetaAddress, error) {
-	return wallet.metaAddress(1, index)
+	if wallet.masterPrivateKey != nil {
+		return wallet.metaAddress(1, index)
+	} else if wallet.accountPublicKey != nil {
+		changeKey, err := wallet.accountPublicKey.Child(1)
+		if err != nil {
+			return nil, errors.New("failed to create internal child key")
+		}
+		indexKey, err := changeKey.Child(uint32(index))
+		if err != nil {
+			return nil, errors.New("failed to create index child key")
+		}
+		ecPub, err := indexKey.ECPubKey()
+		if err != nil {
+			return nil, errors.New("failed to create index ec public key")
+		}
+		path := NewDerivationPath(wallet.BaseCoin, 1, index)
+		addr, err := generateAddress(path, ecPub)
+		if err != nil {
+			return nil, errors.New("failed to create index address")
+		}
+		ucpk := hex.EncodeToString(ecPub.SerializeUncompressed())
+		meta := NewMetaAddress(addr, path, ucpk)
+		return meta, nil
+	}
+
+	return nil, errors.New("no valid master private key or account extended public key found")
 }
 
 // UpdateCoin updates the pointer stored to a new instance of BaseCoin. Fetched MetaAddresses will reflect updated coin.

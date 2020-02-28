@@ -464,6 +464,19 @@ func TestReceiveAddressForIndex_AccountPubKey_M_49_0_0(t *testing.T) {
 	assert.Equal(t, expectedAddr, addr)
 }
 
+func TestChangeAddressForIndex_AccountPubKey_M_49_0_0(t *testing.T) {
+	keyStr := "ypub6Ww3ibxVfGzLrAH1PNcjyAWenMTbbAosGNB6VvmSEgytSER9azLDWCxoJwW7Ke7icmizBMXrzBx9979FfaHxHcrArf3zbeJJJUZPf663zsP"
+	expectedAddr := "34K56kSjgUCUSD8GTtuF7c9Zzwokbs6uZ7"
+	wallet, err := NewHDWalletFromAccountExtendedPublicKey(keyStr)
+	assert.Nil(t, err)
+
+	meta, err := wallet.ChangeAddressForIndex(0)
+	assert.Nil(t, err)
+
+	addr := meta.Address
+	assert.Equal(t, expectedAddr, addr)
+}
+
 func TestReceiveAddressForIndex_AccountPubKey_M_49_0_1(t *testing.T) {
 	keyStr := "ypub6Ww3ibxVfGzLtJR4F9SRBicspAfvmvw54yern9Q6qZWFC9T6FYA34K57La5Sgs8pXuyvpDfEHX5KNZRiZRukUWaVPyL4NxA69sEAqdoV8ve"
 	expectedAddr := "35eszW2wmZ4hn7hfG5LGqxw5xCPjZcEJPM"
@@ -471,6 +484,19 @@ func TestReceiveAddressForIndex_AccountPubKey_M_49_0_1(t *testing.T) {
 	assert.Nil(t, err)
 
 	meta, err := wallet.ReceiveAddressForIndex(0)
+	assert.Nil(t, err)
+
+	addr := meta.Address
+	assert.Equal(t, expectedAddr, addr)
+}
+
+func TestChangeAddressForIndex_AccountPubKey_M_49_0_1(t *testing.T) {
+	keyStr := "ypub6Ww3ibxVfGzLtJR4F9SRBicspAfvmvw54yern9Q6qZWFC9T6FYA34K57La5Sgs8pXuyvpDfEHX5KNZRiZRukUWaVPyL4NxA69sEAqdoV8ve"
+	expectedAddr := "35gZZo6xPJEPgcz1cj1mTQHRMiPP97NGRY"
+	wallet, err := NewHDWalletFromAccountExtendedPublicKey(keyStr)
+	assert.Nil(t, err)
+
+	meta, err := wallet.ChangeAddressForIndex(0)
 	assert.Nil(t, err)
 
 	addr := meta.Address
@@ -490,6 +516,19 @@ func TestReceiveAddressForIndex_AccountPubKey_M_84_0_0(t *testing.T) {
 	assert.Equal(t, expectedAddr, addr)
 }
 
+func TestChangeAddressForIndex_AccountPubKey_M_84_0_0(t *testing.T) {
+	keyStr := "zpub6rFR7y4Q2AijBEqTUquhVz398htDFrtymD9xYYfG1m4wAcvPhXNfE3EfH1r1ADqtfSdVCToUG868RvUUkgDKf31mGDtKsAYz2oz2AGutZYs"
+	expectedAddr := "bc1q8c6fshw2dlwun7ekn9qwf37cu2rn755upcp6el"
+	wallet, err := NewHDWalletFromAccountExtendedPublicKey(keyStr)
+	assert.Nil(t, err)
+
+	meta, err := wallet.ChangeAddressForIndex(0)
+	assert.Nil(t, err)
+
+	addr := meta.Address
+	assert.Equal(t, expectedAddr, addr)
+}
+
 func TestReceiveAddressForIndex_AccountPubKey_M_84_0_1(t *testing.T) {
 	keyStr := "zpub6rFR7y4Q2AijF6Gk1bofHLs1d66hKFamhXWdWBup1Em25wfabZqkDqvaieV63fDQFaYmaatCG7jVNUpUiM2hAMo6SAVHcrUpSnHDpNzucB7"
 	expectedAddr := "bc1qku0qh0mc00y8tk0n65x2tqw4trlspak0fnjmfz"
@@ -497,6 +536,19 @@ func TestReceiveAddressForIndex_AccountPubKey_M_84_0_1(t *testing.T) {
 	assert.Nil(t, err)
 
 	meta, err := wallet.ReceiveAddressForIndex(0)
+	assert.Nil(t, err)
+
+	addr := meta.Address
+	assert.Equal(t, expectedAddr, addr)
+}
+
+func TestChangeAddressForIndex_AccountPubKey_M_84_0_1(t *testing.T) {
+	keyStr := "zpub6rFR7y4Q2AijF6Gk1bofHLs1d66hKFamhXWdWBup1Em25wfabZqkDqvaieV63fDQFaYmaatCG7jVNUpUiM2hAMo6SAVHcrUpSnHDpNzucB7"
+	expectedAddr := "bc1qt0x83f5vmnapgl2gjj9r3d67rcghvjaqrvgpck"
+	wallet, err := NewHDWalletFromAccountExtendedPublicKey(keyStr)
+	assert.Nil(t, err)
+
+	meta, err := wallet.ChangeAddressForIndex(0)
 	assert.Nil(t, err)
 
 	addr := meta.Address

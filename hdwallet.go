@@ -117,26 +117,7 @@ func (wallet *HDWallet) ReceiveAddressForIndex(index int) (*MetaAddress, error) 
 	if wallet.masterPrivateKey != nil {
 		return wallet.metaAddress(0, index)
 	} else if wallet.accountPublicKey != nil {
-		changeKey, err := wallet.accountPublicKey.Child(0)
-		if err != nil {
-			return nil, errors.New("failed to create external child key")
-		}
-		indexKey, err := changeKey.Child(uint32(index))
-		if err != nil {
-			return nil, errors.New("failed to create index child key")
-		}
-		ecPub, err := indexKey.ECPubKey()
-		if err != nil {
-			return nil, errors.New("failed to create index ec public key")
-		}
-		path := NewDerivationPath(wallet.BaseCoin, 0, index)
-		addr, err := generateAddress(path, ecPub)
-		if err != nil {
-			return nil, errors.New("failed to create index address")
-		}
-		ucpk := hex.EncodeToString(ecPub.SerializeUncompressed())
-		meta := NewMetaAddress(addr, path, ucpk)
-		return meta, nil
+		return indexMetaAddressFromExtendedPubkey(wallet.accountPublicKey, wallet.BaseCoin, 0, uint32(index))
 	}
 
 	return nil, errors.New("no valid master private key or account extended public key found")
@@ -147,29 +128,34 @@ func (wallet *HDWallet) ChangeAddressForIndex(index int) (*MetaAddress, error) {
 	if wallet.masterPrivateKey != nil {
 		return wallet.metaAddress(1, index)
 	} else if wallet.accountPublicKey != nil {
-		changeKey, err := wallet.accountPublicKey.Child(1)
-		if err != nil {
-			return nil, errors.New("failed to create internal child key")
-		}
-		indexKey, err := changeKey.Child(uint32(index))
-		if err != nil {
-			return nil, errors.New("failed to create index child key")
-		}
-		ecPub, err := indexKey.ECPubKey()
-		if err != nil {
-			return nil, errors.New("failed to create index ec public key")
-		}
-		path := NewDerivationPath(wallet.BaseCoin, 1, index)
-		addr, err := generateAddress(path, ecPub)
-		if err != nil {
-			return nil, errors.New("failed to create index address")
-		}
-		ucpk := hex.EncodeToString(ecPub.SerializeUncompressed())
-		meta := NewMetaAddress(addr, path, ucpk)
-		return meta, nil
+		return indexMetaAddressFromExtendedPubkey(wallet.accountPublicKey, wallet.BaseCoin, 1, uint32(index))
 	}
 
 	return nil, errors.New("no valid master private key or account extended public key found")
+}
+
+// indexMetaAddressFromExtendedPubkey is a private method to use shared code to create internal/external (change) MetaAddresses with a given index.
+func indexMetaAddressFromExtendedPubkey(extPubkey *hdkeychain.ExtendedKey, basecoin *BaseCoin, change uint32, index uint32) (*MetaAddress, error) {
+	changeKey, err := extPubkey.Child(change)
+	if err != nil {
+		return nil, err
+	}
+	indexKey, err := changeKey.Child(index)
+	if err != nil {
+		return nil, err
+	}
+	ecPub, err := indexKey.ECPubKey()
+	if err != nil {
+		return nil, err
+	}
+	path := NewDerivationPath(basecoin, int(change), int(index))
+	addr, err := generateAddress(path, ecPub)
+	if err != nil {
+		return nil, err
+	}
+	ucpk := hex.EncodeToString(ecPub.SerializeUncompressed())
+	meta := NewMetaAddress(addr, path, ucpk)
+	return meta, nil
 }
 
 // UpdateCoin updates the pointer stored to a new instance of BaseCoin. Fetched MetaAddresses will reflect updated coin.

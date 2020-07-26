@@ -1,8 +1,4 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
-git.coinninja.net/engineering/cryptor v1.0.1 h1:JUiBy38J3UAvyDmQXnfZnpXapWWNa8ySAhTRVPDq5es=
-git.coinninja.net/engineering/cryptor v1.0.1/go.mod h1:MsFd5asjRMUQZ+hG5PrM4vyLkEEuJu1JjvHhD52rljw=
-git.coinninja.net/engineering/cryptor v1.0.4 h1:tPQIL0bHWf9EgbLml/T2d2hBIajKZLINl2fqkKB+S44=
-git.coinninja.net/engineering/cryptor v1.0.4/go.mod h1:MsFd5asjRMUQZ+hG5PrM4vyLkEEuJu1JjvHhD52rljw=
 git.schwanenlied.me/yawning/bsaes.git v0.0.0-20180720073208-c0276d75487e/go.mod h1:BWqTsj8PgcPriQJGl7el20J/7TuT1d/hSyFDXMEpoEo=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/FactomProject/basen v0.0.0-20150613233007-fe3947df716e h1:ahyvB3q25YnZWly5Gq1ekg6jcmWaGj/vG/MhF4aisoc=

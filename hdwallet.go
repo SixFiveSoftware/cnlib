@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil"
@@ -23,6 +24,7 @@ type HDWallet struct {
 	BaseCoin         *BaseCoin
 	WalletWords      string // space-separated string of user's recovery words
 	masterPrivateKey *hdkeychain.ExtendedKey
+	accountPublicKey *hdkeychain.ExtendedKey
 }
 
 // GetFullBIP39WordListString returns all 2,048 BIP39 mnemonic words as a space-separated string.
@@ -49,8 +51,28 @@ func NewHDWalletFromWords(wordString string, basecoin *BaseCoin) *HDWallet {
 	if err != nil {
 		return nil
 	}
-	wallet := HDWallet{BaseCoin: basecoin, WalletWords: wordString, masterPrivateKey: masterKey}
+	kf := keyFactory{masterPrivateKey: masterKey}
+	pubkey, _, err := kf.accountExtendedPublicKey(basecoin)
+	if err != nil {
+		return nil
+	}
+	wallet := HDWallet{BaseCoin: basecoin, WalletWords: wordString, masterPrivateKey: masterKey, accountPublicKey: pubkey}
 	return &wallet
+}
+
+// NewHDWalletFromAccountExtendedPublicKey returns a pointer to an HDWallet, containing the BaseCoin, empty word list, nil master private key,
+// and unexported pointer to extended key for account-level extended master private key. Returns error if unable to parse x/y/zpub.
+func NewHDWalletFromAccountExtendedPublicKey(acctPubKeyStr string) (*HDWallet, error) {
+	key, err := hdkeychain.NewKeyFromString(acctPubKeyStr)
+	if err != nil {
+		return nil, err
+	}
+	basecoin, err := NewBaseCoinFromAccountPubKey(acctPubKeyStr)
+	if err != nil {
+		return nil, err
+	}
+	wallet := HDWallet{BaseCoin: basecoin, WalletWords: "", masterPrivateKey: nil, accountPublicKey: key}
+	return &wallet, nil
 }
 
 /// Receiver functions
@@ -92,12 +114,48 @@ func (wallet *HDWallet) CoinNinjaVerificationKeyHexString() (string, error) {
 
 // ReceiveAddressForIndex returns a receive MetaAddress derived from the current wallet, BaseCoin, and index.
 func (wallet *HDWallet) ReceiveAddressForIndex(index int) (*MetaAddress, error) {
-	return wallet.metaAddress(0, index)
+	if wallet.masterPrivateKey != nil {
+		return wallet.metaAddress(0, index)
+	} else if wallet.accountPublicKey != nil {
+		return indexMetaAddressFromExtendedPubkey(wallet.accountPublicKey, wallet.BaseCoin, 0, uint32(index))
+	}
+
+	return nil, errors.New("no valid master private key or account extended public key found")
 }
 
 // ChangeAddressForIndex returns a change MetaAddress derived from the current wallet, BaseCoin, and index.
 func (wallet *HDWallet) ChangeAddressForIndex(index int) (*MetaAddress, error) {
-	return wallet.metaAddress(1, index)
+	if wallet.masterPrivateKey != nil {
+		return wallet.metaAddress(1, index)
+	} else if wallet.accountPublicKey != nil {
+		return indexMetaAddressFromExtendedPubkey(wallet.accountPublicKey, wallet.BaseCoin, 1, uint32(index))
+	}
+
+	return nil, errors.New("no valid master private key or account extended public key found")
+}
+
+// indexMetaAddressFromExtendedPubkey is a private method to use shared code to create internal/external (change) MetaAddresses with a given index.
+func indexMetaAddressFromExtendedPubkey(extPubkey *hdkeychain.ExtendedKey, basecoin *BaseCoin, change uint32, index uint32) (*MetaAddress, error) {
+	changeKey, err := extPubkey.Child(change)
+	if err != nil {
+		return nil, err
+	}
+	indexKey, err := changeKey.Child(index)
+	if err != nil {
+		return nil, err
+	}
+	ecPub, err := indexKey.ECPubKey()
+	if err != nil {
+		return nil, err
+	}
+	path := NewDerivationPath(basecoin, int(change), int(index))
+	addr, err := generateAddress(path, ecPub)
+	if err != nil {
+		return nil, err
+	}
+	ucpk := hex.EncodeToString(ecPub.SerializeUncompressed())
+	meta := NewMetaAddress(addr, path, ucpk)
+	return meta, nil
 }
 
 // UpdateCoin updates the pointer stored to a new instance of BaseCoin. Fetched MetaAddresses will reflect updated coin.
@@ -243,6 +301,16 @@ func (wallet *HDWallet) ImportPrivateKey(encodedKey string) (*ImportedPrivateKey
 	return &retval, nil
 }
 
+// AccountExtendedMasterPublicKey returns the stringified base58 encoded master extended public key.
+func (wallet *HDWallet) AccountExtendedMasterPublicKey() (string, error) {
+	kf := keyFactory{masterPrivateKey: wallet.masterPrivateKey}
+	_, pubkeyString, err := kf.accountExtendedPublicKey(wallet.BaseCoin)
+	if err != nil {
+		return "", err
+	}
+	return pubkeyString, nil
+}
+
 // BuildTransactionMetadata will generate the tx metadata needed for client to consume.
 func (wallet *HDWallet) BuildTransactionMetadata(data *TransactionData) (*TransactionMetadata, error) {
 	builder := transactionBuilder{wallet: wallet}
@@ -264,15 +332,64 @@ func (wallet *HDWallet) DecodeLightningInvoice(invoice string) (*LightningInvoic
 	if inv.MilliSat != nil {
 		sats = int(inv.MilliSat.ToSatoshis())
 	}
+
+	isExpired := false
+	timestampPlusExpiry := inv.Timestamp.Add(inv.Expiry()).Unix()
+	expiresAt := time.Unix(timestampPlusExpiry, 0)
+	if time.Now().UTC().After(expiresAt) {
+		isExpired = true
+	}
+
 	return &LightningInvoice{
 		NumSatoshis: sats,
 		Description: memo,
+		IsExpired:   isExpired,
+		ExpiresAt:   timestampPlusExpiry,
 	}, nil
+}
+
+// CompressedPubKeyForPath returns a compressed public key byte slice for a given derivation path in a wallet.
+func (wallet *HDWallet) CompressedPubKeyForPath(path *DerivationPath) ([]byte, error) {
+	key, err := wallet.publicKey(path)
+	if err != nil {
+		return nil, err
+	}
+	return key.SerializeCompressed(), nil
+}
+
+// UncompressedPubKeyForPath returns a compressed public key byte slice for a given derivation path in a wallet.
+func (wallet *HDWallet) UncompressedPubKeyForPath(path *DerivationPath) ([]byte, error) {
+	key, err := wallet.publicKey(path)
+	if err != nil {
+		return nil, err
+	}
+	return key.SerializeUncompressed(), nil
 }
 
 /// Unexported functions
 
+func (wallet *HDWallet) publicKey(path *DerivationPath) (*btcec.PublicKey, error) {
+	if path == nil {
+		return nil, errors.New("derivation path cannot be nil")
+	}
+
+	keyFactory := keyFactory{masterPrivateKey: wallet.masterPrivateKey}
+	privKey, err := keyFactory.indexPrivateKey(path)
+	if err != nil {
+		return nil, err
+	}
+	pubKey, err := privKey.ECPubKey()
+	if err != nil {
+		return nil, err
+	}
+	return pubKey, nil
+}
+
 func (wallet *HDWallet) metaAddress(change int, index int) (*MetaAddress, error) {
+	if change < 0 {
+		return nil, errors.New("change index cannot be negative")
+	}
+
 	if index < 0 {
 		return nil, errors.New("index cannot be negative")
 	}

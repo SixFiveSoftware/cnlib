@@ -304,6 +304,18 @@ func TestDecodeLightningInvoice_WithMemo_WithSats(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, expectedAmount, di.NumSatoshis)
 	assert.Equal(t, expectedDescription, di.Description)
+	assert.True(t, di.IsExpired)
+}
+
+func TestDecodeLightningInvoice_Expired(t *testing.T) {
+	invoiceString := "lnbc10u1p0znnwnpp590yg0vlxfd5lsdvn4m3fxzr939nk7ewzsz43fenc3j97exnrurrsdq8w3jhxaqcqzpgxqzfvydc7jvtacl4c7z4jygdhq76whzhve6q6qqdmecahw7nsx0rw0gas3g9ufcej55thffjawjxuga62nphexptuh92fwrumy3z7xng3zwsplmgqah"
+
+	wallet := NewHDWalletFromWords(w, BaseCoinBip84MainNet)
+	invoice, err := wallet.DecodeLightningInvoice(invoiceString)
+
+	assert.Nil(t, err)
+	assert.True(t, invoice.IsExpired)
+	assert.Equal(t, int64(1579798271), invoice.ExpiresAt)
 }
 
 func TestDecodeLightningInvoice_NoMemo_NoSats(t *testing.T) {
@@ -343,4 +355,202 @@ func TestDecodeLightningInvoice_Malformed(t *testing.T) {
 	di, err := wallet.DecodeLightningInvoice(invoice)
 	assert.Contains(t, err.Error(), "checksum failed")
 	assert.Nil(t, di)
+}
+
+func TestExtendedAccountPublicKey_BIP44(t *testing.T) {
+	bc := NewBaseCoin(44, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	actualKey, err := wallet.AccountExtendedMasterPublicKey()
+	assert.Nil(t, err)
+	expectedKey := "xpub6BosfCnifzxcFwrSzQiqu2DBVTshkCXacvNsWGYJVVhhawA7d4R5WSWGFNbi8Aw6ZRc1brxMyWMzG3DSSSSoekkudhUd9yLb6qx39T9nMdj"
+	assert.Equal(t, expectedKey, actualKey)
+}
+
+func TestExtendedAccountPublicKey_BIP49(t *testing.T) {
+	bc := NewBaseCoin(49, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	actualKey, err := wallet.AccountExtendedMasterPublicKey()
+	assert.Nil(t, err)
+	expectedKey := "ypub6Ww3ibxVfGzLrAH1PNcjyAWenMTbbAosGNB6VvmSEgytSER9azLDWCxoJwW7Ke7icmizBMXrzBx9979FfaHxHcrArf3zbeJJJUZPf663zsP"
+	assert.Equal(t, expectedKey, actualKey)
+}
+
+func TestExtendedAccountPublicKey_BIP84(t *testing.T) {
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	actualKey, err := wallet.AccountExtendedMasterPublicKey()
+	assert.Nil(t, err)
+	expectedKey := "zpub6rFR7y4Q2AijBEqTUquhVz398htDFrtymD9xYYfG1m4wAcvPhXNfE3EfH1r1ADqtfSdVCToUG868RvUUkgDKf31mGDtKsAYz2oz2AGutZYs"
+	assert.Equal(t, expectedKey, actualKey)
+}
+
+func TestExtendedAccountPublicKey_BIP44_Testnet(t *testing.T) {
+	bc := NewBaseCoin(44, 1, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	actualKey, err := wallet.AccountExtendedMasterPublicKey()
+	assert.Nil(t, err)
+	expectedKey := "tpubDC5FSnBiZDMmhiuCmWAYsLwgLYrrT9rAqvTySfuCCrgsWz8wxMXUS9Tb9iVMvcRbvFcAHGkMD5Kx8koh4GquNGNTfohfk7pgjhaPCdXpoba"
+	assert.Equal(t, expectedKey, actualKey)
+}
+
+func TestExtendedAccountPublicKey_BIP49_Testnet(t *testing.T) {
+	bc := NewBaseCoin(49, 1, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	actualKey, err := wallet.AccountExtendedMasterPublicKey()
+	assert.Nil(t, err)
+	expectedKey := "upub5EFU65HtV5TeiSHmZZm7FUffBGy8UKeqp7vw43jYbvZPpoVsgU93oac7Wk3u6moKegAEWtGNF8DehrnHtv21XXEMYRUocHqguyjknFHYfgY"
+	assert.Equal(t, expectedKey, actualKey)
+}
+
+func TestExtendedAccountPublicKey_BIP84_Testnet(t *testing.T) {
+	bc := NewBaseCoin(84, 1, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	actualKey, err := wallet.AccountExtendedMasterPublicKey()
+	assert.Nil(t, err)
+	expectedKey := "vpub5Y6cjg78GGuNLsaPhmYsiw4gYX3HoQiRBiSwDaBXKUafCt9bNwWQiitDk5VZ5BVxYnQdwoTyXSs2JHRPAgjAvtbBrf8ZhDYe2jWAqvZVnsc"
+	assert.Equal(t, expectedKey, actualKey)
+}
+
+func TestCompressedPubKeyAtPath_Receive(t *testing.T) {
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	path := NewDerivationPath(bc, 0, 0)
+	bytes, err := wallet.CompressedPubKeyForPath(path)
+	assert.Nil(t, err)
+	byteString := hex.EncodeToString(bytes)
+	assert.Equal(t, "0330d54fd0dd420a6e5f8d3624f5f3482cae350f79d5f0753bf5beef9c2d91af3c", byteString)
+}
+
+func TestCompressedPubKeyAtPath_Change(t *testing.T) {
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	path := NewDerivationPath(bc, 1, 0)
+	bytes, err := wallet.CompressedPubKeyForPath(path)
+	assert.Nil(t, err)
+	byteString := hex.EncodeToString(bytes)
+	assert.Equal(t, "03025324888e429ab8e3dbaf1f7802648b9cd01e9b418485c5fa4c1b9b5700e1a6", byteString)
+}
+
+func TestUncompressedPubKeyAtPath_Receive(t *testing.T) {
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	path := NewDerivationPath(bc, 0, 0)
+	bytes, err := wallet.UncompressedPubKeyForPath(path)
+	assert.Nil(t, err)
+	byteString := hex.EncodeToString(bytes)
+	assert.Equal(t, "0430d54fd0dd420a6e5f8d3624f5f3482cae350f79d5f0753bf5beef9c2d91af3c04717159ce0828a7f686c2c7510b7aa7d4c685ebc2051642ccbebc7099e2f679", byteString)
+}
+
+func TestUncompressedPubKeyAtPath_Change(t *testing.T) {
+	bc := NewBaseCoin(84, 0, 0)
+	wallet := NewHDWalletFromWords(w, bc)
+	path := NewDerivationPath(bc, 1, 0)
+	bytes, err := wallet.UncompressedPubKeyForPath(path)
+	assert.Nil(t, err)
+	byteString := hex.EncodeToString(bytes)
+	assert.Equal(t, "04025324888e429ab8e3dbaf1f7802648b9cd01e9b418485c5fa4c1b9b5700e1a64181f3bdfdbcb59e063badaba3919b897158dcb26b48ad46bc57955c5e61d2d5", byteString)
+}
+
+func TestReceiveAddressForIndex_AccountPubKey_M_49_0_0(t *testing.T) {
+	keyStr := "ypub6Ww3ibxVfGzLrAH1PNcjyAWenMTbbAosGNB6VvmSEgytSER9azLDWCxoJwW7Ke7icmizBMXrzBx9979FfaHxHcrArf3zbeJJJUZPf663zsP"
+	expectedAddr := "37VucYSaXLCAsxYyAPfbSi9eh4iEcbShgf"
+	wallet, err := NewHDWalletFromAccountExtendedPublicKey(keyStr)
+	assert.Nil(t, err)
+
+	meta, err := wallet.ReceiveAddressForIndex(0)
+	assert.Nil(t, err)
+
+	addr := meta.Address
+	assert.Equal(t, expectedAddr, addr)
+}
+
+func TestChangeAddressForIndex_AccountPubKey_M_49_0_0(t *testing.T) {
+	keyStr := "ypub6Ww3ibxVfGzLrAH1PNcjyAWenMTbbAosGNB6VvmSEgytSER9azLDWCxoJwW7Ke7icmizBMXrzBx9979FfaHxHcrArf3zbeJJJUZPf663zsP"
+	expectedAddr := "34K56kSjgUCUSD8GTtuF7c9Zzwokbs6uZ7"
+	wallet, err := NewHDWalletFromAccountExtendedPublicKey(keyStr)
+	assert.Nil(t, err)
+
+	meta, err := wallet.ChangeAddressForIndex(0)
+	assert.Nil(t, err)
+
+	addr := meta.Address
+	assert.Equal(t, expectedAddr, addr)
+}
+
+func TestReceiveAddressForIndex_AccountPubKey_M_49_0_1(t *testing.T) {
+	keyStr := "ypub6Ww3ibxVfGzLtJR4F9SRBicspAfvmvw54yern9Q6qZWFC9T6FYA34K57La5Sgs8pXuyvpDfEHX5KNZRiZRukUWaVPyL4NxA69sEAqdoV8ve"
+	expectedAddr := "35eszW2wmZ4hn7hfG5LGqxw5xCPjZcEJPM"
+	wallet, err := NewHDWalletFromAccountExtendedPublicKey(keyStr)
+	assert.Nil(t, err)
+
+	meta, err := wallet.ReceiveAddressForIndex(0)
+	assert.Nil(t, err)
+
+	addr := meta.Address
+	assert.Equal(t, expectedAddr, addr)
+}
+
+func TestChangeAddressForIndex_AccountPubKey_M_49_0_1(t *testing.T) {
+	keyStr := "ypub6Ww3ibxVfGzLtJR4F9SRBicspAfvmvw54yern9Q6qZWFC9T6FYA34K57La5Sgs8pXuyvpDfEHX5KNZRiZRukUWaVPyL4NxA69sEAqdoV8ve"
+	expectedAddr := "35gZZo6xPJEPgcz1cj1mTQHRMiPP97NGRY"
+	wallet, err := NewHDWalletFromAccountExtendedPublicKey(keyStr)
+	assert.Nil(t, err)
+
+	meta, err := wallet.ChangeAddressForIndex(0)
+	assert.Nil(t, err)
+
+	addr := meta.Address
+	assert.Equal(t, expectedAddr, addr)
+}
+
+func TestReceiveAddressForIndex_AccountPubKey_M_84_0_0(t *testing.T) {
+	keyStr := "zpub6rFR7y4Q2AijBEqTUquhVz398htDFrtymD9xYYfG1m4wAcvPhXNfE3EfH1r1ADqtfSdVCToUG868RvUUkgDKf31mGDtKsAYz2oz2AGutZYs"
+	expectedAddr := "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu"
+	wallet, err := NewHDWalletFromAccountExtendedPublicKey(keyStr)
+	assert.Nil(t, err)
+
+	meta, err := wallet.ReceiveAddressForIndex(0)
+	assert.Nil(t, err)
+
+	addr := meta.Address
+	assert.Equal(t, expectedAddr, addr)
+}
+
+func TestChangeAddressForIndex_AccountPubKey_M_84_0_0(t *testing.T) {
+	keyStr := "zpub6rFR7y4Q2AijBEqTUquhVz398htDFrtymD9xYYfG1m4wAcvPhXNfE3EfH1r1ADqtfSdVCToUG868RvUUkgDKf31mGDtKsAYz2oz2AGutZYs"
+	expectedAddr := "bc1q8c6fshw2dlwun7ekn9qwf37cu2rn755upcp6el"
+	wallet, err := NewHDWalletFromAccountExtendedPublicKey(keyStr)
+	assert.Nil(t, err)
+
+	meta, err := wallet.ChangeAddressForIndex(0)
+	assert.Nil(t, err)
+
+	addr := meta.Address
+	assert.Equal(t, expectedAddr, addr)
+}
+
+func TestReceiveAddressForIndex_AccountPubKey_M_84_0_1(t *testing.T) {
+	keyStr := "zpub6rFR7y4Q2AijF6Gk1bofHLs1d66hKFamhXWdWBup1Em25wfabZqkDqvaieV63fDQFaYmaatCG7jVNUpUiM2hAMo6SAVHcrUpSnHDpNzucB7"
+	expectedAddr := "bc1qku0qh0mc00y8tk0n65x2tqw4trlspak0fnjmfz"
+	wallet, err := NewHDWalletFromAccountExtendedPublicKey(keyStr)
+	assert.Nil(t, err)
+
+	meta, err := wallet.ReceiveAddressForIndex(0)
+	assert.Nil(t, err)
+
+	addr := meta.Address
+	assert.Equal(t, expectedAddr, addr)
+}
+
+func TestChangeAddressForIndex_AccountPubKey_M_84_0_1(t *testing.T) {
+	keyStr := "zpub6rFR7y4Q2AijF6Gk1bofHLs1d66hKFamhXWdWBup1Em25wfabZqkDqvaieV63fDQFaYmaatCG7jVNUpUiM2hAMo6SAVHcrUpSnHDpNzucB7"
+	expectedAddr := "bc1qt0x83f5vmnapgl2gjj9r3d67rcghvjaqrvgpck"
+	wallet, err := NewHDWalletFromAccountExtendedPublicKey(keyStr)
+	assert.Nil(t, err)
+
+	meta, err := wallet.ChangeAddressForIndex(0)
+	assert.Nil(t, err)
+
+	addr := meta.Address
+	assert.Equal(t, expectedAddr, addr)
 }

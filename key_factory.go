@@ -5,14 +5,25 @@ import (
 	"errors"
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcutil/base58"
 	"github.com/btcsuite/btcutil/hdkeychain"
 )
 
 /// Type Definition
 
-// KeyFactory is a struct holding a ref to an HDWallet, with receiver methods to obtain keys relative to the wallet.
+// KeyFactory is a struct holding optional refs to masterPrivateKey, and acctExtPubKey, with receiver methods to obtain keys relative to the wallet.
 type keyFactory struct {
 	masterPrivateKey *hdkeychain.ExtendedKey
+	acctExtPubKey    *hdkeychain.ExtendedKey
+}
+
+var pubkeyIDs = map[string][]byte{
+	xpub: []byte{0x04, 0x88, 0xb2, 0x1e}, // m/44'/0'
+	ypub: []byte{0x04, 0x9d, 0x7c, 0xb2}, // m/49'/0'
+	zpub: []byte{0x04, 0xb2, 0x47, 0x46}, // m/84'/0'
+	tpub: []byte{0x04, 0x35, 0x87, 0xcf}, // m/44'/1'
+	upub: []byte{0x04, 0x4a, 0x52, 0x62}, // m/49'/1'
+	vpub: []byte{0x04, 0x5f, 0x1c, 0xf6}, // m/84'/1'
 }
 
 /// Receiver methods
@@ -39,6 +50,66 @@ func (kf keyFactory) indexPrivateKey(path *DerivationPath) (*hdkeychain.Extended
 		return nil, err
 	}
 	return indexKey, nil
+}
+
+// accountExtendedPublicKey returns the extended public key and its stringified version.
+func (kf keyFactory) accountExtendedPublicKey(bc *BaseCoin) (*hdkeychain.ExtendedKey, string, error) {
+	var key *hdkeychain.ExtendedKey
+
+	if kf.masterPrivateKey != nil {
+		// derive account child
+		purposeKey, err := kf.masterPrivateKey.Child(hardened(bc.Purpose))
+		if err != nil {
+			return nil, "", err
+		}
+		coinKey, err := purposeKey.Child(hardened(bc.Coin))
+		if err != nil {
+			return nil, "", err
+		}
+		accountKey, err := coinKey.Child(hardened(bc.Account))
+		if err != nil {
+			return nil, "", err
+		}
+
+		// get extended pubkey
+		key, err = accountKey.Neuter()
+		if err != nil {
+			return nil, "", err
+		}
+	} else if kf.acctExtPubKey != nil {
+		key = kf.acctExtPubKey
+	}
+
+	// base58check encode extended pubkey
+	neutered := key.String()
+
+	// get appropriate prefix
+	idType, err := bc.defaultExtendedPubkeyType()
+	if err != nil {
+		return nil, "", err
+	}
+	newPrefix := pubkeyIDs[idType]
+
+	// decode
+	decoded, version, err := base58.CheckDecode(neutered)
+	if err != nil {
+		return nil, "", err
+	}
+
+	if version != newPrefix[0] {
+		return nil, "", errors.New("version mismatch when decoding account pubkey")
+	}
+
+	// swap bytes. `version` has first byte, and needs to match first byte of prefix.
+	// `temp` does not need `version` to be first byte, CheckEncode will do that.
+	temp := make([]byte, len(decoded))
+	copy(temp[:3], newPrefix[1:4])
+	copy(temp[3:], decoded[3:])
+
+	// re-encode
+	encoded := base58.CheckEncode(temp, version)
+
+	return key, encoded, nil
 }
 
 func (kf keyFactory) signingMasterKey() (*hdkeychain.ExtendedKey, error) {

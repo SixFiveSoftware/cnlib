@@ -1,8 +1,9 @@
 package cnlib
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMetaAddress_Receive_Segwit_Address(t *testing.T) {
@@ -40,7 +41,7 @@ func TestMetaAddress_Change_Segwit_Address(t *testing.T) {
 	assert.Equal(t, expectedPubkey, meta.UncompressedPublicKey)
 }
 
-func TestMetaAddress_RegTestAddresses(t *testing.T) {
+func TestMetaAddress_TestNetAddresses(t *testing.T) {
 	rpath0 := NewDerivationPath(BaseCoinBip84TestNet, 0, 0)
 	rpath1 := NewDerivationPath(BaseCoinBip84TestNet, 0, 1)
 	rpath2 := NewDerivationPath(BaseCoinBip84TestNet, 0, 2)
@@ -48,12 +49,12 @@ func TestMetaAddress_RegTestAddresses(t *testing.T) {
 	cpath1 := NewDerivationPath(BaseCoinBip84TestNet, 1, 1)
 	cpath2 := NewDerivationPath(BaseCoinBip84TestNet, 1, 2)
 
-	rexp0 := "bcrt1q6rz28mcfaxtmd6v789l9rrlrusdprr9pz3cppk"
-	rexp1 := "bcrt1qd7spv5q28348xl4myc8zmh983w5jx32cs707jh"
-	rexp2 := "bcrt1qxdyjf6h5d6qxap4n2dap97q4j5ps6ua8jkxz0z"
-	cexp0 := "bcrt1q9u62588spffmq4dzjxsr5l297znf3z6jkgnhsw"
-	cexp1 := "bcrt1qkwgskuzmmwwvqajnyr7yp9hgvh5y45kg984qvy"
-	cexp2 := "bcrt1q2vma00td2g9llw8hwa8ny3r774rtt7ae3q2e44"
+	rexp0 := "tb1q6rz28mcfaxtmd6v789l9rrlrusdprr9pqcpvkl"
+	rexp1 := "tb1qd7spv5q28348xl4myc8zmh983w5jx32cjhkn97"
+	rexp2 := "tb1qxdyjf6h5d6qxap4n2dap97q4j5ps6ua8sll0ct"
+	cexp0 := "tb1q9u62588spffmq4dzjxsr5l297znf3z6j5p2688"
+	cexp1 := "tb1qkwgskuzmmwwvqajnyr7yp9hgvh5y45kg8wvdmd"
+	cexp2 := "tb1q2vma00td2g9llw8hwa8ny3r774rtt7aenfn5zu"
 
 	wallet := NewHDWalletFromWords(w, BaseCoinBip84TestNet)
 

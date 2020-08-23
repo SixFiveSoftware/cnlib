@@ -156,7 +156,7 @@ func (bc *BaseCoin) defaultExtendedPubkeyType() (string, error) {
 
 func (bc *BaseCoin) defaultNetParams() *chaincfg.Params {
 	if bc.isTestNet() {
-		return &chaincfg.RegressionNetParams
+		return &chaincfg.TestNet3Params
 	}
 	return &chaincfg.MainNetParams
 }
